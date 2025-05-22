@@ -5,9 +5,8 @@
 {% endif %}
 {% assign pageform = page.forms[formnumber] %}
 
-<!-- fixme link -->
+<!-- fixme link pageform.js -->
 <script src="{{ site.baseurl }}{% link pages/calculator/calculator.js %}" ></script>
-<!-- <script src="{{ site.baseurl }}{% link {{ pageform.js }} %}" ></script> -->
 
 <form id="{{ page.url | slugify }}" class="form autofill" action="{{ pageform.redirect }}" onsubmit="{{ pageform.onsubmit }}">
     <input type="text" name="_gotcha" style="display:none" />
