@@ -15,11 +15,13 @@ class GoogleMapsManager {
     if (!this.enable) {
       this.showMapDisabledMessage();
       this.hideMapContainer();
+      this.hideMapError();
       console.log("map disabled");
       return;
     } else {
       this.hideMapDisabledMessage();
-      this.showMapContainer();
+      this.showElement("mapContainer", "block");
+      this.hideMapError();
     }
 
     this.showMapLoadingIndicator();
@@ -69,60 +71,61 @@ class GoogleMapsManager {
       );
   }
 
-  showMapLoadingIndicator() {
-    const messageElement = document.getElementById("mapLoading");
-    if (messageElement) {
-      messageElement.style.display = "block";
+  showElement(elementId, display = "flex") {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.style.display = display;
     }
+  }
+
+  hideElement(elementId, display = "none") {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.style.display = display;
+    }
+  }
+
+  showMapError(message = "Something went wrong.") {
+    const messageElement = document.getElementById("mapError");
+    if (messageElement) {
+      messageElement.style.display = "flex";
+      messageElement.querySelector("p").textContent = message;
+    }
+  }
+  hideMapError() {
+    this.hideElement("mapError");
+  }
+
+  showMapLoadingIndicator() {
+    this.showElement("mapLoading");
   }
 
   hideMapLoadingIndicator() {
-    const messageElement = document.getElementById("mapLoading");
-    if (messageElement) {
-      messageElement.style.display = "none";
-    }
+    this.hideElement("mapLoading");
   }
 
   showMapDisabledMessage() {
-    const messageElement = document.getElementById("mapDisabled");
-    if (messageElement) {
-      messageElement.style.display = "flex";
-    }
+    this.showElement("mapDisabled");
   }
 
   hideMapDisabledMessage() {
-    const messageElement = document.getElementById("mapDisabled");
-    if (messageElement) {
-      messageElement.style.display = "none";
-    }
+    this.hideElement("mapDisabled");
   }
 
   showApiKeyError() {
-    const errorElement = document.getElementById("apiKeyError");
-    if (errorElement) {
-      errorElement.style.display = "block";
-    }
+    this.showElement("apiKeyError");
   }
 
   hideApiKeyError() {
-    const errorElement = document.getElementById("apiKeyError");
-    if (errorElement) {
-      errorElement.style.display = "none";
-    }
+    this.hideElement("apiKeyError");
   }
 
   showMapContainer() {
-    const mapContainer = document.getElementById("mapContainer");
-    if (mapContainer) {
-      mapContainer.style.display = "block";
-    }
+    this.showElement("mapContainer");
   }
 
   hideMapContainer() {
-    const mapContainer = document.getElementById("mapContainer");
-    if (mapContainer) {
-      mapContainer.style.display = "none";
-    }
+    this.hideElement("mapContainer");
   }
 
   // FIXME
@@ -151,6 +154,8 @@ class GoogleMapsManager {
       const apiKey = this.getApiKey();
       const script = document.createElement("script");
       script.id = "google-maps-script";
+      // TODO: add loading=async
+      // https://developers.google.com/maps/documentation/javascript/load-maps-js-api#direct_script_loading_url_parameters
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker`;
       script.async = true;
       script.onload = () => {
@@ -161,6 +166,7 @@ class GoogleMapsManager {
           this.showApiKeyError();
           reject(new Error("Google Maps API key not configured"));
         } else {
+          this.showElement("mapError");
           reject(new Error("Failed to load Google Maps API"));
         }
       };
@@ -244,14 +250,17 @@ class GoogleMapsManager {
               content: userMarkerElement,
             });
 
+            this.hideElement("mapError");
             resolve(this.userLocation);
           },
           (error) => {
+            this.showElement("mapError");
             console.error("Geolocation error:", error);
             reject(error);
           }
         );
       } else {
+        this.showElement("mapError");
         reject(new Error("Geolocation not supported"));
       }
     });
@@ -468,7 +477,7 @@ class GoogleMapsManager {
 
       const infoWindow = new google.maps.InfoWindow({
         content: `
-                    <div style="margin-top: -12px; padding: 12px; min-width: 320px;">
+                    <div id="map-station-info-window" class="map-station-info-window">
                         <h3 style="margin: 0 0 12px 0; color: #2563eb; font-size: 16px;">${name}</h3>
                         ${
                           availableConnectorTypes.length > 0

@@ -4,7 +4,7 @@ class ChargingCalculator {
     this.tariffs = [];
     this.selectedProviders = new Set();
     this.selectedConnectors = new Set();
-    this.mapsManager = new GoogleMapsManager(false); // false to disable map
+    this.mapsManager = new GoogleMapsManager(true); // false to disable map
 
     this.init();
   }
