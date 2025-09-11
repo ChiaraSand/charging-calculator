@@ -5,6 +5,7 @@ class ChargingCalculator {
     this.selectedProviders = new Set();
     this.selectedConnectors = new Set();
     this.mapsManager = new GoogleMapsManager(true); // false to disable map
+    this.chargingChart = null;
 
     this.init();
   }
@@ -24,6 +25,7 @@ class ChargingCalculator {
     this.populateTariffTable();
     // this.mapsManager.setAvailableTariffs(this.tariffs);
     this.updateCalculations();
+    this.initializeChargingChart();
     await this.mapsManager.initializeMap("map");
   }
 
@@ -591,6 +593,9 @@ class ChargingCalculator {
 
     // Update header with actual energy amount
     this.updatePricePerSelectedKwhHeader(energyToCharge);
+
+    // Update charging chart
+    this.updateChargingChart();
   }
 
   setupCustomTariffEventListeners() {
@@ -1052,6 +1057,266 @@ class ChargingCalculator {
 
     // If no time cost applies
     return 0;
+  }
+
+  // Charging Chart Methods
+  initializeChargingChart() {
+    const ctx = document.getElementById("chargingLevelChart");
+    if (!ctx) return;
+
+    this.chargingChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: "Ladeverlauf (realistisch)",
+            data: [],
+            borderColor: "#2563eb",
+            backgroundColor: "rgba(37, 99, 235, 0.1)",
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: "#2563eb",
+            pointBorderColor: "#ffffff",
+            pointBorderWidth: 2,
+          },
+          {
+            label: "Lineare Schätzung",
+            data: [],
+            borderColor: "#10b981",
+            backgroundColor: "rgba(16, 185, 129, 0.1)",
+            borderWidth: 2,
+            fill: false,
+            tension: 0,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            pointBackgroundColor: "#10b981",
+            pointBorderColor: "#ffffff",
+            pointBorderWidth: 2,
+            borderDash: [5, 5],
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: "Batterieladestand über Zeit",
+            font: {
+              size: 16,
+              weight: "bold",
+            },
+            color: "#1e293b",
+          },
+          legend: {
+            display: false, // We have our custom legend
+          },
+          tooltip: {
+            mode: "index",
+            intersect: false,
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            titleColor: "#ffffff",
+            bodyColor: "#ffffff",
+            borderColor: "#e2e8f0",
+            borderWidth: 1,
+            callbacks: {
+              title: function (context) {
+                return `Zeit: ${context[0].label}`;
+              },
+              label: function (context) {
+                return `${context.dataset.label}: ${context.parsed.y.toFixed(
+                  1
+                )}%`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            display: true,
+            title: {
+              display: true,
+              text: "Ladezeit (Minuten)",
+              font: {
+                weight: "bold",
+              },
+              color: "#64748b",
+            },
+            grid: {
+              color: "#e2e8f0",
+              drawBorder: false,
+            },
+            ticks: {
+              color: "#64748b",
+            },
+          },
+          y: {
+            display: true,
+            title: {
+              display: true,
+              text: "Batterieladestand (%)",
+              font: {
+                weight: "bold",
+              },
+              color: "#64748b",
+            },
+            min: 0,
+            max: 100,
+            grid: {
+              color: "#e2e8f0",
+              drawBorder: false,
+            },
+            ticks: {
+              color: "#64748b",
+              callback: function (value) {
+                return value + "%";
+              },
+            },
+          },
+        },
+        interaction: {
+          mode: "nearest",
+          axis: "x",
+          intersect: false,
+        },
+        elements: {
+          point: {
+            hoverBackgroundColor: "#ffffff",
+          },
+        },
+      },
+    });
+
+    // Initial empty state
+    this.updateChargingChart();
+  }
+
+  updateChargingChart() {
+    if (!this.chargingChart) return;
+
+    const batteryCapacity =
+      parseFloat(document.getElementById("batteryCapacity").value) || 0;
+    const currentCharge =
+      parseFloat(document.getElementById("currentCharge").value) || 0;
+    const targetCharge =
+      parseFloat(document.getElementById("targetCharge").value) || 0;
+    const chargingPower =
+      parseFloat(document.getElementById("chargingPower").value) || 0;
+
+    // Check if we have enough data to calculate
+    if (
+      batteryCapacity <= 0 ||
+      targetCharge <= currentCharge ||
+      chargingPower <= 0
+    ) {
+      this.chargingChart.data.labels = [];
+      this.chargingChart.data.datasets[0].data = [];
+      this.chargingChart.data.datasets[1].data = [];
+      this.chargingChart.update();
+      return;
+    }
+
+    const energyToCharge =
+      (batteryCapacity * (targetCharge - currentCharge)) / 100;
+    const estimatedTime = (energyToCharge / chargingPower) * 60; // in minutes
+
+    // Generate data points for the chart
+    const timePoints = [];
+    const realisticChargingLevels = [];
+    const linearChargingLevels = [];
+
+    // Create time points every 5 minutes or every minute for shorter sessions
+    const interval = estimatedTime <= 30 ? 1 : 5;
+    const maxTime = Math.ceil(estimatedTime * 1.2); // Show 20% more than estimated
+
+    for (let time = 0; time <= maxTime; time += interval) {
+      timePoints.push(time);
+
+      // Linear charging (simple calculation)
+      const linearLevel = Math.min(
+        currentCharge + (time / estimatedTime) * (targetCharge - currentCharge),
+        targetCharge
+      );
+      linearChargingLevels.push(linearLevel);
+
+      // Realistic charging curve
+      const realisticLevel = this.calculateRealisticChargingLevel(
+        currentCharge,
+        targetCharge,
+        time,
+        estimatedTime,
+        chargingPower
+      );
+      realisticChargingLevels.push(realisticLevel);
+    }
+
+    // Update chart data
+    this.chargingChart.data.labels = timePoints.map((t) => `${t} min`);
+    this.chargingChart.data.datasets[0].data = realisticChargingLevels;
+    this.chargingChart.data.datasets[1].data = linearChargingLevels;
+
+    this.chargingChart.update();
+  }
+
+  calculateRealisticChargingLevel(
+    currentCharge,
+    targetCharge,
+    time,
+    estimatedTime,
+    chargingPower
+  ) {
+    // Realistic charging curve that accounts for:
+    // 1. Slower charging at higher battery levels (above 80%)
+    // 2. Initial slower charging phase
+    // 3. Temperature effects (simplified)
+
+    const chargeRange = targetCharge - currentCharge;
+    const progress = Math.min(time / estimatedTime, 1);
+
+    // Base charging curve (S-curve)
+    let chargingProgress;
+
+    if (progress <= 0.1) {
+      // Initial slow phase (0-10% of time)
+      chargingProgress = 0.5 * Math.pow(progress / 0.1, 2);
+    } else if (progress <= 0.8) {
+      // Fast charging phase (10-80% of time)
+      const fastProgress = (progress - 0.1) / 0.7;
+      chargingProgress = 0.05 + 0.7 * fastProgress;
+    } else {
+      // Slower charging at high levels (80-100% of time)
+      const slowProgress = (progress - 0.8) / 0.2;
+      chargingProgress = 0.75 + 0.2 * Math.pow(slowProgress, 0.5);
+    }
+
+    // Apply power-dependent adjustments
+    let powerFactor = 1;
+    if (chargingPower <= 3.7) {
+      // Very slow charging (household outlet)
+      powerFactor = 0.8;
+    } else if (chargingPower <= 11) {
+      // AC charging
+      powerFactor = 0.9;
+    } else if (chargingPower >= 150) {
+      // High power DC charging - more aggressive curve
+      powerFactor = 1.1;
+    }
+
+    // Apply temperature simulation (simplified)
+    const temperatureFactor = 0.95 + Math.random() * 0.1; // Random variation
+
+    const adjustedProgress = Math.min(
+      chargingProgress * powerFactor * temperatureFactor,
+      1
+    );
+    const realisticLevel = currentCharge + chargeRange * adjustedProgress;
+
+    return Math.min(realisticLevel, targetCharge);
   }
 }
 

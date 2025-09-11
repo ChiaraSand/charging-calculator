@@ -185,6 +185,38 @@
           </div>
         </section>
 
+        <!-- Charging Level Graph Section -->
+        <section class="graph-section">
+          <div class="card">
+            <h2><i class="fas fa-chart-line"></i> Ladeverlauf</h2>
+            <div class="graph-container">
+              <div class="graph-info">
+                <p class="graph-description">
+                  Realistische Darstellung des Ladeverlaufs basierend auf
+                  Batteriekapazität und Ladeleistung
+                </p>
+              </div>
+              <div class="chart-wrapper">
+                <canvas
+                  id="chargingLevelChart"
+                  width="800"
+                  height="400"
+                ></canvas>
+              </div>
+              <div class="graph-legend">
+                <div class="legend-item">
+                  <div class="legend-color" style="background: #2563eb"></div>
+                  <span>Ladeverlauf (realistisch)</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color" style="background: #10b981"></div>
+                  <span>Lineare Schätzung</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Provider Filter Section -->
         <section class="filter-section">
           <div class="card">
@@ -304,6 +336,7 @@
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
       // FIXME
       $(function () {
