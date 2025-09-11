@@ -6,6 +6,8 @@ class ChargingCalculator {
     this.selectedConnectors = new Set();
     this.mapsManager = new GoogleMapsManager(true); // false to disable map
     this.chargingChart = null;
+    this.vehicleCurves = new VehicleChargingCurves();
+    this.selectedVehicle = "renault-5-e-tech-52kwh"; // Default vehicle
 
     this.init();
   }
@@ -68,6 +70,11 @@ class ChargingCalculator {
     document
       .getElementById("chargingPower")
       .addEventListener("change", () => this.updateCalculations());
+    document.getElementById("vehicleSelect").addEventListener("change", (e) => {
+      this.selectedVehicle = e.target.value;
+      this.updateCalculations();
+      this.updateChargingChart();
+    });
     document
       .getElementById("startTime")
       .addEventListener("change", () => this.updateCalculations());
@@ -82,6 +89,9 @@ class ChargingCalculator {
         this.clearInput(targetId);
       });
     });
+
+    // Legend toggle functionality
+    this.setupLegendToggles();
 
     // Clear all button
     document.getElementById("clearAll").addEventListener("click", () => {
@@ -302,9 +312,17 @@ class ChargingCalculator {
       targetCharge > currentCharge &&
       chargingPower > 0
     ) {
-      const energyToCharge =
-        (batteryCapacity * (targetCharge - currentCharge)) / 100;
-      const estimatedTime = (energyToCharge / chargingPower) * 60; // in minutes
+      // Use vehicle-specific charging curves for more accurate calculation
+      const chargingResult = this.vehicleCurves.calculateChargingTime(
+        this.selectedVehicle,
+        currentCharge,
+        targetCharge,
+        chargingPower,
+        batteryCapacity
+      );
+
+      const energyToCharge = chargingResult.totalEnergy;
+      const estimatedTime = chargingResult.totalTime; // in minutes
 
       // Calculate total parking time from start and end time
       let totalParkingTime = 0;
@@ -339,6 +357,9 @@ class ChargingCalculator {
         estimatedTimeString;
       document.getElementById("totalParkingTime").textContent =
         totalParkingTimeString;
+
+      // Update charging speed information
+      this.updateChargingSpeedInfo(chargingResult);
     } else {
       // Show placeholder values when inputs are empty or invalid
       document.getElementById("energyToCharge").textContent = "— kWh";
@@ -1098,6 +1119,97 @@ class ChargingCalculator {
             pointBorderWidth: 2,
             borderDash: [5, 5],
           },
+          // Additional charging power curves
+          {
+            label: "400 kW (Ultra-Schnelllader)",
+            data: [],
+            borderColor: "#dc2626",
+            backgroundColor: "rgba(220, 38, 38, 0.1)",
+            borderWidth: 2,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 2,
+            pointHoverRadius: 4,
+            pointBackgroundColor: "#dc2626",
+            pointBorderColor: "#ffffff",
+            pointBorderWidth: 1,
+            borderDash: [3, 3],
+          },
+          {
+            label: "300 kW (Hochleistungslader)",
+            data: [],
+            borderColor: "#f59e0b",
+            backgroundColor: "rgba(245, 158, 11, 0.1)",
+            borderWidth: 2,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 2,
+            pointHoverRadius: 4,
+            pointBackgroundColor: "#f59e0b",
+            pointBorderColor: "#ffffff",
+            pointBorderWidth: 1,
+            borderDash: [3, 3],
+          },
+          {
+            label: "150 kW (Schnelllader)",
+            data: [],
+            borderColor: "#8b5cf6",
+            backgroundColor: "rgba(139, 92, 246, 0.1)",
+            borderWidth: 2,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 2,
+            pointHoverRadius: 4,
+            pointBackgroundColor: "#8b5cf6",
+            pointBorderColor: "#ffffff",
+            pointBorderWidth: 1,
+            borderDash: [3, 3],
+          },
+          {
+            label: "50 kW (DC Schnelllader)",
+            data: [],
+            borderColor: "#06b6d4",
+            backgroundColor: "rgba(6, 182, 212, 0.1)",
+            borderWidth: 2,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 2,
+            pointHoverRadius: 4,
+            pointBackgroundColor: "#06b6d4",
+            pointBorderColor: "#ffffff",
+            pointBorderWidth: 1,
+            borderDash: [3, 3],
+          },
+          {
+            label: "22 kW (AC Wallbox)",
+            data: [],
+            borderColor: "#84cc16",
+            backgroundColor: "rgba(132, 204, 22, 0.1)",
+            borderWidth: 2,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 2,
+            pointHoverRadius: 4,
+            pointBackgroundColor: "#84cc16",
+            pointBorderColor: "#ffffff",
+            pointBorderWidth: 1,
+            borderDash: [3, 3],
+          },
+          {
+            label: "11 kW (AC Wallbox)",
+            data: [],
+            borderColor: "#f97316",
+            backgroundColor: "rgba(249, 115, 22, 0.1)",
+            borderWidth: 2,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 2,
+            pointHoverRadius: 4,
+            pointBackgroundColor: "#f97316",
+            pointBorderColor: "#ffffff",
+            pointBorderWidth: 1,
+            borderDash: [3, 3],
+          },
         ],
       },
       options: {
@@ -1221,14 +1333,25 @@ class ChargingCalculator {
       return;
     }
 
-    const energyToCharge =
-      (batteryCapacity * (targetCharge - currentCharge)) / 100;
-    const estimatedTime = (energyToCharge / chargingPower) * 60; // in minutes
+    // Use vehicle-specific charging curves for more accurate calculation
+    const chargingResult = this.vehicleCurves.calculateChargingTime(
+      this.selectedVehicle,
+      currentCharge,
+      targetCharge,
+      chargingPower,
+      batteryCapacity
+    );
+
+    const estimatedTime = chargingResult.totalTime; // in minutes
 
     // Generate data points for the chart
     const timePoints = [];
     const realisticChargingLevels = [];
     const linearChargingLevels = [];
+
+    // Additional charging power curves
+    const chargingPowers = [400, 300, 150, 50, 22, 11];
+    const additionalCurves = chargingPowers.map(() => []);
 
     // Create time points every 5 minutes or every minute for shorter sessions
     const interval = estimatedTime <= 30 ? 1 : 5;
@@ -1244,21 +1367,41 @@ class ChargingCalculator {
       );
       linearChargingLevels.push(linearLevel);
 
-      // Realistic charging curve
-      const realisticLevel = this.calculateRealisticChargingLevel(
-        currentCharge,
-        targetCharge,
-        time,
-        estimatedTime,
-        chargingPower
-      );
-      realisticChargingLevels.push(realisticLevel);
+      // Vehicle-specific realistic charging curve
+      const progress = Math.min(time / estimatedTime, 1);
+      const batteryLevel =
+        currentCharge + (targetCharge - currentCharge) * progress;
+      realisticChargingLevels.push(batteryLevel);
+
+      // Calculate additional charging power curves
+      chargingPowers.forEach((power, index) => {
+        const additionalResult = this.vehicleCurves.calculateChargingTime(
+          this.selectedVehicle,
+          currentCharge,
+          targetCharge,
+          power,
+          batteryCapacity
+        );
+
+        const additionalProgress = Math.min(
+          time / additionalResult.totalTime,
+          1
+        );
+        const additionalLevel =
+          currentCharge + (targetCharge - currentCharge) * additionalProgress;
+        additionalCurves[index].push(additionalLevel);
+      });
     }
 
     // Update chart data
     this.chargingChart.data.labels = timePoints.map((t) => `${t} min`);
     this.chargingChart.data.datasets[0].data = realisticChargingLevels;
     this.chargingChart.data.datasets[1].data = linearChargingLevels;
+
+    // Update additional charging power curves
+    additionalCurves.forEach((curve, index) => {
+      this.chargingChart.data.datasets[index + 2].data = curve;
+    });
 
     this.chargingChart.update();
   }
@@ -1317,6 +1460,180 @@ class ChargingCalculator {
     const realisticLevel = currentCharge + chargeRange * adjustedProgress;
 
     return Math.min(realisticLevel, targetCharge);
+  }
+
+  /**
+   * Update charging speed information display
+   * @param {Object} chargingResult - Result from vehicle charging curves calculation
+   */
+  updateChargingSpeedInfo(chargingResult) {
+    // Find or create charging speed info element
+    let speedInfoElement = document.getElementById("chargingSpeedInfo");
+    if (!speedInfoElement) {
+      speedInfoElement = document.createElement("div");
+      speedInfoElement.id = "chargingSpeedInfo";
+      speedInfoElement.className = "charging-speed-info";
+      speedInfoElement.style.cssText = `
+        background: #f0f9ff;
+        border: 1px solid #0ea5e9;
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 16px;
+        font-size: 0.875rem;
+      `;
+
+      // Insert after the estimated time element
+      const parentElement = document.getElementById("vehicle-details");
+      parentElement.appendChild(speedInfoElement);
+    }
+
+    const vehicle = this.vehicleCurves.vehicleData[this.selectedVehicle];
+    const vehicleName = vehicle ? vehicle.name : "Allgemeines Fahrzeug";
+
+    // Calculate charging speed statistics
+    const maxPower = Math.max(...chargingResult.powerSteps);
+    const minPower = Math.min(...chargingResult.powerSteps);
+    const avgPower = chargingResult.averagePower;
+
+    speedInfoElement.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <i class="fas fa-car" style="color: #0ea5e9;"></i>
+        <strong>Ladegeschwindigkeit - ${vehicleName}</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; font-size: 0.8rem;">
+        <div>
+          <div style="color: #64748b; font-weight: 500;">Max. Leistung</div>
+          <div style="font-weight: 600; color: #0ea5e9;">${maxPower.toFixed(
+            1
+          )} kW</div>
+        </div>
+        <div>
+          <div style="color: #64748b; font-weight: 500;">Min. Leistung</div>
+          <div style="font-weight: 600; color: #0ea5e9;">${minPower.toFixed(
+            1
+          )} kW</div>
+        </div>
+        <div>
+          <div style="color: #64748b; font-weight: 500;">Ø Leistung</div>
+          <div style="font-weight: 600; color: #0ea5e9;">${avgPower.toFixed(
+            1
+          )} kW</div>
+        </div>
+        <div>
+          <div style="color: #64748b; font-weight: 500;">Effizienz</div>
+          <div style="font-weight: 600; color: #0ea5e9;">${(
+            (avgPower /
+              parseFloat(document.getElementById("chargingPower").value)) *
+            100
+          ).toFixed(0)}%</div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Setup legend toggle functionality
+   */
+  setupLegendToggles() {
+    // Individual legend item toggles
+    document.querySelectorAll(".legend-toggle").forEach((button) => {
+      button.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const datasetIndex = parseInt(button.dataset.dataset);
+        this.toggleDataset(datasetIndex);
+      });
+    });
+
+    // Legend item clicks (alternative to button)
+    document.querySelectorAll(".legend-item").forEach((item) => {
+      item.addEventListener("click", (e) => {
+        if (!e.target.closest(".legend-toggle")) {
+          const datasetIndex = parseInt(item.dataset.dataset);
+          this.toggleDataset(datasetIndex);
+        }
+      });
+    });
+
+    // Show all curves button
+    document.getElementById("showAllCurves").addEventListener("click", () => {
+      this.showAllDatasets();
+    });
+
+    // Hide all curves button
+    document.getElementById("hideAllCurves").addEventListener("click", () => {
+      this.hideAllDatasets();
+    });
+  }
+
+  /**
+   * Toggle a specific dataset visibility
+   * @param {number} datasetIndex - Index of the dataset to toggle
+   */
+  toggleDataset(datasetIndex) {
+    if (!this.chargingChart) return;
+
+    const dataset = this.chargingChart.data.datasets[datasetIndex];
+    const legendItem = document.querySelector(
+      `[data-dataset="${datasetIndex}"]`
+    );
+
+    if (dataset && legendItem) {
+      // Toggle dataset visibility
+      dataset.hidden = !dataset.hidden;
+
+      // Update legend item appearance
+      if (dataset.hidden) {
+        legendItem.classList.add("hidden");
+      } else {
+        legendItem.classList.remove("hidden");
+      }
+
+      // Update chart
+      this.chargingChart.update();
+    }
+  }
+
+  /**
+   * Show all datasets
+   */
+  showAllDatasets() {
+    if (!this.chargingChart) return;
+
+    this.chargingChart.data.datasets.forEach((dataset, index) => {
+      dataset.hidden = false;
+      const legendItem = document.querySelector(`[data-dataset="${index}"]`);
+      if (legendItem) {
+        legendItem.classList.remove("hidden");
+      }
+    });
+
+    this.chargingChart.update();
+  }
+
+  /**
+   * Hide all datasets except the first two (realistic and linear)
+   */
+  hideAllDatasets() {
+    if (!this.chargingChart) return;
+
+    this.chargingChart.data.datasets.forEach((dataset, index) => {
+      // Keep the first two datasets (realistic and linear) visible
+      if (index < 2) {
+        dataset.hidden = false;
+        const legendItem = document.querySelector(`[data-dataset="${index}"]`);
+        if (legendItem) {
+          legendItem.classList.remove("hidden");
+        }
+      } else {
+        dataset.hidden = true;
+        const legendItem = document.querySelector(`[data-dataset="${index}"]`);
+        if (legendItem) {
+          legendItem.classList.add("hidden");
+        }
+      }
+    });
+
+    this.chargingChart.update();
   }
 }
 

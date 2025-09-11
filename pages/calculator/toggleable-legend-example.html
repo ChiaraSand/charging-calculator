@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Togglable Chart Legend Example</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .example {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+      }
+      .feature-card {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid #2563eb;
+      }
+      .feature-title {
+        font-weight: bold;
+        color: #2563eb;
+        margin-bottom: 12px;
+        font-size: 1.1rem;
+      }
+      .feature-description {
+        color: #666;
+        line-height: 1.5;
+      }
+      .legend-demo {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      .legend-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .legend-controls {
+        display: flex;
+        gap: 8px;
+      }
+      .btn {
+        padding: 6px 12px;
+        border: 1px solid #d1d5db;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.75rem;
+        transition: all 0.2s ease;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+        border-color: #9ca3af;
+      }
+      .btn-secondary {
+        background: #6b7280;
+        color: white;
+        border-color: #6b7280;
+      }
+      .btn-secondary:hover {
+        background: #4b5563;
+        border-color: #4b5563;
+      }
+      .legend-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 12px;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #1f2937;
+        padding: 8px 12px;
+        border-radius: 6px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+        cursor: pointer;
+      }
+      .legend-item:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+      }
+      .legend-item.hidden {
+        opacity: 0.4;
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+      }
+      .legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+        flex-shrink: 0;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+      .legend-toggle {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: #64748b;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        font-size: 0.75rem;
+      }
+      .legend-toggle:hover {
+        background: #e2e8f0;
+        color: #1f2937;
+      }
+      .legend-item.hidden .legend-toggle {
+        color: #94a3b8;
+      }
+      .benefits {
+        background: #ecfdf5;
+        border: 1px solid #10b981;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      .benefits h3 {
+        color: #059669;
+        margin-top: 0;
+      }
+      .benefits ul {
+        margin: 10px 0;
+        padding-left: 20px;
+      }
+      .benefits li {
+        margin: 8px 0;
+        color: #065f46;
+      }
+      .interaction-demo {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      .interaction-demo h4 {
+        color: #d97706;
+        margin-top: 0;
+      }
+      .code-example {
+        background: #1f2937;
+        color: #f9fafb;
+        padding: 16px;
+        border-radius: 6px;
+        font-family: "Courier New", monospace;
+        font-size: 0.875rem;
+        margin: 12px 0;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Togglable Chart Legend</h1>
+    <p>
+      The charging calculator now features an interactive, togglable legend that
+      allows users to show or hide individual charging power curves on the
+      chart.
+    </p>
+
+    <div class="example">
+      <h2>Interactive Legend Features</h2>
+      <p>
+        The enhanced legend provides multiple ways to control chart visibility:
+      </p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-title">Individual Toggle</div>
+          <div class="feature-description">
+            Click on any legend item or its toggle button to show/hide that
+            specific charging curve. Perfect for focusing on specific charging
+            scenarios.
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-title">Bulk Controls</div>
+          <div class="feature-description">
+            Use "Alle anzeigen" to show all curves or "Alle ausblenden" to hide
+            comparison curves while keeping the main realistic and linear curves
+            visible.
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-title">Visual Feedback</div>
+          <div class="feature-description">
+            Hidden curves are visually dimmed in the legend, and the chart
+            updates instantly to reflect your selections. Eye icons change to
+            indicate visibility state.
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-title">Responsive Design</div>
+          <div class="feature-description">
+            The legend adapts to different screen sizes, with mobile-friendly
+            controls and optimized layout for tablets and phones.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend-demo">
+      <h3>Legend Demo</h3>
+      <p>Try interacting with the legend below:</p>
+
+      <div class="legend-header">
+        <h4>Ladekurven anzeigen/ausblenden</h4>
+        <div class="legend-controls">
+          <button type="button" class="btn btn-secondary" onclick="showAll()">
+            <i class="fas fa-eye"></i> Alle anzeigen
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="hideAll()">
+            <i class="fas fa-eye-slash"></i> Alle ausblenden
+          </button>
+        </div>
+      </div>
+      <div class="legend-items">
+        <div class="legend-item active" data-dataset="0">
+          <div class="legend-color" style="background: #2563eb"></div>
+          <span>Ladeverlauf (realistisch)</span>
+          <button type="button" class="legend-toggle" onclick="toggleItem(0)">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <div class="legend-item active" data-dataset="1">
+          <div class="legend-color" style="background: #10b981"></div>
+          <span>Lineare Schätzung</span>
+          <button type="button" class="legend-toggle" onclick="toggleItem(1)">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <div class="legend-item active" data-dataset="2">
+          <div class="legend-color" style="background: #dc2626"></div>
+          <span>400 kW (Ultra-Schnelllader)</span>
+          <button type="button" class="legend-toggle" onclick="toggleItem(2)">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <div class="legend-item active" data-dataset="3">
+          <div class="legend-color" style="background: #f59e0b"></div>
+          <span>300 kW (Hochleistungslader)</span>
+          <button type="button" class="legend-toggle" onclick="toggleItem(3)">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <div class="legend-item active" data-dataset="4">
+          <div class="legend-color" style="background: #8b5cf6"></div>
+          <span>150 kW (Schnelllader)</span>
+          <button type="button" class="legend-toggle" onclick="toggleItem(4)">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <div class="legend-item active" data-dataset="5">
+          <div class="legend-color" style="background: #06b6d4"></div>
+          <span>50 kW (DC Schnelllader)</span>
+          <button type="button" class="legend-toggle" onclick="toggleItem(5)">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <div class="legend-item active" data-dataset="6">
+          <div class="legend-color" style="background: #84cc16"></div>
+          <span>22 kW (AC Wallbox)</span>
+          <button type="button" class="legend-toggle" onclick="toggleItem(6)">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <div class="legend-item active" data-dataset="7">
+          <div class="legend-color" style="background: #f97316"></div>
+          <span>11 kW (AC Wallbox)</span>
+          <button type="button" class="legend-toggle" onclick="toggleItem(7)">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="benefits">
+      <h3>Benefits of Togglable Legend</h3>
+      <ul>
+        <li>
+          <strong>Focused Analysis:</strong> Hide irrelevant charging curves to
+          focus on specific scenarios
+        </li>
+        <li>
+          <strong>Clean Visualization:</strong> Reduce chart clutter by showing
+          only the curves you need
+        </li>
+        <li>
+          <strong>Interactive Experience:</strong> Users can explore different
+          charging scenarios dynamically
+        </li>
+        <li>
+          <strong>Better Comparison:</strong> Easily compare 2-3 charging powers
+          without visual interference
+        </li>
+        <li>
+          <strong>Mobile Friendly:</strong> Optimized controls for touch devices
+        </li>
+        <li>
+          <strong>Intuitive Controls:</strong> Clear visual feedback and
+          familiar interaction patterns
+        </li>
+      </ul>
+    </div>
+
+    <div class="interaction-demo">
+      <h4>How to Use the Togglable Legend</h4>
+      <ol>
+        <li>
+          <strong>Individual Toggle:</strong> Click on any legend item or its
+          eye icon to show/hide that specific curve
+        </li>
+        <li>
+          <strong>Show All:</strong> Click "Alle anzeigen" to display all
+          charging curves
+        </li>
+        <li>
+          <strong>Hide All:</strong> Click "Alle ausblenden" to hide comparison
+          curves (keeps main curves visible)
+        </li>
+        <li>
+          <strong>Visual Feedback:</strong> Hidden curves appear dimmed in the
+          legend
+        </li>
+        <li>
+          <strong>Chart Updates:</strong> The chart updates instantly to reflect
+          your selections
+        </li>
+      </ol>
+    </div>
+
+    <div class="example">
+      <h2>Technical Implementation</h2>
+      <p>
+        The togglable legend is implemented using Chart.js dataset visibility
+        controls:
+      </p>
+
+      <div class="code-example">
+        // Toggle individual dataset visibility toggleDataset(datasetIndex) {
+        const dataset = this.chargingChart.data.datasets[datasetIndex]; const
+        legendItem = document.querySelector(`[data-dataset="${datasetIndex}"]`);
+        if (dataset && legendItem) { // Toggle dataset visibility dataset.hidden
+        = !dataset.hidden; // Update legend item appearance if (dataset.hidden)
+        { legendItem.classList.add("hidden"); } else {
+        legendItem.classList.remove("hidden"); } // Update chart
+        this.chargingChart.update(); } }
+      </div>
+
+      <h3>Key Features:</h3>
+      <ul>
+        <li>
+          <strong>Dataset Control:</strong> Uses Chart.js built-in dataset
+          visibility
+        </li>
+        <li>
+          <strong>Event Handling:</strong> Click events for both legend items
+          and toggle buttons
+        </li>
+        <li>
+          <strong>Visual State:</strong> CSS classes for hidden/visible states
+        </li>
+        <li>
+          <strong>Bulk Operations:</strong> Show/hide all datasets with single
+          actions
+        </li>
+        <li>
+          <strong>Responsive Design:</strong> Mobile-optimized layout and
+          controls
+        </li>
+      </ul>
+    </div>
+
+    <div class="example">
+      <h2>Use Cases</h2>
+
+      <h3>Scenario Planning</h3>
+      <p>
+        When planning a trip, you might want to compare only the charging
+        options available on your route:
+      </p>
+      <ul>
+        <li>Show only 150kW and 50kW curves for highway charging</li>
+        <li>Compare 22kW and 11kW for overnight charging</li>
+        <li>Focus on ultra-fast charging (400kW, 300kW) for quick stops</li>
+      </ul>
+
+      <h3>Cost Analysis</h3>
+      <p>Analyze the time-cost trade-off between different charging speeds:</p>
+      <ul>
+        <li>Compare fast charging (150kW+) vs slow charging (22kW)</li>
+        <li>Focus on your vehicle's optimal charging range</li>
+        <li>Plan charging stops based on available infrastructure</li>
+      </ul>
+
+      <h3>Presentation Mode</h3>
+      <p>Create clean, focused charts for presentations or reports:</p>
+      <ul>
+        <li>Show only the most relevant charging curves</li>
+        <li>Highlight specific charging scenarios</li>
+        <li>Create comparison charts for different vehicles</li>
+      </ul>
+    </div>
+
+    <script>
+      // Demo functionality for the legend
+      function toggleItem(index) {
+        const item = document.querySelector(`[data-dataset="${index}"]`);
+        const button = item.querySelector(".legend-toggle");
+        const icon = button.querySelector("i");
+
+        if (item.classList.contains("hidden")) {
+          item.classList.remove("hidden");
+          icon.className = "fas fa-eye";
+        } else {
+          item.classList.add("hidden");
+          icon.className = "fas fa-eye-slash";
+        }
+      }
+
+      function showAll() {
+        document.querySelectorAll(".legend-item").forEach((item) => {
+          item.classList.remove("hidden");
+          const button = item.querySelector(".legend-toggle");
+          const icon = button.querySelector("i");
+          icon.className = "fas fa-eye";
+        });
+      }
+
+      function hideAll() {
+        // Keep first two items (realistic and linear) visible
+        document.querySelectorAll(".legend-item").forEach((item, index) => {
+          if (index < 2) {
+            item.classList.remove("hidden");
+            const button = item.querySelector(".legend-toggle");
+            const icon = button.querySelector("i");
+            icon.className = "fas fa-eye";
+          } else {
+            item.classList.add("hidden");
+            const button = item.querySelector(".legend-toggle");
+            const icon = button.querySelector("i");
+            icon.className = "fas fa-eye-slash";
+          }
+        });
+      }
+
+      // Add click handlers for legend items
+      document.querySelectorAll(".legend-item").forEach((item) => {
+        item.addEventListener("click", (e) => {
+          if (!e.target.closest(".legend-toggle")) {
+            const datasetIndex = parseInt(item.dataset.dataset);
+            toggleItem(datasetIndex);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

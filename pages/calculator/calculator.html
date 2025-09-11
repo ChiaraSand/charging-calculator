@@ -34,7 +34,23 @@
         <!-- Calculator Section -->
         <section class="calculator-section">
           <div class="card">
-            <h2><i class="fas fa-calculator"></i> Ladedauer berechnen</h2>
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                gap: 16px;
+                align-items: center;
+                justify-content: space-between;
+              "
+            >
+              <h2><i class="fas fa-calculator"></i> Ladedauer berechnen</h2>
+              <div class="form-actions">
+                <button type="button" id="clearAll" class="btn btn-secondary">
+                  <i class="fas fa-eraser"></i> Alle Felder leeren
+                </button>
+              </div>
+            </div>
+
             <form id="chargingForm" class="calculator-form">
               <div class="form-grid">
                 <div class="form-group">
@@ -58,6 +74,18 @@
                       <i class="fas fa-times"></i>
                     </button>
                   </div>
+                </div>
+                <div class="form-group">
+                  <label for="vehicleSelect">Fahrzeug-Modell</label>
+                  <select id="vehicleSelect" name="vehicleSelect">
+                    <option value="renault-5-e-tech-52kwh" selected>
+                      Renault 5 E-Tech 52 kWh
+                    </option>
+                    <option value="generic">Allgemeines Fahrzeug</option>
+                  </select>
+                  <small class="form-help"
+                    >Wählen Sie Ihr Fahrzeug für präzise Ladekurven</small
+                  >
                 </div>
 
                 <div class="form-group">
@@ -119,7 +147,7 @@
                     <option value="300">DC 300 kW (Ultra-Schnelllader)</option>
                   </select>
                 </div>
-
+                <!-- <div class="form-group-double"> -->
                 <div class="form-group">
                   <label for="startTime">Parken Beginn</label>
                   <div class="input-with-clear">
@@ -159,7 +187,9 @@
                     </button>
                   </div>
                 </div>
+                <!-- </div> -->
               </div>
+              <div id="vehicle-details"></div>
 
               <div class="calculation-summary">
                 <div class="summary-item">
@@ -175,12 +205,6 @@
                   <span class="value" id="totalParkingTime"></span>
                 </div>
               </div>
-
-              <div class="form-actions">
-                <button type="button" id="clearAll" class="btn btn-secondary">
-                  <i class="fas fa-eraser"></i> Alle Felder leeren
-                </button>
-              </div>
             </form>
           </div>
         </section>
@@ -193,7 +217,9 @@
               <div class="graph-info">
                 <p class="graph-description">
                   Realistische Darstellung des Ladeverlaufs basierend auf
-                  Batteriekapazität und Ladeleistung
+                  Batteriekapazität und Ladeleistung. Die Grafik zeigt
+                  verschiedene Ladeleistungen im Vergleich - von der
+                  Haushaltssteckdose bis zum Ultra-Schnelllader.
                 </p>
               </div>
               <div class="chart-wrapper">
@@ -204,13 +230,114 @@
                 ></canvas>
               </div>
               <div class="graph-legend">
-                <div class="legend-item">
-                  <div class="legend-color" style="background: #2563eb"></div>
-                  <span>Ladeverlauf (realistisch)</span>
+                <div class="legend-header">
+                  <h4>Ladekurven anzeigen/ausblenden</h4>
+                  <div class="legend-controls">
+                    <button
+                      type="button"
+                      id="showAllCurves"
+                      class="btn btn-sm btn-secondary"
+                    >
+                      <i class="fas fa-eye"></i> Alle anzeigen
+                    </button>
+                    <button
+                      type="button"
+                      id="hideAllCurves"
+                      class="btn btn-sm btn-secondary"
+                    >
+                      <i class="fas fa-eye-slash"></i> Alle ausblenden
+                    </button>
+                  </div>
                 </div>
-                <div class="legend-item">
-                  <div class="legend-color" style="background: #10b981"></div>
-                  <span>Lineare Schätzung</span>
+                <div class="legend-items">
+                  <div class="legend-item active" data-dataset="0">
+                    <div class="legend-color" style="background: #2563eb"></div>
+                    <span>Ladeverlauf (realistisch)</span>
+                    <button
+                      type="button"
+                      class="legend-toggle"
+                      data-dataset="0"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+                  <div class="legend-item active" data-dataset="1">
+                    <div class="legend-color" style="background: #10b981"></div>
+                    <span>Lineare Schätzung</span>
+                    <button
+                      type="button"
+                      class="legend-toggle"
+                      data-dataset="1"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+                  <div class="legend-item active" data-dataset="2">
+                    <div class="legend-color" style="background: #dc2626"></div>
+                    <span>400 kW (Ultra-Schnelllader)</span>
+                    <button
+                      type="button"
+                      class="legend-toggle"
+                      data-dataset="2"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+                  <div class="legend-item active" data-dataset="3">
+                    <div class="legend-color" style="background: #f59e0b"></div>
+                    <span>300 kW (Hochleistungslader)</span>
+                    <button
+                      type="button"
+                      class="legend-toggle"
+                      data-dataset="3"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+                  <div class="legend-item active" data-dataset="4">
+                    <div class="legend-color" style="background: #8b5cf6"></div>
+                    <span>150 kW (Schnelllader)</span>
+                    <button
+                      type="button"
+                      class="legend-toggle"
+                      data-dataset="4"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+                  <div class="legend-item active" data-dataset="5">
+                    <div class="legend-color" style="background: #06b6d4"></div>
+                    <span>50 kW (DC Schnelllader)</span>
+                    <button
+                      type="button"
+                      class="legend-toggle"
+                      data-dataset="5"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+                  <div class="legend-item active" data-dataset="6">
+                    <div class="legend-color" style="background: #84cc16"></div>
+                    <span>22 kW (AC Wallbox)</span>
+                    <button
+                      type="button"
+                      class="legend-toggle"
+                      data-dataset="6"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+                  <div class="legend-item active" data-dataset="7">
+                    <div class="legend-color" style="background: #f97316"></div>
+                    <span>11 kW (AC Wallbox)</span>
+                    <button
+                      type="button"
+                      class="legend-toggle"
+                      data-dataset="7"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -346,6 +473,7 @@
     <!-- <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places,marker"></script> -->
 
     <script src="TariffClasses.js"></script>
+    <script src="VehicleChargingCurves.js"></script>
     <script src="GoogleMapsManager.js"></script>
     <script src="calculator.js"></script>
   </body>

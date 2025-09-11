@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Renault 5 E-Tech Charging Speed Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --primary-color: #2563eb;
+        --primary-hover: #1d4ed8;
+        --secondary-color: #64748b;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --error-color: #ef4444;
+        --background-color: #f8fafc;
+        --card-background: #ffffff;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --border-color: #e2e8f0;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1),
+          0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+          0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --border-radius: 12px;
+        --transition: all 0.2s ease-in-out;
+      }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: var(--text-primary);
+        line-height: 1.6;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 32px;
+        color: white;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .header p {
+        font-size: 1.125rem;
+        opacity: 0.9;
+      }
+
+      .card {
+        background: var(--card-background);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-lg);
+        padding: 32px;
+        margin-bottom: 32px;
+      }
+
+      .card h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .chart-container {
+        position: relative;
+        height: 500px;
+        margin: 24px 0;
+      }
+
+      .chart-info {
+        background: #f0f9ff;
+        border: 1px solid #0ea5e9;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 24px;
+      }
+
+      .chart-info h3 {
+        color: #0c4a6e;
+        margin-bottom: 8px;
+        font-size: 1.1rem;
+      }
+
+      .chart-info p {
+        color: #0369a1;
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .graph-legend {
+        margin-top: 24px;
+        padding: 20px;
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .legend-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .legend-header h4 {
+        margin: 0;
+        font-size: 1rem;
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+
+      .legend-controls {
+        display: flex;
+        gap: 8px;
+      }
+
+      .btn {
+        padding: 8px 16px;
+        border: 1px solid #d1d5db;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .btn:hover {
+        background: #f3f4f6;
+        border-color: #9ca3af;
+      }
+
+      .btn-secondary {
+        background: #6b7280;
+        color: white;
+        border-color: #6b7280;
+      }
+
+      .btn-secondary:hover {
+        background: #4b5563;
+        border-color: #4b5563;
+      }
+
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+      }
+
+      .legend-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 12px;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        padding: 8px 12px;
+        border-radius: 6px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+        cursor: pointer;
+      }
+
+      .legend-item:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+      }
+
+      .legend-item.hidden {
+        opacity: 0.4;
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+      }
+
+      .legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+        flex-shrink: 0;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      .legend-toggle {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: #64748b;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        font-size: 0.75rem;
+      }
+
+      .legend-toggle:hover {
+        background: #e2e8f0;
+        color: var(--text-primary);
+      }
+
+      .legend-item.hidden .legend-toggle {
+        color: #94a3b8;
+      }
+
+      .legend-item.hidden .legend-toggle i:before {
+        content: "\f070"; /* fa-eye-slash */
+      }
+
+      .vehicle-info {
+        background: #f0fdf4;
+        border: 1px solid #22c55e;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 24px;
+      }
+
+      .vehicle-info h3 {
+        color: #15803d;
+        margin-bottom: 12px;
+        font-size: 1.2rem;
+      }
+
+      .vehicle-specs {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-top: 12px;
+      }
+
+      .spec-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .spec-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+      }
+
+      .spec-value {
+        font-size: 1.125rem;
+        color: #15803d;
+        font-weight: 600;
+      }
+
+      .charging-data {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 24px;
+      }
+
+      .charging-data h3 {
+        color: #d97706;
+        margin-bottom: 12px;
+        font-size: 1.1rem;
+      }
+
+      .data-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+        margin-top: 12px;
+      }
+
+      .data-item {
+        text-align: center;
+        padding: 12px;
+        background: white;
+        border-radius: 6px;
+        border: 1px solid #fbbf24;
+      }
+
+      .data-label {
+        font-size: 0.75rem;
+        color: #92400e;
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+
+      .data-value {
+        font-size: 1.25rem;
+        color: #d97706;
+        font-weight: 700;
+      }
+
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 2rem;
+        }
+
+        .card {
+          padding: 20px;
+        }
+
+        .chart-container {
+          height: 400px;
+        }
+
+        .legend-header {
+          flex-direction: column;
+          gap: 12px;
+          align-items: flex-start;
+        }
+
+        .legend-controls {
+          width: 100%;
+          justify-content: center;
+        }
+
+        .legend-items {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+
+        .vehicle-specs,
+        .data-grid {
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1><i class="fas fa-charging-station"></i> Renault 5 E-Tech</h1>
+        <p>Ladegeschwindigkeits-Kurve basierend auf realen Messdaten</p>
+      </div>
+
+      <div class="card">
+        <h2><i class="fas fa-chart-line"></i> Ladeverlauf</h2>
+
+        <div class="vehicle-info">
+          <h3><i class="fas fa-car"></i> Fahrzeugdaten</h3>
+          <div class="vehicle-specs">
+            <div class="spec-item">
+              <div class="spec-label">Batteriekapazität</div>
+              <div class="spec-value">52 kWh</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Max. Ladeleistung</div>
+              <div class="spec-value">100 kW</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Steckertyp</div>
+              <div class="spec-value">CCS</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Empfohlener Lader</div>
+              <div class="spec-value">150+ kW</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-info">
+          <h3><i class="fas fa-info-circle"></i> Über diese Grafik</h3>
+          <p>
+            Diese Grafik zeigt die tatsächliche Ladegeschwindigkeit des Renault
+            5 E-Tech basierend auf realen Messdaten. Die Kurve zeigt, wie sich
+            die Ladeleistung mit steigendem Batterieladestand verändert - von
+            maximaler Leistung bei niedrigen Ladeständen bis hin zu reduzierter
+            Leistung bei höheren Ladeständen.
+          </p>
+        </div>
+
+        <div class="chart-container">
+          <canvas id="chargingChart"></canvas>
+        </div>
+
+        <div class="graph-legend">
+          <div class="legend-header">
+            <h4>Ladekurven anzeigen/ausblenden</h4>
+            <div class="legend-controls">
+              <button
+                type="button"
+                id="showAllCurves"
+                class="btn btn-secondary btn-sm"
+              >
+                <i class="fas fa-eye"></i> Alle anzeigen
+              </button>
+              <button
+                type="button"
+                id="hideAllCurves"
+                class="btn btn-secondary btn-sm"
+              >
+                <i class="fas fa-eye-slash"></i> Alle ausblenden
+              </button>
+            </div>
+          </div>
+          <div class="legend-items">
+            <div class="legend-item active" data-dataset="0">
+              <div class="legend-color" style="background: #2563eb"></div>
+              <span>400 kW Lader (Originaldaten)</span>
+              <button type="button" class="legend-toggle" data-dataset="0">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <div class="legend-item active" data-dataset="1">
+              <div class="legend-color" style="background: #dc2626"></div>
+              <span>300 kW Lader</span>
+              <button type="button" class="legend-toggle" data-dataset="1">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <div class="legend-item active" data-dataset="2">
+              <div class="legend-color" style="background: #f59e0b"></div>
+              <span>150 kW Lader</span>
+              <button type="button" class="legend-toggle" data-dataset="2">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <div class="legend-item active" data-dataset="3">
+              <div class="legend-color" style="background: #8b5cf6"></div>
+              <span>100 kW Lader</span>
+              <button type="button" class="legend-toggle" data-dataset="3">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <div class="legend-item active" data-dataset="4">
+              <div class="legend-color" style="background: #06b6d4"></div>
+              <span>50 kW Lader</span>
+              <button type="button" class="legend-toggle" data-dataset="4">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <div class="legend-item active" data-dataset="5">
+              <div class="legend-color" style="background: #84cc16"></div>
+              <span>22 kW AC Wallbox</span>
+              <button type="button" class="legend-toggle" data-dataset="5">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <div class="legend-item active" data-dataset="6">
+              <div class="legend-color" style="background: #f97316"></div>
+              <span>11 kW AC Wallbox</span>
+              <button type="button" class="legend-toggle" data-dataset="6">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><i class="fas fa-chart-bar"></i> Ladezeiten im Vergleich</h2>
+
+        <div class="charging-data">
+          <h3><i class="fas fa-clock"></i> 20% → 80% Ladezeit</h3>
+          <div class="data-grid">
+            <div class="data-item">
+              <div class="data-label">400 kW</div>
+              <div class="data-value">~18 min</div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">300 kW</div>
+              <div class="data-value">~20 min</div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">150 kW</div>
+              <div class="data-value">~25 min</div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">100 kW</div>
+              <div class="data-value">~28 min</div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">50 kW</div>
+              <div class="data-value">~45 min</div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">22 kW</div>
+              <div class="data-value">~2.5h</div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">11 kW</div>
+              <div class="data-value">~5h</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Renault 5 E-Tech charging curve data (400kW charger)
+      const renault5ChargingData = {
+        14: 100.39,
+        15: 100.56,
+        16: 100.96,
+        17: 100.93,
+        18: 100.93,
+        19: 100.96,
+        20: 100.89,
+        21: 100.89,
+        22: 100.95,
+        23: 100.88,
+        24: 100.95,
+        25: 100.95,
+        26: 100.59,
+        27: 99.68,
+        28: 98.28,
+        29: 97.45,
+        30: 96.05,
+        31: 95.35,
+        32: 94.56,
+        33: 93.61,
+        34: 93.16,
+        35: 92.5,
+        36: 91.76,
+        37: 91.46,
+        38: 91.14,
+        39: 90.57,
+        40: 88.88,
+        41: 87.86,
+        42: 86.94,
+        43: 84.93,
+        44: 83.89,
+        45: 82.51,
+        46: 81.66,
+        47: 80.24,
+        48: 78.74,
+        49: 76.19,
+        50: 75.86,
+        51: 76.19,
+        52: 76.2,
+        53: 75.43,
+        54: 73.26,
+        55: 71.48,
+        56: 70.56,
+        57: 69.34,
+        58: 67.97,
+        59: 66.54,
+        60: 65.65,
+        61: 65.5,
+        62: 65.75,
+        63: 64.07,
+        64: 61.15,
+        65: 60.56,
+        66: 60.44,
+        67: 60.58,
+        68: 60.87,
+        69: 60.83,
+        70: 59.69,
+        71: 58.76,
+        72: 57.37,
+        73: 56.39,
+        74: 55.78,
+        75: 55.05,
+        76: 54.17,
+        77: 53.02,
+        78: 52.14,
+        79: 51.1,
+        80: 41.85,
+        81: 39.94,
+        82: 37.66,
+        83: 36.2,
+        84: 33.76,
+        85: 33.43,
+        86: 33.64,
+        87: 34.13,
+        88: 33.25,
+        89: 32.7,
+        90: 32.03,
+        91: 31.95,
+        92: 31.98,
+        93: 28.39,
+        94: 22.62,
+        95: 18.64,
+        96: 18.39,
+        97: 14.62,
+      };
+
+      // Calculate charging curves for different power levels
+      function calculateChargingCurve(chargerPower, batteryCapacity = 52) {
+        const curve = [];
+        const timePoints = [];
+        let totalTime = 0;
+
+        // Calculate charging from 14% to 97% (available data range)
+        for (let soc = 14; soc <= 97; soc += 1) {
+          // Get actual charging power at this SOC
+          let actualPower = renault5ChargingData[soc] || 0;
+
+          // Limit by charger power
+          actualPower = Math.min(actualPower, chargerPower);
+
+          // Calculate time for 1% charge
+          const energyFor1Percent = (batteryCapacity * 1) / 100; // kWh
+          const timeFor1Percent = (energyFor1Percent / actualPower) * 60; // minutes
+
+          totalTime += timeFor1Percent;
+          timePoints.push(totalTime);
+          curve.push(soc);
+        }
+
+        return { curve, timePoints };
+      }
+
+      // Generate chart data
+      const chargingPowers = [400, 300, 150, 100, 50, 22, 11];
+      const datasets = chargingPowers.map((power, index) => {
+        const { curve, timePoints } = calculateChargingCurve(power);
+
+        return {
+          label: `${power} kW ${power >= 50 ? "DC" : "AC"} ${
+            power >= 150 ? "Schnelllader" : power >= 50 ? "Lader" : "Wallbox"
+          }`,
+          data: curve,
+          borderColor: [
+            "#2563eb", // 400kW - blue
+            "#dc2626", // 300kW - red
+            "#f59e0b", // 150kW - orange
+            "#8b5cf6", // 100kW - purple
+            "#06b6d4", // 50kW - cyan
+            "#84cc16", // 22kW - green
+            "#f97316", // 11kW - orange
+          ][index],
+          backgroundColor: [
+            "rgba(37, 99, 235, 0.1)",
+            "rgba(220, 38, 38, 0.1)",
+            "rgba(245, 158, 11, 0.1)",
+            "rgba(139, 92, 246, 0.1)",
+            "rgba(6, 182, 212, 0.1)",
+            "rgba(132, 204, 22, 0.1)",
+            "rgba(249, 115, 22, 0.1)",
+          ][index],
+          borderWidth: power === 400 ? 3 : 2,
+          fill: power === 400,
+          tension: 0.4,
+          pointRadius: power === 400 ? 4 : 2,
+          pointHoverRadius: power === 400 ? 6 : 4,
+          pointBackgroundColor: [
+            "#2563eb",
+            "#dc2626",
+            "#f59e0b",
+            "#8b5cf6",
+            "#06b6d4",
+            "#84cc16",
+            "#f97316",
+          ][index],
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 2,
+          hidden: false,
+        };
+      });
+
+      // Create chart
+      const ctx = document.getElementById("chargingChart").getContext("2d");
+      const chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: Array.from({ length: 84 }, (_, i) => `${i + 14}%`),
+          datasets: datasets,
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: "Renault 5 E-Tech - Ladegeschwindigkeit vs. Batterieladestand",
+              font: {
+                size: 16,
+                weight: "bold",
+              },
+              color: "#1e293b",
+            },
+            legend: {
+              display: false, // We use custom legend
+            },
+            tooltip: {
+              mode: "index",
+              intersect: false,
+              callbacks: {
+                title: function (context) {
+                  return `Batterieladestand: ${context[0].label}`;
+                },
+                label: function (context) {
+                  const soc = parseInt(context.label);
+                  const power = renault5ChargingData[soc] || 0;
+                  const actualPower = Math.min(
+                    power,
+                    chargingPowers[context.datasetIndex]
+                  );
+                  return `${context.dataset.label}: ${actualPower.toFixed(
+                    1
+                  )} kW`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "Batterieladestand (SoC)",
+                font: {
+                  size: 14,
+                  weight: "bold",
+                },
+                color: "#64748b",
+              },
+              grid: {
+                color: "#e2e8f0",
+              },
+              ticks: {
+                color: "#64748b",
+                maxTicksLimit: 10,
+              },
+            },
+            y: {
+              title: {
+                display: true,
+                text: "Ladeleistung (kW)",
+                font: {
+                  size: 14,
+                  weight: "bold",
+                },
+                color: "#64748b",
+              },
+              grid: {
+                color: "#e2e8f0",
+              },
+              ticks: {
+                color: "#64748b",
+              },
+              beginAtZero: true,
+            },
+          },
+          interaction: {
+            mode: "nearest",
+            axis: "x",
+            intersect: false,
+          },
+        },
+      });
+
+      // Legend toggle functionality
+      function setupLegendToggles() {
+        // Individual legend item toggles
+        document.querySelectorAll(".legend-toggle").forEach((button) => {
+          button.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const datasetIndex = parseInt(button.dataset.dataset);
+            toggleDataset(datasetIndex);
+          });
+        });
+
+        // Legend item clicks
+        document.querySelectorAll(".legend-item").forEach((item) => {
+          item.addEventListener("click", (e) => {
+            if (!e.target.closest(".legend-toggle")) {
+              const datasetIndex = parseInt(item.dataset.dataset);
+              toggleDataset(datasetIndex);
+            }
+          });
+        });
+
+        // Show all curves button
+        document
+          .getElementById("showAllCurves")
+          .addEventListener("click", () => {
+            showAllDatasets();
+          });
+
+        // Hide all curves button
+        document
+          .getElementById("hideAllCurves")
+          .addEventListener("click", () => {
+            hideAllDatasets();
+          });
+      }
+
+      function toggleDataset(datasetIndex) {
+        const dataset = chart.data.datasets[datasetIndex];
+        const legendItem = document.querySelector(
+          `[data-dataset="${datasetIndex}"]`
+        );
+
+        if (dataset && legendItem) {
+          dataset.hidden = !dataset.hidden;
+
+          if (dataset.hidden) {
+            legendItem.classList.add("hidden");
+          } else {
+            legendItem.classList.remove("hidden");
+          }
+
+          chart.update();
+        }
+      }
+
+      function showAllDatasets() {
+        chart.data.datasets.forEach((dataset, index) => {
+          dataset.hidden = false;
+          const legendItem = document.querySelector(
+            `[data-dataset="${index}"]`
+          );
+          if (legendItem) {
+            legendItem.classList.remove("hidden");
+          }
+        });
+        chart.update();
+      }
+
+      function hideAllDatasets() {
+        chart.data.datasets.forEach((dataset, index) => {
+          if (index === 0) {
+            // Keep 400kW visible
+            dataset.hidden = false;
+            const legendItem = document.querySelector(
+              `[data-dataset="${index}"]`
+            );
+            if (legendItem) {
+              legendItem.classList.remove("hidden");
+            }
+          } else {
+            dataset.hidden = true;
+            const legendItem = document.querySelector(
+              `[data-dataset="${index}"]`
+            );
+            if (legendItem) {
+              legendItem.classList.add("hidden");
+            }
+          }
+        });
+        chart.update();
+      }
+
+      // Initialize legend toggles
+      setupLegendToggles();
+    </script>
+  </body>
+</html>
