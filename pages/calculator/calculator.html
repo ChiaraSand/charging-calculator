@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-Auto Ladekosten Rechner & Tarifvergleich</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <h1>
+            <i class="fas fa-charging-station"></i> E-Auto Ladekosten Rechner
+          </h1>
+          <p class="subtitle">
+            Vergleiche Ladetarife und finde die günstigsten Ladesäulen in deiner
+            Nähe
+          </p>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Calculator Section -->
+        <section class="calculator-section">
+          <div class="card">
+            <h2><i class="fas fa-calculator"></i> Ladedauer berechnen</h2>
+            <form id="chargingForm" class="calculator-form">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="batteryCapacity">Batteriekapazität (kWh)</label>
+                  <div class="input-with-clear">
+                    <input
+                      type="number"
+                      id="batteryCapacity"
+                      name="batteryCapacity"
+                      value="52"
+                      min="1"
+                      max="200"
+                      step="0.1"
+                    />
+                    <button
+                      type="button"
+                      class="clear-btn"
+                      data-target="batteryCapacity"
+                      title="Löschen"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="currentCharge">Aktueller Ladestand (%)</label>
+                  <div class="range-with-clear">
+                    <input
+                      type="range"
+                      id="currentCharge"
+                      name="currentCharge"
+                      value="20"
+                      min="0"
+                      max="100"
+                      step="1"
+                    />
+                    <span class="range-value" id="currentChargeValue">20%</span>
+                    <button
+                      type="button"
+                      class="clear-btn range-clear-btn"
+                      data-target="currentCharge"
+                      title="Löschen"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="targetCharge">Ziel-Ladestand (%)</label>
+                  <div class="range-with-clear">
+                    <input
+                      type="range"
+                      id="targetCharge"
+                      name="targetCharge"
+                      value="80"
+                      min="0"
+                      max="100"
+                      step="1"
+                    />
+                    <span class="range-value" id="targetChargeValue">80%</span>
+                    <button
+                      type="button"
+                      class="clear-btn range-clear-btn"
+                      data-target="targetCharge"
+                      title="Löschen"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="chargingPower">Ladeleistung (kW)</label>
+                  <select id="chargingPower" name="chargingPower">
+                    <option value="3.7">AC 3,7 kW (Haushaltssteckdose)</option>
+                    <option value="11">AC 11 kW (Wallbox)</option>
+                    <option value="22" selected>AC 22 kW (Wallbox)</option>
+                    <option value="50">DC 50 kW (Schnelllader)</option>
+                    <option value="150">DC 150 kW (Hochleistungslader)</option>
+                    <option value="300">DC 300 kW (Ultra-Schnelllader)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="startTime">Parken Beginn</label>
+                  <div class="input-with-clear">
+                    <input
+                      type="time"
+                      id="startTime"
+                      name="startTime"
+                      value="--:--"
+                    />
+                    <button
+                      type="button"
+                      class="clear-btn"
+                      data-target="startTime"
+                      title="Löschen"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="endTime">Parken Ende</label>
+                  <div class="input-with-clear">
+                    <input
+                      type="time"
+                      id="endTime"
+                      name="endTime"
+                      value="--:--"
+                    />
+                    <button
+                      type="button"
+                      class="clear-btn"
+                      data-target="endTime"
+                      title="Löschen"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="calculation-summary">
+                <div class="summary-item">
+                  <span class="label">Zu ladende Energie:</span>
+                  <span class="value" id="energyToCharge"></span>
+                </div>
+                <div class="summary-item">
+                  <span class="label">Geschätzte Ladezeit:</span>
+                  <span class="value" id="estimatedTime"></span>
+                </div>
+                <div class="summary-item">
+                  <span class="label">Gesamte Parkzeit:</span>
+                  <span class="value" id="totalParkingTime"></span>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" id="clearAll" class="btn btn-secondary">
+                  <i class="fas fa-eraser"></i> Alle Felder leeren
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- Provider Filter Section -->
+        <section class="filter-section">
+          <div class="card">
+            <h2><i class="fas fa-filter"></i> Filter</h2>
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-tab="providers">
+                <i class="fas fa-building"></i> Anbieter
+              </button>
+              <button class="filter-tab" data-tab="connectors">
+                <i class="fas fa-plug"></i> Steckertypen
+              </button>
+            </div>
+
+            <!-- Provider Filter Tab -->
+            <div class="filter-content active" id="providers-tab">
+              <div class="provider-filters">
+                <div class="filter-group">
+                  <label>Ladetarife anzeigen:</label>
+                  <div class="checkbox-grid" id="providerCheckboxes">
+                    <!-- Will be populated by JavaScript -->
+                  </div>
+                </div>
+                <div class="filter-actions">
+                  <button
+                    type="button"
+                    id="selectAll"
+                    class="btn btn-secondary"
+                  >
+                    Alle auswählen
+                  </button>
+                  <button
+                    type="button"
+                    id="selectNone"
+                    class="btn btn-secondary"
+                  >
+                    Alle abwählen
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Connector Filter Tab -->
+            <div class="filter-content" id="connectors-tab">
+              <div class="connector-filters">
+                <div class="filter-group">
+                  <label>Steckertypen anzeigen:</label>
+                  <div class="checkbox-grid" id="connectorCheckboxes">
+                    <!-- Will be populated by JavaScript -->
+                  </div>
+                </div>
+                <div class="filter-actions">
+                  <button
+                    type="button"
+                    id="selectAllConnectors"
+                    class="btn btn-secondary"
+                  >
+                    Alle auswählen
+                  </button>
+                  <button
+                    type="button"
+                    id="selectNoConnectors"
+                    class="btn btn-secondary"
+                  >
+                    Alle abwählen
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tariff Comparison Section -->
+        <section class="comparison-section">
+          <div class="card">
+            <h2><i class="fas fa-chart-bar"></i> Tarifvergleich</h2>
+            <div class="table-container">
+              <table id="tariffTable" class="tariff-table">
+                <thead>
+                  <tr>
+                    <th>Anbieter</th>
+                    <!-- <th>Ladeleistung (kW)</th> -->
+                    <th>€/kWh</th>
+                    <!-- <th>Grundgebühr</th> -->
+                    <th>Blocking Fee (Tarif)</th>
+                    <th>
+                      Ladekosten Total <br />
+                      <small>(<span id="pricePerSelectedKwh">kWh</span>)</small>
+                    </th>
+                    <th>Blocking Fee Total</th>
+                    <th>Gesamtkosten</th>
+                    <th>Effektiv €/kWh</th>
+                  </tr>
+                </thead>
+                <tbody id="tariffTableBody">
+                  <tr>
+                    <td colspan="8" style="text-align: center; padding: 2rem">
+                      <i class="fas fa-spinner fa-spin"></i> Lade Tarifdaten...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Map Section -->
+        <div id="maps-section"></div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <p>
+          &copy; 2025 E-Auto Ladekosten Rechner. Daten basieren auf öffentlich
+          verfügbaren Informationen.
+        </p>
+      </footer>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      // FIXME
+      $(function () {
+        $("#maps-section").load("maps.html");
+      });
+    </script>
+    <!-- <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places,marker"></script> -->
+
+    <script src="TariffClasses.js"></script>
+    <script src="GoogleMapsManager.js"></script>
+    <script src="calculator.js"></script>
+  </body>
+</html>

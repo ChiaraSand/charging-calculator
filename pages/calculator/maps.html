@@ -1,0 +1,60 @@
+<section class="map-section">
+  <div class="card">
+    <h2><i class="fas fa-map-marker-alt"></i> Ladesäulen in der Nähe</h2>
+    <div id="noStationsMessage" class="map-warning" style="display: none">
+      <i class="fas fa-info-circle"></i>
+      <p>
+        Keine Ladesäulen in der Nähe gefunden. Versuchen Sie einen anderen
+        Standort oder erweitern Sie den Suchradius.
+      </p>
+    </div>
+    <div id="mapDisabled" class="map-warning">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <p id="mapDisabledMessage">Map disabled.</p>
+    </div>
+    <div id="apiKeyError" class="map-warning" style="display: none">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <p id="apiKeyErrorMessage">Google Maps API key not configured.</p>
+    </div>
+    <div class="map-container" style="display: none">
+      <div id="map" class="map" title="Karte vertikal vergrößern/verkleinern">
+        <div id="mapLoading" class="map-loading">
+          <p id="mapLoadingMessage" style="display: none">
+            <i class="fas fa-spinner fa-spin"></i>
+            Lade Karte und Standort...
+          </p>
+        </div>
+      </div>
+      <div class="map-controls">
+        <button id="locateMe" class="btn btn-primary">
+          <i class="fas fa-location-arrow"></i> Meine Position
+        </button>
+        <button id="refreshStations" class="btn btn-secondary">
+          <i class="fas fa-sync-alt"></i> Aktualisieren
+        </button>
+      </div>
+      <!-- <div class="controls">
+        <select name="types" class="type-select">
+          <option value="">Select a place type</option>
+          <option value="cafe">Cafe</option>
+          <option value="restaurant">Restaurant</option>
+          <option value="electric_vehicle_charging_station">
+            EV charging station
+          </option>
+        </select>
+      </div>
+      <div class="list-container">
+        <gmp-place-search orientation="vertical" selectable>
+          <gmp-place-all-content> </gmp-place-all-content>
+          <gmp-place-nearby-search-request></gmp-place-nearby-search-request>
+        </gmp-place-search>
+      </div>
+      <div id="details-container">
+        <gmp-place-details-compact orientation="horizontal">
+          <gmp-place-details-place-request></gmp-place-details-place-request>
+          <gmp-place-all-content></gmp-place-all-content>
+        </gmp-place-details-compact>
+      </div> -->
+    </div>
+  </div>
+</section>
