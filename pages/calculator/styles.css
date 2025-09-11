@@ -597,6 +597,91 @@ body {
   margin-bottom: 32px;
 }
 
+/* Charging Speed Section Styles */
+.charging-speed-section {
+  margin-bottom: 32px;
+}
+
+.charging-speed-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--background-color);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 150px;
+}
+
+.info-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.info-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Line Chart Styles */
+.c-line-chart {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.line-chart__label-container {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.line-chart__label-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  background: var(--background-color);
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  display: inline-block;
+}
+
+.line-chart__svg-axis {
+  color: var(--text-secondary);
+}
+
+.line-chart__svg-labels text {
+  font-size: 12px;
+  font-weight: 500;
+  fill: var(--text-secondary);
+}
+
+.line-chart__svg-lines path {
+  stroke: var(--primary-color);
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Responsive adjustments for charging speed chart */
+@media (max-width: 768px) {
+  .charging-speed-info {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .info-item {
+    min-width: auto;
+  }
+}
+
 .graph-container {
   display: flex;
   flex-direction: column;
