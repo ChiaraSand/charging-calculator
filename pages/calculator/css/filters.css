@@ -1,0 +1,112 @@
+/* Filter Styles */
+.filter-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.filter-tab {
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.filter-tab:hover {
+  background: #f8fafc;
+  color: var(--text-primary);
+}
+
+.filter-tab.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.filter-tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary-color);
+}
+
+.filter-content {
+  display: none;
+}
+
+.filter-content.active {
+  display: block;
+}
+
+.provider-filters,
+.connector-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.filter-group label {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  display: block;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.checkbox-item:hover {
+  background: #f1f5f9;
+  border-color: var(--primary-color);
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-color);
+}
+
+.checkbox-item label {
+  font-weight: 500;
+  cursor: pointer;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.checkbox-item label small {
+  display: block;
+  margin-top: 2px;
+  font-weight: 400;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}

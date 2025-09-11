@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>E-Auto Ladekosten Rechner & Tarifvergleich</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="css/main.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
@@ -34,15 +34,7 @@
         <!-- Calculator Section -->
         <section class="calculator-section">
           <div class="card">
-            <div
-              style="
-                display: flex;
-                flex-direction: row;
-                gap: 16px;
-                align-items: center;
-                justify-content: space-between;
-              "
-            >
+            <div class="card-header">
               <h2><i class="fas fa-calculator"></i> Ladedauer berechnen</h2>
               <div class="form-actions">
                 <button type="button" id="clearAll" class="btn btn-secondary">
@@ -694,7 +686,7 @@
                 </thead>
                 <tbody id="tariffTableBody">
                   <tr>
-                    <td colspan="8" style="text-align: center; padding: 2rem">
+                    <td colspan="8" class="loading-cell">
                       <i class="fas fa-spinner fa-spin"></i> Lade Tarifdaten...
                     </td>
                   </tr>

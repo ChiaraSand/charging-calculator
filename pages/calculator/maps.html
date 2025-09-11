@@ -4,7 +4,7 @@
       <h2 class="map-section-header-title">
         <i class="fas fa-map-marker-alt"></i> Ladesäulen in der Nähe
       </h2>
-      <div id="noStationsMessage" class="map-warning" style="display: none">
+      <div id="noStationsMessage" class="map-warning hidden">
         <i class="fas fa-info-circle"></i>
         <p>
           Keine Ladesäulen in der Nähe gefunden. Versuchen Sie einen anderen
@@ -19,7 +19,7 @@
         <i class="fa-solid fa-triangle-exclamation"></i>
         <p id="mapErrorMessage">Something went wrong.</p>
       </div>
-      <div id="apiKeyError" class="map-warning" style="display: none">
+      <div id="apiKeyError" class="map-warning hidden">
         <i class="fa-solid fa-triangle-exclamation"></i>
         <p id="apiKeyErrorMessage">Google Maps API key not configured.</p>
       </div>
@@ -27,7 +27,7 @@
     <div class="map-container">
       <div id="map" class="map" title="Karte vertikal vergrößern/verkleinern">
         <div id="mapLoading" class="map-loading">
-          <p id="mapLoadingMessage" style="display: none">
+          <p id="mapLoadingMessage" class="hidden">
             <i class="fas fa-spinner fa-spin"></i>
             Lade Karte und Standort...
           </p>

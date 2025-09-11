@@ -1,0 +1,116 @@
+/* Table Styles */
+.table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.tariff-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.tariff-table th {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 16px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tariff-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+.tariff-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.tariff-table .provider-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tariff-table .charging-type {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.tariff-table .charging-type.ac {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.tariff-table .charging-type.dc {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.tariff-table .price {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tariff-table .total-cost {
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: var(--success-color);
+}
+
+.tariff-table .effective-price {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+/* Custom tariff input styling */
+.custom-tariff-input {
+  width: 80px !important;
+  padding: 4px 6px !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 4px !important;
+  font-size: 0.875rem !important;
+  text-align: center !important;
+  background: white !important;
+  transition: var(--transition) !important;
+}
+
+.custom-tariff-input:focus {
+  outline: none !important;
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1) !important;
+}
+
+.custom-tariff-input:hover {
+  border-color: var(--primary-color) !important;
+}
+
+/* Custom tariff row styling */
+.custom-tariff-row {
+  background-color: #f0f9ff !important;
+  border-bottom: 2px solid var(--primary-color) !important;
+}
+
+.custom-tariff-row td {
+  padding: 12px 8px !important;
+  vertical-align: middle !important;
+}
+
+.custom-tariff-row .provider-name {
+  font-weight: 600 !important;
+  color: var(--primary-color) !important;
+}
+
+.loading-cell {
+  text-align: center;
+  padding: 2rem;
+}
