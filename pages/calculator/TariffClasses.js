@@ -188,7 +188,7 @@ class BlockingFee {
   ) {
     if (this.pricePerMin <= 0) return 0;
 
-    let applicableTime = 0;
+    let applicableMinutes = 0;
     let removedBillableTimeInWindow = 0;
 
     // Apply time-based conditions
@@ -215,27 +215,28 @@ class BlockingFee {
         removedBillableTimeInWindow = 0;
       }
 
-      applicableTime = blockingTimeMinutes - removedBillableTimeInWindow;
+      applicableMinutes = blockingTimeMinutes - removedBillableTimeInWindow;
     }
 
     // Apply duration-based conditions
     else if (this.conditions.durationHours) {
-      const totalTimeHours = (chargingTimeMinutes + blockingTimeMinutes) / 60;
+      const totalTimeHours = blockingTimeMinutes / 60;
       if (!this.conditions.durationHours.isDurationExceeded(totalTimeHours)) {
-        applicableTime = 0;
+        applicableMinutes = 0;
       } else {
-        applicableTime = totalTimeHours - this.conditions.durationHours.from;
+        applicableMinutes =
+          (totalTimeHours - this.conditions.durationHours.from) * 60;
       }
     }
 
     // total blocking time is billed
     else {
-      applicableTime = blockingTimeMinutes;
+      applicableMinutes = blockingTimeMinutes;
     }
 
     // TODO: while charging and while idle
 
-    let fee = applicableTime * this.pricePerMin;
+    let fee = applicableMinutes * this.pricePerMin;
 
     // Apply maximum caps
     if (
@@ -262,25 +263,29 @@ class BlockingFee {
   getBlockingFeeString() {
     let blockingFeeString = "";
     if (this.conditions.daytime) {
+      const icon =
+        this.conditions.daytime.to < this.conditions.daytime.from ? "🌙" : "☀️";
       blockingFeeString =
         this.pricePerMin.toFixed(2) +
-        " €/min<br/>" +
+        " €/min<br/><small><i style='font-weight: normal;'>" +
+        icon +
         this.conditions.daytime.from.split(":")[0] +
         "-" +
         this.conditions.daytime.to.split(":")[0] +
         "h: max " +
         this.conditions.daytime.maxPrice.toFixed(2) +
-        " €";
+        " €</i></small>";
     } else if (this.conditions.durationHours) {
       const details = this.conditions.durationHours;
       blockingFeeString =
+        "<small><i style='font-weight: normal;'>" +
         ">" +
         details.from +
         "h: " +
         this.pricePerMin.toFixed(2) +
-        "€/min<br/>(max " +
+        "€/min<br/>max " +
         details.maxPrice.toFixed(2) +
-        " €)";
+        " €</i></small>";
     } else {
       blockingFeeString =
         this.description + " " + JSON.stringify(this.conditions);

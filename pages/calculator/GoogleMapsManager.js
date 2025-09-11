@@ -86,7 +86,7 @@ class GoogleMapsManager {
   showMapDisabledMessage() {
     const messageElement = document.getElementById("mapDisabled");
     if (messageElement) {
-      messageElement.style.display = "block";
+      messageElement.style.display = "flex";
     }
   }
 
@@ -107,7 +107,7 @@ class GoogleMapsManager {
   hideApiKeyError() {
     const errorElement = document.getElementById("apiKeyError");
     if (errorElement) {
-      errorElement.remove();
+      errorElement.style.display = "none";
     }
   }
 

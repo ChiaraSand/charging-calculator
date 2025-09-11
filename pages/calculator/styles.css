@@ -564,6 +564,15 @@ body {
   box-shadow: var(--shadow-md);
 }
 
+.map-section-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
 .map {
   width: 100%;
   height: 500px;

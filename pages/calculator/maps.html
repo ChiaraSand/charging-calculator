@@ -1,20 +1,22 @@
 <section class="map-section">
   <div class="card">
-    <h2><i class="fas fa-map-marker-alt"></i> Ladesäulen in der Nähe</h2>
-    <div id="noStationsMessage" class="map-warning" style="display: none">
-      <i class="fas fa-info-circle"></i>
-      <p>
-        Keine Ladesäulen in der Nähe gefunden. Versuchen Sie einen anderen
-        Standort oder erweitern Sie den Suchradius.
-      </p>
-    </div>
-    <div id="mapDisabled" class="map-warning">
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      <p id="mapDisabledMessage">Map disabled.</p>
-    </div>
-    <div id="apiKeyError" class="map-warning" style="display: none">
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      <p id="apiKeyErrorMessage">Google Maps API key not configured.</p>
+    <div class="map-section-header">
+      <h2><i class="fas fa-map-marker-alt"></i> Ladesäulen in der Nähe</h2>
+      <div id="noStationsMessage" class="map-warning" style="display: none">
+        <i class="fas fa-info-circle"></i>
+        <p>
+          Keine Ladesäulen in der Nähe gefunden. Versuchen Sie einen anderen
+          Standort oder erweitern Sie den Suchradius.
+        </p>
+      </div>
+      <div id="mapDisabled" class="map-warning">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <p id="mapDisabledMessage">Map disabled.</p>
+      </div>
+      <div id="apiKeyError" class="map-warning" style="display: none">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <p id="apiKeyErrorMessage">Google Maps API key not configured.</p>
+      </div>
     </div>
     <div class="map-container" style="display: none">
       <div id="map" class="map" title="Karte vertikal vergrößern/verkleinern">
