@@ -1,16 +1,28 @@
 class GoogleMapsManager {
-  constructor(enable = true) {
+  constructor(enableInit = true) {
     this.map = null;
     this.userLocation = null;
     this.chargingStationMarkers = [];
     this.userMarker = null;
-    this.enable = enable;
+    this.enableInit = enableInit;
+    this.loadHtmlMap();
+    this.syncMapEnabled();
   }
 
   async initializeMap(mapElementId) {
     const defaultLocation = { lat: 52.52, lng: 13.405 };
     // FIXME: this only loads once on inital page load but not on refresh
     // this.loadHtmlMap();
+
+    document
+      .getElementById("toggleEnableMap")
+      .addEventListener("click", () => this.toggleMapEnabled());
+
+    this.syncMapEnabled();
+
+    document.getElementById("toggleEnableMap").innerHTML = this.enable
+      ? "Disable Map"
+      : "Enable Map";
 
     if (!this.enable) {
       this.showMapDisabledMessage();
@@ -69,66 +81,8 @@ class GoogleMapsManager {
       );
   }
 
-  showElement(elementId, display = "flex") {
-    const element = document.getElementById(elementId);
-    if (element) {
-      element.style.display = display;
-    }
-  }
-
-  hideElement(elementId, display = "none") {
-    const element = document.getElementById(elementId);
-    if (element) {
-      element.style.display = display;
-    }
-  }
-
-  showMapError(message = "Something went wrong.") {
-    const messageElement = document.getElementById("mapError");
-    if (messageElement) {
-      messageElement.style.display = "flex";
-      messageElement.querySelector("p").textContent = message;
-    }
-  }
-  hideMapError() {
-    this.hideElement("mapError");
-  }
-
-  showMapLoadingIndicator() {
-    this.showElement("mapLoading");
-  }
-
-  hideMapLoadingIndicator() {
-    this.hideElement("mapLoading");
-  }
-
-  showMapDisabledMessage() {
-    this.showElement("mapDisabled");
-  }
-
-  hideMapDisabledMessage() {
-    this.hideElement("mapDisabled");
-  }
-
-  showApiKeyError() {
-    this.showElement("apiKeyError");
-  }
-
-  hideApiKeyError() {
-    this.hideElement("apiKeyError");
-  }
-
-  showMapContainer() {
-    this.showElement("mapContainer");
-  }
-
-  hideMapContainer() {
-    this.hideElement("mapContainer");
-  }
-
   // FIXME
   loadHtmlMap() {
-    console.log(document.getElementById("maps-section"));
     $("#maps-section").load("maps.html");
   }
 
@@ -174,7 +128,9 @@ class GoogleMapsManager {
 
   getApiKey() {
     // Try to get API key from multiple sources
-    const secrets = JSON.parse(localStorage.getItem("secrets") || "{}");
+    const secrets = JSON.parse(
+      localStorage.getItem("charging-calculator") || "{}"
+    );
 
     // Check if user has provided their own API key
     if (
@@ -190,17 +146,63 @@ class GoogleMapsManager {
     }
 
     // ask in popup to enter API key
-    const apiKey = prompt("Please enter your Google Maps API key");
+    const apiKey = this.askForApiKey();
     if (apiKey) {
-      localStorage.setItem(
-        "secrets",
-        JSON.stringify({ googleMapsApiKey: apiKey })
-      );
       return apiKey;
     }
 
     // Fallback to placeholder - will show error message
     return "YOUR_API_KEY_HERE";
+  }
+
+  askForApiKey() {
+    const current = JSON.parse(localStorage.getItem("charging-calculator"));
+    const apiKey = prompt("Please enter your Google Maps API key");
+    if (apiKey) {
+      localStorage.setItem(
+        "charging-calculator",
+        JSON.stringify({ ...current, googleMapsApiKey: apiKey })
+      );
+      return apiKey;
+    }
+  }
+
+  syncMapEnabled() {
+    const userEnabled = this.getMapEnabledFromUser();
+    if (userEnabled === undefined) {
+      // set localStorage state if user has not set it
+      this.setMapEnabledFromUser(this.enableInit);
+      this.enable = this.enableInit;
+    } else {
+      // use localStorage state if user has set it
+      this.enable = userEnabled;
+    }
+
+    // document.getElementById("toggleEnableMap").innerHTML = this.enable
+    //   ? "Disable Map"
+    //   : "Enable Map";
+  }
+
+  toggleMapEnabled() {
+    this.enable = !this.enable;
+    this.setMapEnabledFromUser(this.enable);
+    // Reload only maps.html after click on button
+    window.location.reload();
+  }
+
+  getMapEnabledFromUser() {
+    const secrets = JSON.parse(
+      localStorage.getItem("charging-calculator") || "{}"
+    );
+    return secrets.enableMap;
+  }
+
+  setMapEnabledFromUser(enable) {
+    const current = JSON.parse(localStorage.getItem("charging-calculator"));
+    localStorage.setItem(
+      "charging-calculator",
+      JSON.stringify({ ...current, enableMap: enable })
+    );
   }
 
   async getCurrentLocation() {
@@ -694,5 +696,62 @@ class GoogleMapsManager {
       relativeTime = `vor ${days}d`;
     }
     return relativeTime;
+  }
+
+  showElement(elementId, display = "flex") {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.style.display = display;
+    }
+  }
+
+  hideElement(elementId, display = "none") {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.style.display = display;
+    }
+  }
+
+  showMapError(message = "Something went wrong.") {
+    const messageElement = document.getElementById("mapError");
+    if (messageElement) {
+      messageElement.style.display = "flex";
+      messageElement.querySelector("p").textContent = message;
+    }
+  }
+  hideMapError() {
+    this.hideElement("mapError");
+  }
+
+  showMapLoadingIndicator() {
+    this.showElement("mapLoading");
+  }
+
+  hideMapLoadingIndicator() {
+    this.hideElement("mapLoading");
+  }
+
+  showMapDisabledMessage() {
+    this.showElement("mapDisabled");
+  }
+
+  hideMapDisabledMessage() {
+    this.hideElement("mapDisabled");
+  }
+
+  showApiKeyError() {
+    this.showElement("apiKeyError");
+  }
+
+  hideApiKeyError() {
+    this.hideElement("apiKeyError");
+  }
+
+  showMapContainer() {
+    this.showElement("mapContainer");
+  }
+
+  hideMapContainer() {
+    this.hideElement("mapContainer");
   }
 }

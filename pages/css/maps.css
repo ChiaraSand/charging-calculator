@@ -20,6 +20,13 @@
   color: var(--text-primary);
 }
 
+.map-section-header-right {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
 .map {
   width: 100%;
   height: 500px;

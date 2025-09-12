@@ -4,11 +4,11 @@ class ChargingCalculator {
     this.tariffs = [];
     this.selectedProviders = new Set();
     this.selectedConnectors = new Set();
-    this.mapsManager = new GoogleMapsManager(true); // false to disable map
     this.chargingChart = null;
     this.vehicleCurves = new VehicleChargingCurves();
     this.selectedVehicle = "renault-5-e-tech-52kwh"; // Default vehicle
 
+    this.mapsManager = new GoogleMapsManager(true); // false to disable map
     this.init();
   }
 
