@@ -24,6 +24,7 @@ class GoogleMapsManager {
       this.hideMapError();
     }
 
+    this.hideNoStationsMessage();
     this.showMapLoadingIndicator();
 
     await this.loadGoogleMapsApi();
@@ -43,9 +44,6 @@ class GoogleMapsManager {
     }
 
     this.hideMapLoadingIndicator();
-
-    // Hide no stations message initially
-    this.hideNoStationsMessage();
 
     // Add resize event listener to refresh map when resized
     const mapElement = document.getElementById(mapElementId);
@@ -221,25 +219,8 @@ class GoogleMapsManager {
             // Add user location marker
             const userMarkerElement = document.createElement("div");
             userMarkerElement.innerHTML = `
-              <div style="
-                width: 24px;
-                height: 24px;
-                background: #10b981;
-                border: 2px solid #fff;
-                border-radius: 50%;
-                position: relative;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-              ">
-                <div style="
-                  position: absolute;
-                  top: 50%;
-                  left: 50%;
-                  transform: translate(-50%, -50%);
-                  width: 8px;
-                  height: 8px;
-                  background: #fff;
-                  border-radius: 50%;
-                "></div>
+              <div class="map-location-marker">
+                <div class="map-location-marker-inner"></div>
               </div>
             `;
 
@@ -336,6 +317,7 @@ class GoogleMapsManager {
 
   addStationsToMap(stations) {
     stations.forEach((station) => {
+      console.log("station", station);
       // Handle both Google Places data and our custom station data
       const position =
         station.geometry && station.geometry.location
@@ -432,23 +414,11 @@ class GoogleMapsManager {
       // Create marker element
       const markerElement = document.createElement("div");
       markerElement.innerHTML = `
-        <div style="
-          width: 32px;
-          height: 32px;
+        <div class="map-station-marker" style="
           background: ${
             stationPowerLevel[Math.round(stationMaxPower)]?.color ||
             stationPowerLevel.default.color
           };
-          border: 2px solid #fff;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-          font-size: 10px;
-          font-weight: bold;
-          color: white;
-          font-family: Arial, sans-serif;
         ">
           ${stationMaxPower}<br/>
           ${stationAvailabilePorts} / ${stationTotalPorts}
@@ -475,117 +445,99 @@ class GoogleMapsManager {
         });
       }
 
+      const availableConnectorTypesHtml =
+        availableConnectorTypes.length > 0
+          ? `<div>
+          <div class="map-station-info-window-connector-types">
+            ${availableConnectorTypes.map(
+              (connector) =>
+                `<span class="map-station-info-window-connector-type">${connector}</span>`
+            )}
+          </div>
+        </div>`
+          : "";
+
+      const availableTariffs = this.getAvailableTariffsForStation({
+        type: stationType,
+      });
+
       const infoWindow = new google.maps.InfoWindow({
         content: `
                     <div id="map-station-info-window" class="map-station-info-window">
-                        <h3 style="margin: 0 0 12px 0; color: #2563eb; font-size: 16px;">${name}</h3>
-                        ${
-                          availableConnectorTypes.length > 0
-                            ? `
-                        <div style="margin-bottom: 12px;">
-                          <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
-                            ${availableConnectorTypes
-                              .map(
-                                (connector) => `
-                              <span style="
-                                background: #e0f2fe;
-                                color: #0369a1;
-                                padding: 2px 6px;
-                                border-radius: 4px;
-                                font-size: 11px;
-                                font-weight: 500;
-                              ">${connector}</span>
+                        <div class="map-station-info-window-header">
+                          <h3 class="map-station-info-window-headline">${name}</h3>
+                          <div class="map-station-info-window-links">
+                            ${
+                              station.googleMapsURI
+                                ? `
+                          <a href="${station.googleMapsURI}" target="_blank" class="map-station-info-window-link map-station-info-window-link-maps">
+                              <i class="fas fa-map-marker-alt"></i>
+                            </a>
                             `
-                              )
-                              .join("")}
+                                : ""
+                            }
+                            ${
+                              station.websiteURI
+                                ? `
+                                <a href="${station.websiteURI}" target="_blank" class="map-station-info-window-link map-station-info-window-link-website">
+                                  <i class="fas fa-globe"></i>
+                                </a>
+                                `
+                                : ""
+                            }
                           </div>
                         </div>
-                        `
-                            : ""
-                        }
-                        <div style="margin-bottom: 12px;">
-                          <p style="margin: 4px 0; font-size: 14px;"><strong>Adresse:</strong> ${this.getFullAddress(
+                        ${availableConnectorTypesHtml}
+                        <div class="map-station-info-window-section">
+                          <p style="margin: 4px 0;"><strong>Adresse:</strong> ${this.getFullAddress(
                             station
                           )}</p>
-                          <p style="margin: 4px 0; font-size: 14px;"><strong>Max. Leistung:</strong> ${stationMaxPower} kW</p>
+                          <p style="margin: 4px 0;"><strong>Max. Leistung:</strong> ${stationMaxPower} kW</p>
                         </div>
 
                         ${
                           chargingConnectors.length > 0
-                            ? `
-                        <div style="margin-bottom: 12px;">
-                          <p style="margin: 4px 0; font-size: 14px; font-weight: 600;">Verfügbare Leistungen:</p>
-                          <ul style="margin: 4px 0; padding-left: 16px; font-size: 13px;">
-                            ${chargingConnectors
-                              .map(
-                                (connector) => `
-                              <li>${this.mapConnectorType(connector.type)}: ${
-                                  connector.maxChargeRateKw
-                                } kW (${connector.availableCount}/${
-                                  connector.count
-                                } available, ${this.getRelativeTime(
-                                  connector.availabilityLastUpdateTime
-                                )})</li>
-                            `
-                              )
-                              .join("")}
-                          </ul>
-                        </div>
-                        `
+                            ? `<div class="map-station-info-window-section">
+                              <h4>Verfügbare Leistungen:</h4>
+                              <ul style="padding-left: 16px;">
+                                ${chargingConnectors
+                                  .map(
+                                    (connector) => `
+                                  <li>${this.mapConnectorType(
+                                    connector.type
+                                  )}: ${connector.maxChargeRateKw} kW (${
+                                      connector.availableCount
+                                    }/${
+                                      connector.count
+                                    } [${this.getRelativeTime(
+                                      connector.availabilityLastUpdateTime
+                                    )}])</li>
+                                `
+                                  )
+                                  .join("")}
+                              </ul>
+                            </div>`
                             : ""
                         }
-                        <div style="margin-bottom: 12px;">
-                          <p style="margin: 4px 0; font-size: 14px; font-weight: 600;">Verfügbare Tarife:</p>
-                          <ul style="margin: 4px 0; padding-left: 16px; font-size: 13px;">
-                              ${this.getAvailableTariffsForStation({
-                                type: stationType,
-                              })
-                                .map(
-                                  (tariff) =>
-                                    `<li>${
-                                      tariff.name
-                                    }: ${tariff.pricePerKwh.toFixed(
-                                      2
-                                    )} €/kWh</li>`
-                                )
-                                .join("")}
-                          </ul>
-                        </div>
-                        <div style="border-top: 1px solid #e2e8f0; padding-top: 12px;">
-                          <p style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600;">Links:</p>
-                          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                              name + " " + address
-                            )}" target="_blank" style="
-                              background: #10b981;
-                              color: white;
-                              padding: 6px 12px;
-                              border-radius: 6px;
-                              text-decoration: none;
-                              font-size: 12px;
-                              display: inline-flex;
-                              align-items: center;
-                              gap: 4px;
-                            ">
-                              <i class="fas fa-map-marker-alt"></i> Google Maps
-                            </a>
-                            <a href="${
-                              station.websiteURI || "#"
-                            }" target="_blank" style="
-                              background: #2563eb;
-                              color: white;
-                              padding: 6px 12px;
-                              border-radius: 6px;
-                              text-decoration: none;
-                              font-size: 12px;
-                              display: inline-flex;
-                              align-items: center;
-                              gap: 4px;
-                            ">
-                              <i class="fas fa-globe"></i> Website
-                            </a>
-                          </div>
-                        </div>
+                        ${
+                          availableTariffs.length > 0
+                            ? `<div class="map-station-info-window-section">
+                              <h4>Verfügbare Tarife:</h4>
+                              <ul style="padding-left: 16px;">
+                                  ${availableTariffs
+                                    .map(
+                                      (tariff) =>
+                                        `<li>${
+                                          tariff.name
+                                        }: ${tariff.pricePerKwh.toFixed(
+                                          2
+                                        )} €/kWh</li>`
+                                    )
+                                    .join("")}
+                              </ul>
+                            </div>`
+                            : ""
+                        }
                     </div>
                 `,
       });
