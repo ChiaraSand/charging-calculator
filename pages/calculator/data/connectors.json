@@ -1,0 +1,66 @@
+{
+  "connectors": [
+    {
+      "id": "TYPE_1",
+      "name": "Type 1 (J1772)",
+      "description": "AC-Ladung, hauptsächlich in Nordamerika",
+      "chargingType": "AC",
+      "aliases": ["J1772", "IEC_62196_T1"]
+    },
+    {
+      "id": "TYPE_2",
+      "name": "Type 2 (Mennekes)",
+      "description": "AC-Ladung, Standard in Europa",
+      "chargingType": "AC",
+      "aliases": ["MENNEKES", "IEC_62196_T2"]
+    },
+    {
+      "id": "CCS_1",
+      "name": "CCS 1",
+      "description": "DC-Schnellladung, Nordamerika",
+      "chargingType": "DC",
+      "aliases": ["IEC_62196_T1_COMBO"]
+    },
+    {
+      "id": "CCS_2",
+      "name": "CCS 2",
+      "description": "DC-Schnellladung, Europa",
+      "chargingType": "DC",
+      "aliases": ["IEC_62196_T2_COMBO"]
+    },
+    {
+      "id": "CHAdeMO",
+      "name": "CHAdeMO",
+      "description": "DC-Schnellladung, hauptsächlich Japan",
+      "chargingType": "DC",
+      "aliases": []
+    },
+    {
+      "id": "TESLA",
+      "name": "Tesla Supercharger",
+      "description": "Tesla-eigene DC-Schnellladung",
+      "chargingType": "DC",
+      "aliases": []
+    },
+    {
+      "id": "SCHUKO",
+      "name": "Schuko",
+      "description": "Haushaltssteckdose, AC-Ladung",
+      "chargingType": "AC",
+      "aliases": []
+    }
+  ],
+  "chargingTypeMapping": {
+    "AC": ["TYPE_1", "TYPE_2", "SCHUKO"],
+    "DC": ["CCS_1", "CCS_2", "CHAdeMO", "TESLA"]
+  },
+  "enumValues": {
+    "TYPE_1": "TYPE_1",
+    "TYPE_2": "TYPE_2",
+    "CCS_1": "CCS_1",
+    "CCS_2": "CCS_2",
+    "CHADEMO": "CHAdeMO",
+    "TESLA": "TESLA",
+    "SCHUKO": "SCHUKO"
+  }
+}

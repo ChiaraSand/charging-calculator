@@ -368,9 +368,9 @@
   border: 1px solid #e2e8f0;
 }
 
-.preconfiguration-section .card h2 {
+/* .preconfiguration-section .card h2 {
   color: var(--primary-color);
-}
+} */
 
 /* Responsive adjustments for preconfiguration */
 @media (max-width: 768px) {
@@ -378,12 +378,12 @@
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .preconfig-actions {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .preconfig-actions .btn {
     width: 100%;
     max-width: 300px;

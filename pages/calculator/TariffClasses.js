@@ -5,21 +5,43 @@
  * providers, and related structures used in the charging calculator.
  */
 
-// Enums for connector types and charging types
-const ConnectorType = {
-  TYPE_1: "TYPE_1",
-  TYPE_2: "TYPE_2",
-  CCS_1: "CCS_1",
-  CCS_2: "CCS_2",
-  CHADEMO: "CHAdeMO",
-  TESLA: "TESLA",
-  SCHUKO: "SCHUKO",
-};
+// Enums for connector types and charging types - will be loaded from JSON
+let ConnectorType = {};
+let ChargingType = {};
 
-const ChargingType = {
-  AC: "AC",
-  DC: "DC",
-};
+// Load enums from JSON files
+async function loadEnums() {
+  try {
+    const [connectorData, chargingTypeData] = await Promise.all([
+      fetch("./data/connectors.json").then((r) => r.json()),
+      fetch("./data/charging-types-enum.json").then((r) => r.json()),
+    ]);
+
+    ConnectorType = connectorData.enumValues || {};
+    ChargingType = chargingTypeData;
+    console.log("TariffClasses enums loaded from JSON successfully");
+  } catch (error) {
+    console.error("Error loading TariffClasses enums from JSON:", error);
+    // Fallback to hardcoded enums
+    // ConnectorType = {
+    //   TYPE_1: "TYPE_1",
+    //   TYPE_2: "TYPE_2",
+    //   CCS_1: "CCS_1",
+    //   CCS_2: "CCS_2",
+    //   CHADEMO: "CHAdeMO",
+    //   TESLA: "TESLA",
+    //   SCHUKO: "SCHUKO",
+    // };
+
+    // ChargingType = {
+    //   AC: "AC",
+    //   DC: "DC",
+    // };
+  }
+}
+
+// Initialize enums
+loadEnums();
 
 /**
  * Base class for all blocking fee conditions

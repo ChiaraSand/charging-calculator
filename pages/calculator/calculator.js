@@ -10,41 +10,12 @@ class ChargingCalculator {
 
     this.mapsManager = new GoogleMapsManager(true); // false to disable map
 
-    // Preconfiguration presets
-    this.presets = {
-      "renault-5-daily": {
-        vehicle: "renault-5-e-tech-52kwh",
-        batteryCapacity: 52,
-        currentCharge: 20,
-        targetCharge: 80,
-        chargingPower: 22,
-        tariffFilter: "cheapest",
-      },
-      "renault-5-trip": {
-        vehicle: "renault-5-e-tech-52kwh",
-        batteryCapacity: 52,
-        currentCharge: 10,
-        targetCharge: 90,
-        chargingPower: 150,
-        tariffFilter: "premium",
-      },
-      "generic-daily": {
-        vehicle: "generic",
-        batteryCapacity: 50,
-        currentCharge: 20,
-        targetCharge: 80,
-        chargingPower: 11,
-        tariffFilter: "cheapest",
-      },
-      "generic-trip": {
-        vehicle: "generic",
-        batteryCapacity: 60,
-        currentCharge: 10,
-        targetCharge: 90,
-        chargingPower: 150,
-        tariffFilter: "premium",
-      },
-    };
+    // Data will be loaded from JSON files
+    this.presets = {};
+    this.connectorData = {};
+    this.providerGroups = {};
+    this.chargingPowers = [];
+    this.inputFields = [];
 
     this.init();
   }
@@ -56,6 +27,9 @@ class ChargingCalculator {
       minute: "2-digit",
     });
     document.getElementById("startTime").value = startTimeString;
+
+    // Load data from JSON files first
+    await this.loadDataFromJson();
 
     await this.loadTariffs();
     this.setupEventListeners();
@@ -69,6 +43,37 @@ class ChargingCalculator {
 
     // Load saved preconfiguration after everything is initialized
     this.loadSavedPreconfiguration();
+  }
+
+  async loadDataFromJson() {
+    try {
+      // Load all JSON data files
+      const [
+        presets,
+        connectorData,
+        providerGroups,
+        chargingPowers,
+        inputFields,
+      ] = await Promise.all([
+        fetch("./data/presets.json").then((r) => r.json()),
+        fetch("./data/connectors.json").then((r) => r.json()),
+        fetch("./data/provider-groups.json").then((r) => r.json()),
+        fetch("./data/charging-powers.json").then((r) => r.json()),
+        fetch("./data/input-fields.json").then((r) => r.json()),
+      ]);
+
+      this.presets = presets;
+      this.connectorData = connectorData;
+      this.providerGroups = providerGroups;
+      this.chargingPowers = chargingPowers;
+      this.inputFields = inputFields;
+
+      console.log("Data loaded from JSON files successfully");
+    } catch (error) {
+      console.error("Error loading data from JSON files:", error);
+      // Fallback to hardcoded data if JSON loading fails
+      // this.loadFallbackData();
+    }
   }
 
   // Load tariff data from JSON file
@@ -107,7 +112,7 @@ class ChargingCalculator {
         e.target.value + "%";
       this.updateCalculations();
     });
-    document.getElementById("chargingPower").addEventListener("change", () => {
+    document.getElementById("chargingPower").addEventListener("change", (e) => {
       document.getElementById("quickChargingPower").value = e.target.value;
       this.updateCalculations();
     });
@@ -391,7 +396,10 @@ class ChargingCalculator {
   }
 
   selectPremiumProviders() {
-    const premiumProviders = ["Ionity", "Tesla"];
+    const premiumProviders = this.providerGroups.premiumProviders || [
+      "Ionity",
+      "Tesla",
+    ];
 
     document
       .querySelectorAll('#providerCheckboxes input[type="checkbox"]')
@@ -408,7 +416,10 @@ class ChargingCalculator {
   }
 
   selectLocalProviders() {
-    const localProviders = ["EWE Go", "Qwello NRW"];
+    const localProviders = this.providerGroups.localProviders || [
+      "EWE Go",
+      "Qwello NRW",
+    ];
 
     document
       .querySelectorAll('#providerCheckboxes input[type="checkbox"]')
@@ -569,40 +580,8 @@ class ChargingCalculator {
   populateConnectorFilters() {
     const container = document.getElementById("connectorCheckboxes");
 
-    // Define common connector types with their display names
-    const connectorTypes = [
-      {
-        id: "TYPE_1",
-        name: "Type 1 (J1772)",
-        description: "AC-Ladung, hauptsächlich in Nordamerika",
-      },
-      {
-        id: "TYPE_2",
-        name: "Type 2 (Mennekes)",
-        description: "AC-Ladung, Standard in Europa",
-      },
-      {
-        id: "CCS_1",
-        name: "CCS 1",
-        description: "DC-Schnellladung, Nordamerika",
-      },
-      { id: "CCS_2", name: "CCS 2", description: "DC-Schnellladung, Europa" },
-      {
-        id: "CHAdeMO",
-        name: "CHAdeMO",
-        description: "DC-Schnellladung, hauptsächlich Japan",
-      },
-      {
-        id: "TESLA",
-        name: "Tesla Supercharger",
-        description: "Tesla-eigene DC-Schnellladung",
-      },
-      {
-        id: "SCHUKO",
-        name: "Schuko",
-        description: "Haushaltssteckdose, AC-Ladung",
-      },
-    ];
+    // Use loaded connector data or fallback
+    const connectorTypes = this.connectorData.connectors || [];
 
     container.innerHTML = connectorTypes
       .map(
@@ -774,13 +753,16 @@ class ChargingCalculator {
 
   clearAllInputs() {
     // Clear all individual inputs
-    const inputsToClear = [
-      "batteryCapacity",
-      "currentCharge",
-      "targetCharge",
-      "startTime",
-      "endTime",
-    ];
+    const inputsToClear =
+      this.inputFields.length > 0
+        ? this.inputFields
+        : [
+            "batteryCapacity",
+            "currentCharge",
+            "targetCharge",
+            "startTime",
+            "endTime",
+          ];
 
     inputsToClear.forEach((inputId) => {
       this.clearInput(inputId);
@@ -1318,7 +1300,7 @@ class ChargingCalculator {
     }
 
     // Fallback: Map tariff types to compatible connectors
-    const connectorMapping = {
+    const connectorMapping = this.connectorData.chargingTypeMapping || {
       AC: ["TYPE_1", "TYPE_2", "SCHUKO"],
       DC: ["CCS_1", "CCS_2", "CHAdeMO", "TESLA"],
     };
@@ -1512,81 +1494,81 @@ class ChargingCalculator {
             pointBorderWidth: 1,
             borderDash: [3, 3],
           },
-          {
-            label: "300 kW (Hochleistungslader)",
-            data: [],
-            borderColor: "#f59e0b",
-            backgroundColor: "rgba(245, 158, 11, 0.1)",
-            borderWidth: 2,
-            fill: false,
-            tension: 0.4,
-            pointRadius: 2,
-            pointHoverRadius: 4,
-            pointBackgroundColor: "#f59e0b",
-            pointBorderColor: "#ffffff",
-            pointBorderWidth: 1,
-            borderDash: [3, 3],
-          },
-          {
-            label: "150 kW (Schnelllader)",
-            data: [],
-            borderColor: "#8b5cf6",
-            backgroundColor: "rgba(139, 92, 246, 0.1)",
-            borderWidth: 2,
-            fill: false,
-            tension: 0.4,
-            pointRadius: 2,
-            pointHoverRadius: 4,
-            pointBackgroundColor: "#8b5cf6",
-            pointBorderColor: "#ffffff",
-            pointBorderWidth: 1,
-            borderDash: [3, 3],
-          },
-          {
-            label: "50 kW (DC Schnelllader)",
-            data: [],
-            borderColor: "#06b6d4",
-            backgroundColor: "rgba(6, 182, 212, 0.1)",
-            borderWidth: 2,
-            fill: false,
-            tension: 0.4,
-            pointRadius: 2,
-            pointHoverRadius: 4,
-            pointBackgroundColor: "#06b6d4",
-            pointBorderColor: "#ffffff",
-            pointBorderWidth: 1,
-            borderDash: [3, 3],
-          },
-          {
-            label: "22 kW (AC Wallbox)",
-            data: [],
-            borderColor: "#84cc16",
-            backgroundColor: "rgba(132, 204, 22, 0.1)",
-            borderWidth: 2,
-            fill: false,
-            tension: 0.4,
-            pointRadius: 2,
-            pointHoverRadius: 4,
-            pointBackgroundColor: "#84cc16",
-            pointBorderColor: "#ffffff",
-            pointBorderWidth: 1,
-            borderDash: [3, 3],
-          },
-          {
-            label: "11 kW (AC Wallbox)",
-            data: [],
-            borderColor: "#f97316",
-            backgroundColor: "rgba(249, 115, 22, 0.1)",
-            borderWidth: 2,
-            fill: false,
-            tension: 0.4,
-            pointRadius: 2,
-            pointHoverRadius: 4,
-            pointBackgroundColor: "#f97316",
-            pointBorderColor: "#ffffff",
-            pointBorderWidth: 1,
-            borderDash: [3, 3],
-          },
+          // {
+          //   label: "300 kW (Hochleistungslader)",
+          //   data: [],
+          //   borderColor: "#f59e0b",
+          //   backgroundColor: "rgba(245, 158, 11, 0.1)",
+          //   borderWidth: 2,
+          //   fill: false,
+          //   tension: 0.4,
+          //   pointRadius: 2,
+          //   pointHoverRadius: 4,
+          //   pointBackgroundColor: "#f59e0b",
+          //   pointBorderColor: "#ffffff",
+          //   pointBorderWidth: 1,
+          //   borderDash: [3, 3],
+          // },
+          // {
+          //   label: "150 kW (Schnelllader)",
+          //   data: [],
+          //   borderColor: "#8b5cf6",
+          //   backgroundColor: "rgba(139, 92, 246, 0.1)",
+          //   borderWidth: 2,
+          //   fill: false,
+          //   tension: 0.4,
+          //   pointRadius: 2,
+          //   pointHoverRadius: 4,
+          //   pointBackgroundColor: "#8b5cf6",
+          //   pointBorderColor: "#ffffff",
+          //   pointBorderWidth: 1,
+          //   borderDash: [3, 3],
+          // },
+          // {
+          //   label: "50 kW (DC Schnelllader)",
+          //   data: [],
+          //   borderColor: "#06b6d4",
+          //   backgroundColor: "rgba(6, 182, 212, 0.1)",
+          //   borderWidth: 2,
+          //   fill: false,
+          //   tension: 0.4,
+          //   pointRadius: 2,
+          //   pointHoverRadius: 4,
+          //   pointBackgroundColor: "#06b6d4",
+          //   pointBorderColor: "#ffffff",
+          //   pointBorderWidth: 1,
+          //   borderDash: [3, 3],
+          // },
+          // {
+          //   label: "22 kW (AC Wallbox)",
+          //   data: [],
+          //   borderColor: "#84cc16",
+          //   backgroundColor: "rgba(132, 204, 22, 0.1)",
+          //   borderWidth: 2,
+          //   fill: false,
+          //   tension: 0.4,
+          //   pointRadius: 2,
+          //   pointHoverRadius: 4,
+          //   pointBackgroundColor: "#84cc16",
+          //   pointBorderColor: "#ffffff",
+          //   pointBorderWidth: 1,
+          //   borderDash: [3, 3],
+          // },
+          // {
+          //   label: "11 kW (AC Wallbox)",
+          //   data: [],
+          //   borderColor: "#f97316",
+          //   backgroundColor: "rgba(249, 115, 22, 0.1)",
+          //   borderWidth: 2,
+          //   fill: false,
+          //   tension: 0.4,
+          //   pointRadius: 2,
+          //   pointHoverRadius: 4,
+          //   pointBackgroundColor: "#f97316",
+          //   pointBorderColor: "#ffffff",
+          //   pointBorderWidth: 1,
+          //   borderDash: [3, 3],
+          // },
         ],
       },
       options: {
@@ -1719,6 +1701,8 @@ class ChargingCalculator {
       batteryCapacity
     );
 
+    console.log("chargingResult", chargingResult);
+
     const estimatedTime = chargingResult.totalTime; // in minutes
 
     // Generate data points for the chart
@@ -1727,12 +1711,15 @@ class ChargingCalculator {
     const linearChargingLevels = [];
 
     // Additional charging power curves
-    const chargingPowers = [400, 300, 150, 50, 22, 11];
+    const chargingPowers =
+      this.chargingPowers.length > 0
+        ? this.chargingPowers
+        : [400, 300, 150, 50, 22, 11];
     const additionalCurves = chargingPowers.map(() => []);
 
     // Create time points every 5 minutes or every minute for shorter sessions
     const interval = estimatedTime <= 30 ? 1 : 5;
-    const maxTime = Math.ceil(estimatedTime * 1.2); // Show 20% more than estimated
+    const maxTime = Math.ceil(estimatedTime * 1.1); // Show 10% more than estimated
 
     for (let time = 0; time <= maxTime; time += interval) {
       timePoints.push(time);
@@ -1751,23 +1738,23 @@ class ChargingCalculator {
       realisticChargingLevels.push(batteryLevel);
 
       // Calculate additional charging power curves
-      chargingPowers.forEach((power, index) => {
-        const additionalResult = this.vehicleCurves.calculateChargingTime(
-          this.selectedVehicle,
-          currentCharge,
-          targetCharge,
-          power,
-          batteryCapacity
-        );
+      // chargingPowers.forEach((power, index) => {
+      //   const additionalResult = this.vehicleCurves.calculateChargingTime(
+      //     this.selectedVehicle,
+      //     currentCharge,
+      //     targetCharge,
+      //     power,
+      //     batteryCapacity
+      //   );
 
-        const additionalProgress = Math.min(
-          time / additionalResult.totalTime,
-          1
-        );
-        const additionalLevel =
-          currentCharge + (targetCharge - currentCharge) * additionalProgress;
-        additionalCurves[index].push(additionalLevel);
-      });
+      //   const additionalProgress = Math.min(
+      //     time / additionalResult.totalTime,
+      //     1
+      //   );
+      //   const additionalLevel =
+      //     currentCharge + (targetCharge - currentCharge) * additionalProgress;
+      //   additionalCurves[index].push(additionalLevel);
+      // });
     }
 
     // Update chart data
@@ -1776,10 +1763,12 @@ class ChargingCalculator {
     this.chargingChart.data.datasets[1].data = linearChargingLevels;
 
     // Update additional charging power curves
-    additionalCurves.forEach((curve, index) => {
-      this.chargingChart.data.datasets[index + 2].data = curve;
-    });
+    // additionalCurves.forEach((curve, index) => {
+    //   this.chargingChart.data.datasets[index + 2].data = curve;
+    // });
 
+    console.log("chargingChart", this.chargingChart);
+    console.log("realisticChargingLevels", realisticChargingLevels);
     this.chargingChart.update();
   }
 
@@ -2050,3 +2039,119 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+// loadFallbackData() {
+//   // Fallback data in case JSON loading fails
+//   this.presets = {
+//     "renault-5-daily": {
+//       vehicle: "renault-5-e-tech-52kwh",
+//       batteryCapacity: 52,
+//       currentCharge: 20,
+//       targetCharge: 80,
+//       chargingPower: 22,
+//       tariffFilter: "cheapest",
+//     },
+//     "renault-5-trip": {
+//       vehicle: "renault-5-e-tech-52kwh",
+//       batteryCapacity: 52,
+//       currentCharge: 10,
+//       targetCharge: 90,
+//       chargingPower: 150,
+//       tariffFilter: "premium",
+//     },
+//     "generic-daily": {
+//       vehicle: "generic",
+//       batteryCapacity: 50,
+//       currentCharge: 20,
+//       targetCharge: 80,
+//       chargingPower: 11,
+//       tariffFilter: "cheapest",
+//     },
+//     "generic-trip": {
+//       vehicle: "generic",
+//       batteryCapacity: 60,
+//       currentCharge: 10,
+//       targetCharge: 90,
+//       chargingPower: 150,
+//       tariffFilter: "premium",
+//     },
+//   };
+//   this.connectorData = {
+//     connectors: [
+//       {
+//         id: "TYPE_1",
+//         name: "Type 1 (J1772)",
+//         description: "AC-Ladung, hauptsächlich in Nordamerika",
+//         chargingType: "AC",
+//         aliases: ["J1772", "IEC_62196_T1"],
+//       },
+//       {
+//         id: "TYPE_2",
+//         name: "Type 2 (Mennekes)",
+//         description: "AC-Ladung, Standard in Europa",
+//         chargingType: "AC",
+//         aliases: ["MENNEKES", "IEC_62196_T2"],
+//       },
+//       {
+//         id: "CCS_1",
+//         name: "CCS 1",
+//         description: "DC-Schnellladung, Nordamerika",
+//         chargingType: "DC",
+//         aliases: ["IEC_62196_T1_COMBO"],
+//       },
+//       {
+//         id: "CCS_2",
+//         name: "CCS 2",
+//         description: "DC-Schnellladung, Europa",
+//         chargingType: "DC",
+//         aliases: ["IEC_62196_T2_COMBO"],
+//       },
+//       {
+//         id: "CHAdeMO",
+//         name: "CHAdeMO",
+//         description: "DC-Schnellladung, hauptsächlich Japan",
+//         chargingType: "DC",
+//         aliases: [],
+//       },
+//       {
+//         id: "TESLA",
+//         name: "Tesla Supercharger",
+//         description: "Tesla-eigene DC-Schnellladung",
+//         chargingType: "DC",
+//         aliases: [],
+//       },
+//       {
+//         id: "SCHUKO",
+//         name: "Schuko",
+//         description: "Haushaltssteckdose, AC-Ladung",
+//         chargingType: "AC",
+//         aliases: [],
+//       },
+//     ],
+//     chargingTypeMapping: {
+//       AC: ["TYPE_1", "TYPE_2", "SCHUKO"],
+//       DC: ["CCS_1", "CCS_2", "CHAdeMO", "TESLA"],
+//     },
+//     enumValues: {
+//       TYPE_1: "TYPE_1",
+//       TYPE_2: "TYPE_2",
+//       CCS_1: "CCS_1",
+//       CCS_2: "CCS_2",
+//       CHADEMO: "CHAdeMO",
+//       TESLA: "TESLA",
+//       SCHUKO: "SCHUKO",
+//     },
+//   };
+//   this.providerGroups = {
+//     premiumProviders: ["Ionity", "Tesla"],
+//     localProviders: ["EWE Go", "Qwello NRW"],
+//   };
+//   this.chargingPowers = [400, 300, 150, 50, 22, 11];
+//   this.inputFields = [
+//     "batteryCapacity",
+//     "currentCharge",
+//     "targetCharge",
+//     "startTime",
+//     "endTime",
+//   ];
+// }

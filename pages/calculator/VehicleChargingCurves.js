@@ -4,103 +4,23 @@
  */
 class VehicleChargingCurves {
   constructor() {
-    this.vehicleData = {
-      "renault-5-e-tech-52kwh": {
-        name: "Renault 5 E-Tech 52 kWh",
-        batteryCapacity: 52,
-        maxChargingPower: 100,
-        connectorType: "CCS",
-        chargingCurves: {
-          400: {
-            // 400kW charger data from the provided chart
-            14: 100.39,
-            15: 100.56,
-            16: 100.96,
-            17: 100.93,
-            18: 100.93,
-            19: 100.96,
-            20: 100.89,
-            21: 100.89,
-            22: 100.95,
-            23: 100.88,
-            24: 100.95,
-            25: 100.95,
-            26: 100.59,
-            27: 99.68,
-            28: 98.28,
-            29: 97.45,
-            30: 96.05,
-            31: 95.35,
-            32: 94.56,
-            33: 93.61,
-            34: 93.16,
-            35: 92.5,
-            36: 91.76,
-            37: 91.46,
-            38: 91.14,
-            39: 90.57,
-            40: 88.88,
-            41: 87.86,
-            42: 86.94,
-            43: 84.93,
-            44: 83.89,
-            45: 82.51,
-            46: 81.66,
-            47: 80.24,
-            48: 78.74,
-            49: 76.19,
-            50: 75.86,
-            51: 76.19,
-            52: 76.2,
-            53: 75.43,
-            54: 73.26,
-            55: 71.48,
-            56: 70.56,
-            57: 69.34,
-            58: 67.97,
-            59: 66.54,
-            60: 65.65,
-            61: 65.5,
-            62: 65.75,
-            63: 64.07,
-            64: 61.15,
-            65: 60.56,
-            66: 60.44,
-            67: 60.58,
-            68: 60.87,
-            69: 60.83,
-            70: 59.69,
-            71: 58.76,
-            72: 57.37,
-            73: 56.39,
-            74: 55.78,
-            75: 55.05,
-            76: 54.17,
-            77: 53.02,
-            78: 52.14,
-            79: 51.1,
-            80: 41.85,
-            81: 39.94,
-            82: 37.66,
-            83: 36.2,
-            84: 33.76,
-            85: 33.43,
-            86: 33.64,
-            87: 34.13,
-            88: 33.25,
-            89: 32.7,
-            90: 32.03,
-            91: 31.95,
-            92: 31.98,
-            93: 28.39,
-            94: 22.62,
-            95: 18.64,
-            96: 18.39,
-            97: 14.62,
-          },
-        },
-      },
-    };
+    this.vehicleData = {};
+    this.loadVehicleData();
+  }
+
+  async loadVehicleData() {
+    try {
+      const response = await fetch("./data/vehicle-charging-curves.json");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      this.vehicleData = await response.json();
+      console.log("Vehicle charging curves loaded from JSON successfully");
+    } catch (error) {
+      console.error("Error loading vehicle charging curves from JSON:", error);
+      // Fallback to hardcoded data
+      this.loadFallbackVehicleData();
+    }
   }
 
   /**
@@ -129,7 +49,9 @@ class VehicleChargingCurves {
       return this.getGenericChargingPower(batteryLevel, chargerPower);
     }
 
-    const curve = vehicle.chargingCurves[selectedCharger.toString()];
+    const curve =
+      vehicle.chargingCurves[selectedCharger.toString()] ||
+      vehicle.chargingCurves[400];
     const batteryLevelRounded = Math.round(batteryLevel);
 
     // Find exact match or interpolate between closest levels
@@ -216,7 +138,28 @@ class VehicleChargingCurves {
       totalTime += timeForStep;
       totalEnergy += energyForStep;
       currentBatteryLevel += stepSize;
+      // console.log(
+      //   "currentBatteryLevel",
+      //   currentBatteryLevel,
+      //   "targetLevel",
+      //   targetLevel,
+      //   "totalTime",
+      //   totalTime,
+      //   "totalEnergy",
+      //   totalEnergy
+      // );
     }
+
+    // console.log(
+    //   "totalTime",
+    //   totalTime,
+    //   "totalEnergy",
+    //   totalEnergy,
+    //   "timeSteps",
+    //   timeSteps,
+    //   "powerSteps",
+    //   powerSteps
+    // );
 
     return {
       totalTime: totalTime,
@@ -359,3 +302,103 @@ class VehicleChargingCurves {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = VehicleChargingCurves;
 }
+
+// loadFallbackVehicleData() {
+//   this.vehicleData = {
+//     "renault-5-e-tech-52kwh": {
+//       name: "Renault 5 E-Tech 52 kWh",
+//       batteryCapacity: 52,
+//       maxChargingPower: 100,
+//       connectorType: "CCS",
+//       chargingCurves: {
+//         400: {
+//           // 400kW charger data from the provided chart
+//           14: 100.39,
+//           15: 100.56,
+//           16: 100.96,
+//           17: 100.93,
+//           18: 100.93,
+//           19: 100.96,
+//           20: 100.89,
+//           21: 100.89,
+//           22: 100.95,
+//           23: 100.88,
+//           24: 100.95,
+//           25: 100.95,
+//           26: 100.59,
+//           27: 99.68,
+//           28: 98.28,
+//           29: 97.45,
+//           30: 96.05,
+//           31: 95.35,
+//           32: 94.56,
+//           33: 93.61,
+//           34: 93.16,
+//           35: 92.5,
+//           36: 91.76,
+//           37: 91.46,
+//           38: 91.14,
+//           39: 90.57,
+//           40: 88.88,
+//           41: 87.86,
+//           42: 86.94,
+//           43: 84.93,
+//           44: 83.89,
+//           45: 82.51,
+//           46: 81.66,
+//           47: 80.24,
+//           48: 78.74,
+//           49: 76.19,
+//           50: 75.86,
+//           51: 76.19,
+//           52: 76.2,
+//           53: 75.43,
+//           54: 73.26,
+//           55: 71.48,
+//           56: 70.56,
+//           57: 69.34,
+//           58: 67.97,
+//           59: 66.54,
+//           60: 65.65,
+//           61: 65.5,
+//           62: 65.75,
+//           63: 64.07,
+//           64: 61.15,
+//           65: 60.56,
+//           66: 60.44,
+//           67: 60.58,
+//           68: 60.87,
+//           69: 60.83,
+//           70: 59.69,
+//           71: 58.76,
+//           72: 57.37,
+//           73: 56.39,
+//           74: 55.78,
+//           75: 55.05,
+//           76: 54.17,
+//           77: 53.02,
+//           78: 52.14,
+//           79: 51.1,
+//           80: 41.85,
+//           81: 39.94,
+//           82: 37.66,
+//           83: 36.2,
+//           84: 33.76,
+//           85: 33.43,
+//           86: 33.64,
+//           87: 34.13,
+//           88: 33.25,
+//           89: 32.7,
+//           90: 32.03,
+//           91: 31.95,
+//           92: 31.98,
+//           93: 28.39,
+//           94: 22.62,
+//           95: 18.64,
+//           96: 18.39,
+//           97: 14.62,
+//         },
+//       },
+//     },
+//   };
+// }

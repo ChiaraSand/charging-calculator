@@ -5,12 +5,35 @@ class GoogleMapsManager {
     this.chargingStationMarkers = [];
     this.userMarker = null;
     this.enableInit = enableInit;
+    this.defaultLocation = { lat: 52.52, lng: 13.405 };
+    this.connectorData = {};
     this.loadHtmlMap();
     this.syncMapEnabled();
+    this.loadDataFromJson();
+  }
+
+  async loadDataFromJson() {
+    try {
+      const [defaultLocation, connectorData] = await Promise.all([
+        fetch("./data/default-location.json").then((r) => r.json()),
+        fetch("./data/connectors.json").then((r) => r.json()),
+      ]);
+
+      this.defaultLocation = defaultLocation;
+      this.connectorData = connectorData;
+      console.log("GoogleMapsManager data loaded from JSON successfully");
+    } catch (error) {
+      console.error("Error loading GoogleMapsManager data from JSON:", error);
+      // Fallback data is already set in constructor
+    }
+  }
+
+  async loadDefaultLocation() {
+    return this.defaultLocation;
   }
 
   async initializeMap(mapElementId) {
-    const defaultLocation = { lat: 52.52, lng: 13.405 };
+    const defaultLocation = await this.loadDefaultLocation();
     // FIXME: this only loads once on inital page load but not on refresh
     // this.loadHtmlMap();
 
@@ -591,21 +614,37 @@ class GoogleMapsManager {
   }
 
   mapConnectorType(googleType) {
-    const typeMapping = {
-      TYPE_1: "Type 1 (J1772)",
-      TYPE_2: "Type 2 (Mennekes)",
-      CCS_1: "CCS 1",
-      CCS_2: "CCS 2",
-      CHAdeMO: "CHAdeMO",
-      TESLA: "Tesla Supercharger",
-      SCHUKO: "Schuko",
-      J1772: "Type 1 (J1772)",
-      MENNEKES: "Type 2 (Mennekes)",
-      IEC_62196_T1: "Type 1 (J1772)",
-      IEC_62196_T2: "Type 2 (Mennekes)",
-      IEC_62196_T1_COMBO: "CCS 1",
-      IEC_62196_T2_COMBO: "CCS 2",
-    };
+    // Build type mapping from connector data
+    const typeMapping = {};
+
+    if (this.connectorData.connectors) {
+      this.connectorData.connectors.forEach((connector) => {
+        // Add main mapping
+        typeMapping[connector.id] = connector.name;
+
+        // Add aliases
+        connector.aliases.forEach((alias) => {
+          typeMapping[alias] = connector.name;
+        });
+      });
+    }
+
+    // Fallback mapping if no data loaded
+    if (Object.keys(typeMapping).length === 0) {
+      typeMapping.TYPE_1 = "Type 1 (J1772)";
+      typeMapping.TYPE_2 = "Type 2 (Mennekes)";
+      typeMapping.CCS_1 = "CCS 1";
+      typeMapping.CCS_2 = "CCS 2";
+      typeMapping.CHAdeMO = "CHAdeMO";
+      typeMapping.TESLA = "Tesla Supercharger";
+      typeMapping.SCHUKO = "Schuko";
+      typeMapping.J1772 = "Type 1 (J1772)";
+      typeMapping.MENNEKES = "Type 2 (Mennekes)";
+      typeMapping.IEC_62196_T1 = "Type 1 (J1772)";
+      typeMapping.IEC_62196_T2 = "Type 2 (Mennekes)";
+      typeMapping.IEC_62196_T1_COMBO = "CCS 1";
+      typeMapping.IEC_62196_T2_COMBO = "CCS 2";
+    }
 
     return typeMapping[googleType] || googleType;
   }
