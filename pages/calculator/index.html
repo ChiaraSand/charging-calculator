@@ -31,6 +31,182 @@
 
       <!-- Main Content -->
       <main class="main-content">
+        <!-- Preconfiguration Section -->
+        <section class="preconfiguration-section">
+          <div class="card">
+            <div class="card-header">
+              <h2><i class="fas fa-cog"></i> Schnellkonfiguration</h2>
+              <button
+                type="button"
+                id="togglePreconfig"
+                class="btn btn-secondary"
+              >
+                <i class="fas fa-chevron-down"></i> Ein-/Ausblenden
+              </button>
+            </div>
+            <div
+              class="preconfig-content"
+              id="preconfigContent"
+              style="display: none"
+            >
+              <div class="preconfig-grid">
+                <div class="preconfig-group">
+                  <label for="presetSelect"
+                    >Vordefinierte Konfigurationen:</label
+                  >
+                  <select id="presetSelect" name="presetSelect">
+                    <option value="">
+                      Wählen Sie eine Vorkonfiguration...
+                    </option>
+                    <option value="renault-5-daily">
+                      Renault 5 E-Tech - Tägliche Nutzung
+                    </option>
+                    <option value="renault-5-trip">
+                      Renault 5 E-Tech - Reise
+                    </option>
+                    <option value="generic-daily">
+                      Allgemeines Fahrzeug - Tägliche Nutzung
+                    </option>
+                    <option value="generic-trip">
+                      Allgemeines Fahrzeug - Reise
+                    </option>
+                    <option value="custom">Eigene Konfiguration</option>
+                  </select>
+                </div>
+
+                <div class="preconfig-group">
+                  <label for="quickVehicleSelect">Fahrzeug:</label>
+                  <select id="quickVehicleSelect" name="quickVehicleSelect">
+                    <option value="renault-5-e-tech-52kwh">
+                      Renault 5 E-Tech 52 kWh
+                    </option>
+                    <option value="generic">Allgemeines Fahrzeug</option>
+                  </select>
+                </div>
+
+                <div class="preconfig-group">
+                  <label for="quickChargingPower">Ladeleistung:</label>
+                  <select id="quickChargingPower" name="quickChargingPower">
+                    <option value="3.7">AC 3,7 kW (Haushaltssteckdose)</option>
+                    <option value="11">AC 11 kW (Wallbox)</option>
+                    <option value="22">AC 22 kW (Wallbox)</option>
+                    <option value="50">DC 50 kW (Schnelllader)</option>
+                    <option value="150">DC 150 kW (Hochleistungslader)</option>
+                    <option value="300">DC 300 kW (Ultra-Schnelllader)</option>
+                  </select>
+                </div>
+
+                <div class="preconfig-group">
+                  <label for="quickTariffSelect">Bevorzugte Tarife:</label>
+                  <select id="quickTariffSelect" name="quickTariffSelect">
+                    <option value="all">Alle Tarife anzeigen</option>
+                    <option value="cheapest">Nur günstigste Tarife</option>
+                    <option value="premium">
+                      Premium Tarife (Ionity, etc.)
+                    </option>
+                    <option value="local">Lokale Anbieter</option>
+                    <option value="custom">Eigene Auswahl</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="preconfig-actions">
+                <button
+                  type="button"
+                  id="applyPreconfig"
+                  class="btn btn-primary"
+                >
+                  <i class="fas fa-check"></i> Konfiguration anwenden
+                </button>
+                <button
+                  type="button"
+                  id="savePreconfig"
+                  class="btn btn-secondary"
+                >
+                  <i class="fas fa-save"></i> Als Voreinstellung speichern
+                </button>
+                <button
+                  type="button"
+                  id="resetPreconfig"
+                  class="btn btn-secondary"
+                >
+                  <i class="fas fa-undo"></i> Zurücksetzen
+                </button>
+              </div>
+
+              <div id="vehicle-details"></div>
+
+              <div class="filter-section-inline">
+                <h3><i class="fas fa-filter"></i> Filter</h3>
+                <div class="filter-tabs">
+                  <button class="filter-tab active" data-tab="providers">
+                    <i class="fas fa-building"></i> Anbieter
+                  </button>
+                  <button class="filter-tab" data-tab="connectors">
+                    <i class="fas fa-plug"></i> Steckertypen
+                  </button>
+                </div>
+
+                <!-- Provider Filter Tab -->
+                <div class="filter-content active" id="providers-tab">
+                  <div class="provider-filters">
+                    <div class="filter-group">
+                      <label>Ladetarife anzeigen:</label>
+                      <div class="checkbox-grid" id="providerCheckboxes">
+                        <!-- Will be populated by JavaScript -->
+                      </div>
+                    </div>
+                    <div class="filter-actions">
+                      <button
+                        type="button"
+                        id="selectAll"
+                        class="btn btn-secondary"
+                      >
+                        Alle auswählen
+                      </button>
+                      <button
+                        type="button"
+                        id="selectNone"
+                        class="btn btn-secondary"
+                      >
+                        Alle abwählen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Connector Filter Tab -->
+                <div class="filter-content" id="connectors-tab">
+                  <div class="connector-filters">
+                    <div class="filter-group">
+                      <label>Steckertypen anzeigen:</label>
+                      <div class="checkbox-grid" id="connectorCheckboxes">
+                        <!-- Will be populated by JavaScript -->
+                      </div>
+                    </div>
+                    <div class="filter-actions">
+                      <button
+                        type="button"
+                        id="selectAllConnectors"
+                        class="btn btn-secondary"
+                      >
+                        Alle auswählen
+                      </button>
+                      <button
+                        type="button"
+                        id="selectNoConnectors"
+                        class="btn btn-secondary"
+                      >
+                        Alle abwählen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Calculator Section -->
         <section class="calculator-section">
           <div class="card">
@@ -45,29 +221,7 @@
 
             <form id="chargingForm" class="calculator-form">
               <div class="form-grid">
-                <div class="form-group">
-                  <label for="batteryCapacity">Batteriekapazität (kWh)</label>
-                  <div class="input-with-clear">
-                    <input
-                      type="number"
-                      id="batteryCapacity"
-                      name="batteryCapacity"
-                      value="52"
-                      min="1"
-                      max="200"
-                      step="0.1"
-                    />
-                    <button
-                      type="button"
-                      class="clear-btn"
-                      data-target="batteryCapacity"
-                      title="Löschen"
-                    >
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="form-group">
+                <!-- <div class="form-group">
                   <label for="vehicleSelect">Fahrzeug-Modell</label>
                   <select id="vehicleSelect" name="vehicleSelect">
                     <option value="renault-5-e-tech-52kwh" selected>
@@ -78,7 +232,7 @@
                   <small class="form-help"
                     >Wählen Sie Ihr Fahrzeug für präzise Ladekurven</small
                   >
-                </div>
+                </div>-->
 
                 <div class="form-group">
                   <label for="currentCharge">Aktueller Ladestand (%)</label>
@@ -121,6 +275,29 @@
                       type="button"
                       class="clear-btn range-clear-btn"
                       data-target="targetCharge"
+                      title="Löschen"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="batteryCapacity">Batteriekapazität (kWh)</label>
+                  <div class="input-with-clear">
+                    <input
+                      type="number"
+                      id="batteryCapacity"
+                      name="batteryCapacity"
+                      value="52"
+                      min="1"
+                      max="200"
+                      step="0.1"
+                    />
+                    <button
+                      type="button"
+                      class="clear-btn"
+                      data-target="batteryCapacity"
                       title="Löschen"
                     >
                       <i class="fas fa-times"></i>
@@ -176,7 +353,6 @@
                 </div>
                 <!-- </div> -->
               </div>
-              <div id="vehicle-details"></div>
 
               <div class="calculation-summary">
                 <div class="summary-item">
@@ -325,77 +501,6 @@
                       <i class="fas fa-eye"></i>
                     </button>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Provider Filter Section -->
-        <section class="filter-section">
-          <div class="card">
-            <h2><i class="fas fa-filter"></i> Filter</h2>
-            <div class="filter-tabs">
-              <button class="filter-tab active" data-tab="providers">
-                <i class="fas fa-building"></i> Anbieter
-              </button>
-              <button class="filter-tab" data-tab="connectors">
-                <i class="fas fa-plug"></i> Steckertypen
-              </button>
-            </div>
-
-            <!-- Provider Filter Tab -->
-            <div class="filter-content active" id="providers-tab">
-              <div class="provider-filters">
-                <div class="filter-group">
-                  <label>Ladetarife anzeigen:</label>
-                  <div class="checkbox-grid" id="providerCheckboxes">
-                    <!-- Will be populated by JavaScript -->
-                  </div>
-                </div>
-                <div class="filter-actions">
-                  <button
-                    type="button"
-                    id="selectAll"
-                    class="btn btn-secondary"
-                  >
-                    Alle auswählen
-                  </button>
-                  <button
-                    type="button"
-                    id="selectNone"
-                    class="btn btn-secondary"
-                  >
-                    Alle abwählen
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Connector Filter Tab -->
-            <div class="filter-content" id="connectors-tab">
-              <div class="connector-filters">
-                <div class="filter-group">
-                  <label>Steckertypen anzeigen:</label>
-                  <div class="checkbox-grid" id="connectorCheckboxes">
-                    <!-- Will be populated by JavaScript -->
-                  </div>
-                </div>
-                <div class="filter-actions">
-                  <button
-                    type="button"
-                    id="selectAllConnectors"
-                    class="btn btn-secondary"
-                  >
-                    Alle auswählen
-                  </button>
-                  <button
-                    type="button"
-                    id="selectNoConnectors"
-                    class="btn btn-secondary"
-                  >
-                    Alle abwählen
-                  </button>
                 </div>
               </div>
             </div>

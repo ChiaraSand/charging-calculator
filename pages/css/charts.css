@@ -66,13 +66,15 @@
 
 .charging-speed-info {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 24px;
   margin-top: 24px;
   padding: 20px;
-  background: var(--background-color);
   border-radius: 8px;
-  border: 1px solid var(--border-color);
+  background: #f0f9ff;
+  border: 1px solid #0ea5e9;
+  /* background: var(--background-color);
+  border: 1px solid var(--border-color); */
 }
 
 .info-item {

@@ -9,6 +9,43 @@ class ChargingCalculator {
     this.selectedVehicle = "renault-5-e-tech-52kwh"; // Default vehicle
 
     this.mapsManager = new GoogleMapsManager(true); // false to disable map
+
+    // Preconfiguration presets
+    this.presets = {
+      "renault-5-daily": {
+        vehicle: "renault-5-e-tech-52kwh",
+        batteryCapacity: 52,
+        currentCharge: 20,
+        targetCharge: 80,
+        chargingPower: 22,
+        tariffFilter: "cheapest",
+      },
+      "renault-5-trip": {
+        vehicle: "renault-5-e-tech-52kwh",
+        batteryCapacity: 52,
+        currentCharge: 10,
+        targetCharge: 90,
+        chargingPower: 150,
+        tariffFilter: "premium",
+      },
+      "generic-daily": {
+        vehicle: "generic",
+        batteryCapacity: 50,
+        currentCharge: 20,
+        targetCharge: 80,
+        chargingPower: 11,
+        tariffFilter: "cheapest",
+      },
+      "generic-trip": {
+        vehicle: "generic",
+        batteryCapacity: 60,
+        currentCharge: 10,
+        targetCharge: 90,
+        chargingPower: 150,
+        tariffFilter: "premium",
+      },
+    };
+
     this.init();
   }
 
@@ -29,6 +66,9 @@ class ChargingCalculator {
     this.updateCalculations();
     this.initializeChargingChart();
     await this.mapsManager.initializeMap("map");
+
+    // Load saved preconfiguration after everything is initialized
+    this.loadSavedPreconfiguration();
   }
 
   // Load tariff data from JSON file
@@ -67,14 +107,15 @@ class ChargingCalculator {
         e.target.value + "%";
       this.updateCalculations();
     });
-    document
-      .getElementById("chargingPower")
-      .addEventListener("change", () => this.updateCalculations());
-    document.getElementById("vehicleSelect").addEventListener("change", (e) => {
-      this.selectedVehicle = e.target.value;
+    document.getElementById("chargingPower").addEventListener("change", () => {
+      document.getElementById("quickChargingPower").value = e.target.value;
       this.updateCalculations();
-      this.updateChargingChart();
     });
+    // document.getElementById("vehicleSelect").addEventListener("change", (e) => {
+    //   this.selectedVehicle = e.target.value;
+    //   this.updateCalculations();
+    //   this.updateChargingChart();
+    // });
     document
       .getElementById("startTime")
       .addEventListener("change", () => this.updateCalculations());
@@ -131,6 +172,342 @@ class ChargingCalculator {
     //   .addEventListener("click", () =>
     //     this.mapsManager.refreshChargingStations()
     //   );
+
+    // Preconfiguration controls
+    this.setupPreconfigurationEventListeners();
+  }
+
+  setupPreconfigurationEventListeners() {
+    // Toggle preconfiguration section
+    document.getElementById("togglePreconfig").addEventListener("click", () => {
+      this.togglePreconfiguration();
+    });
+
+    // Preset selection
+    document.getElementById("presetSelect").addEventListener("change", (e) => {
+      this.handlePresetSelection(e.target.value);
+    });
+
+    // Apply preconfiguration
+    document.getElementById("applyPreconfig").addEventListener("click", () => {
+      this.applyPreconfiguration();
+    });
+
+    // Save preconfiguration
+    document.getElementById("savePreconfig").addEventListener("click", () => {
+      this.savePreconfiguration();
+    });
+
+    // Reset preconfiguration
+    document.getElementById("resetPreconfig").addEventListener("click", () => {
+      this.resetPreconfiguration();
+    });
+
+    // Quick vehicle selection
+    document
+      .getElementById("quickVehicleSelect")
+      .addEventListener("change", (e) => {
+        this.selectedVehicle = e.target.value;
+        this.updateCalculations();
+        this.updateChargingChart();
+      });
+
+    // Quick charging power selection
+    document
+      .getElementById("quickChargingPower")
+      .addEventListener("change", (e) => {
+        document.getElementById("chargingPower").value = e.target.value;
+        this.updateCalculations();
+      });
+
+    // Quick tariff selection
+    document
+      .getElementById("quickTariffSelect")
+      .addEventListener("change", (e) => {
+        this.applyTariffFilter(e.target.value);
+      });
+  }
+
+  togglePreconfiguration() {
+    const content = document.getElementById("preconfigContent");
+    const button = document.getElementById("togglePreconfig");
+
+    if (content.style.display === "none") {
+      content.style.display = "block";
+      button.classList.add("expanded");
+      button.innerHTML = '<i class="fas fa-chevron-up"></i> Ein-/Ausblenden';
+    } else {
+      content.style.display = "none";
+      button.classList.remove("expanded");
+      button.innerHTML = '<i class="fas fa-chevron-down"></i> Ein-/Ausblenden';
+    }
+  }
+
+  handlePresetSelection(presetId) {
+    if (!presetId || presetId === "custom") {
+      return;
+    }
+
+    const preset = this.presets[presetId];
+    if (!preset) {
+      return;
+    }
+
+    // Apply preset values to form fields
+    // document.getElementById("vehicleSelect").value = preset.vehicle;
+    document.getElementById("quickVehicleSelect").value = preset.vehicle;
+    document.getElementById("batteryCapacity").value = preset.batteryCapacity;
+    document.getElementById("currentCharge").value = preset.currentCharge;
+    document.getElementById("currentChargeValue").textContent =
+      preset.currentCharge + "%";
+    document.getElementById("targetCharge").value = preset.targetCharge;
+    document.getElementById("targetChargeValue").textContent =
+      preset.targetCharge + "%";
+    document.getElementById("chargingPower").value = preset.chargingPower;
+    document.getElementById("quickChargingPower").value = preset.chargingPower;
+    document.getElementById("quickTariffSelect").value = preset.tariffFilter;
+
+    // Update selected vehicle
+    this.selectedVehicle = preset.vehicle;
+
+    // Apply tariff filter
+    this.applyTariffFilter(preset.tariffFilter);
+
+    // Update calculations
+    this.updateCalculations();
+    this.updateChargingChart();
+
+    // Show success message
+    this.showPreconfigMessage("Vorkonfiguration angewendet!", "success");
+  }
+
+  applyPreconfiguration() {
+    const vehicle = document.getElementById("quickVehicleSelect").value;
+    const chargingPower = document.getElementById("quickChargingPower").value;
+    const tariffFilter = document.getElementById("quickTariffSelect").value;
+
+    // Apply to main form
+    // document.getElementById("vehicleSelect").value = vehicle;
+    document.getElementById("chargingPower").value = chargingPower;
+
+    // Update selected vehicle
+    this.selectedVehicle = vehicle;
+
+    // Apply tariff filter
+    this.applyTariffFilter(tariffFilter);
+
+    // Update calculations
+    this.updateCalculations();
+    this.updateChargingChart();
+
+    this.showPreconfigMessage("Konfiguration angewendet!", "success");
+  }
+
+  savePreconfiguration() {
+    const config = {
+      vehicle: document.getElementById("quickVehicleSelect").value,
+      chargingPower: document.getElementById("quickChargingPower").value,
+      tariffFilter: document.getElementById("quickTariffSelect").value,
+      batteryCapacity: document.getElementById("batteryCapacity").value,
+      currentCharge: document.getElementById("currentCharge").value,
+      targetCharge: document.getElementById("targetCharge").value,
+    };
+
+    // Save to localStorage
+    localStorage.setItem("chargingCalculatorPreconfig", JSON.stringify(config));
+    this.showPreconfigMessage("Voreinstellung gespeichert!", "success");
+  }
+
+  resetPreconfiguration() {
+    // Reset all preconfiguration fields
+    document.getElementById("presetSelect").value = "";
+    document.getElementById("quickVehicleSelect").value =
+      "renault-5-e-tech-52kwh";
+    document.getElementById("quickChargingPower").value = "22";
+    document.getElementById("quickTariffSelect").value = "all";
+
+    // Clear saved configuration
+    localStorage.removeItem("chargingCalculatorPreconfig");
+
+    this.showPreconfigMessage("Voreinstellungen zurückgesetzt!", "info");
+  }
+
+  applyTariffFilter(filterType) {
+    switch (filterType) {
+      case "cheapest":
+        // Select only the cheapest providers
+        this.selectCheapestProviders();
+        break;
+      case "premium":
+        // Select premium providers like Ionity
+        this.selectPremiumProviders();
+        break;
+      case "local":
+        // Select local providers
+        this.selectLocalProviders();
+        break;
+      case "all":
+        // Select all providers
+        this.selectAllProviders();
+        break;
+      case "custom":
+        // Don't change selection, let user choose manually
+        break;
+    }
+  }
+
+  selectCheapestProviders() {
+    // Get all providers and sort by average price
+    const providers = this.tariffManager.getUniqueProviders();
+    const providerPrices = providers.map((provider) => {
+      const providerTariffs = this.tariffs.filter(
+        (t) => t.providerName === provider
+      );
+      const avgPrice =
+        providerTariffs.reduce((sum, t) => sum + t.pricePerKwh, 0) /
+        providerTariffs.length;
+      return { provider, avgPrice };
+    });
+
+    // Select the 3 cheapest providers
+    const cheapestProviders = providerPrices
+      .sort((a, b) => a.avgPrice - b.avgPrice)
+      .slice(0, 3)
+      .map((p) => p.provider);
+
+    // Update checkboxes
+    document
+      .querySelectorAll('#providerCheckboxes input[type="checkbox"]')
+      .forEach((checkbox) => {
+        checkbox.checked = cheapestProviders.includes(checkbox.value);
+        if (checkbox.checked) {
+          this.selectedProviders.add(checkbox.value);
+        } else {
+          this.selectedProviders.delete(checkbox.value);
+        }
+      });
+
+    this.populateTariffTable();
+  }
+
+  selectPremiumProviders() {
+    const premiumProviders = ["Ionity", "Tesla"];
+
+    document
+      .querySelectorAll('#providerCheckboxes input[type="checkbox"]')
+      .forEach((checkbox) => {
+        checkbox.checked = premiumProviders.includes(checkbox.value);
+        if (checkbox.checked) {
+          this.selectedProviders.add(checkbox.value);
+        } else {
+          this.selectedProviders.delete(checkbox.value);
+        }
+      });
+
+    this.populateTariffTable();
+  }
+
+  selectLocalProviders() {
+    const localProviders = ["EWE Go", "Qwello NRW"];
+
+    document
+      .querySelectorAll('#providerCheckboxes input[type="checkbox"]')
+      .forEach((checkbox) => {
+        checkbox.checked = localProviders.includes(checkbox.value);
+        if (checkbox.checked) {
+          this.selectedProviders.add(checkbox.value);
+        } else {
+          this.selectedProviders.delete(checkbox.value);
+        }
+      });
+
+    this.populateTariffTable();
+  }
+
+  showPreconfigMessage(message, type = "info") {
+    // Create or update message element
+    let messageElement = document.getElementById("preconfigMessage");
+    if (!messageElement) {
+      messageElement = document.createElement("div");
+      messageElement.id = "preconfigMessage";
+      messageElement.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        z-index: 1000;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      `;
+      document.body.appendChild(messageElement);
+    }
+
+    // Set message content and styling based on type
+    messageElement.textContent = message;
+    switch (type) {
+      case "success":
+        messageElement.style.background = "#10b981";
+        messageElement.style.color = "white";
+        break;
+      case "error":
+        messageElement.style.background = "#ef4444";
+        messageElement.style.color = "white";
+        break;
+      case "info":
+      default:
+        messageElement.style.background = "#3b82f6";
+        messageElement.style.color = "white";
+        break;
+    }
+
+    // Show message
+    messageElement.style.opacity = "1";
+    messageElement.style.transform = "translateX(0)";
+
+    // Hide message after 3 seconds
+    setTimeout(() => {
+      messageElement.style.opacity = "0";
+      messageElement.style.transform = "translateX(100%)";
+    }, 3000);
+  }
+
+  loadSavedPreconfiguration() {
+    const saved = localStorage.getItem("chargingCalculatorPreconfig");
+    if (saved) {
+      try {
+        const config = JSON.parse(saved);
+
+        // Apply saved configuration
+        document.getElementById("quickVehicleSelect").value =
+          config.vehicle || "renault-5-e-tech-52kwh";
+        document.getElementById("quickChargingPower").value =
+          config.chargingPower || "22";
+        document.getElementById("quickTariffSelect").value =
+          config.tariffFilter || "all";
+
+        if (config.batteryCapacity) {
+          document.getElementById("batteryCapacity").value =
+            config.batteryCapacity;
+        }
+        if (config.currentCharge) {
+          document.getElementById("currentCharge").value = config.currentCharge;
+          document.getElementById("currentChargeValue").textContent =
+            config.currentCharge + "%";
+        }
+        if (config.targetCharge) {
+          document.getElementById("targetCharge").value = config.targetCharge;
+          document.getElementById("targetChargeValue").textContent =
+            config.targetCharge + "%";
+        }
+
+        // Apply the configuration
+        this.applyPreconfiguration();
+      } catch (error) {
+        console.error("Error loading saved preconfiguration:", error);
+      }
+    }
   }
 
   populateProviderFilters() {
@@ -1473,14 +1850,6 @@ class ChargingCalculator {
       speedInfoElement = document.createElement("div");
       speedInfoElement.id = "chargingSpeedInfo";
       speedInfoElement.className = "charging-speed-info";
-      speedInfoElement.style.cssText = `
-        background: #f0f9ff;
-        border: 1px solid #0ea5e9;
-        border-radius: 8px;
-        padding: 16px;
-        margin-top: 16px;
-        font-size: 0.875rem;
-      `;
 
       // Insert after the estimated time element
       const parentElement = document.getElementById("vehicle-details");
@@ -1496,7 +1865,7 @@ class ChargingCalculator {
     const avgPower = chargingResult.averagePower;
 
     speedInfoElement.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
         <i class="fas fa-car" style="color: #0ea5e9;"></i>
         <strong>Ladegeschwindigkeit - ${vehicleName}</strong>
       </div>
