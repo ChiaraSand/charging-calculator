@@ -11,6 +11,13 @@ layout: default
     </a>
   </div>
 
+  <div>
+    <ul>
+      <li><a href="pages/calculator">Calculator</a></li>
+      <li><a href="pages/examples">Examples</a></li>
+    </ul>
+  </div>
+
   <div class="features">
     <div class="feature-grid">
       <div class="feature-card">
@@ -18,19 +25,16 @@ layout: default
         <h3>Tarifvergleich</h3>
         <p>Übersicht verschiedener Ladetarife basierend auf aktuellen ADAC-Daten</p>
       </div>
-
       <div class="feature-card">
         <div class="feature-icon">🔍</div>
         <h3>Anbieter-Filter</h3>
         <p>Mehrfach-Auswahl von Ladetarifen für personalisierte Ergebnisse</p>
       </div>
-
       <div class="feature-card">
         <div class="feature-icon">🗺️</div>
         <h3>Kartenintegration</h3>
         <p>Google Maps mit Ladesäulen und verfügbaren Tarifen</p>
       </div>
-
       <div class="feature-card">
         <div class="feature-icon">💡</div>
         <h3>Echtzeit-Berechnung</h3>
