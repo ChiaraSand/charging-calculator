@@ -317,7 +317,6 @@ class GoogleMapsManager {
 
   addStationsToMap(stations) {
     stations.forEach((station) => {
-      console.log("station", station);
       // Handle both Google Places data and our custom station data
       const position =
         station.geometry && station.geometry.location
