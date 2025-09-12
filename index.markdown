@@ -6,7 +6,7 @@ layout: default
   <div class="hero">
     <h1 class="hero-title">🔌 E-Auto Ladekosten Rechner</h1>
     <p class="hero-subtitle">Vergleiche Ladetarife und finde die günstigsten Ladesäulen in deiner Nähe</p>
-    <a href="/pages/calculator/calculator.html" class="cta-button">
+    <a href="pages/calculator" class="cta-button">
       <i class="fas fa-calculator"></i> Jetzt berechnen
     </a>
   </div>
@@ -44,7 +44,7 @@ layout: default
     <h2>Warum unser Rechner?</h2>
     <ul>
       <li>✅ <strong>Aktuelle Daten:</strong> Basierend auf ADAC-Informationen von 2025</li>
-      <li>✅ <strong>Vollständig:</strong> Über 12 verschiedene Ladetarife im Vergleich</li>
+      <!-- <li>✅ <strong>Vollständig:</strong> Über 12 verschiedene Ladetarife im Vergleich</li> -->
       <li>✅ <strong>Interaktiv:</strong> Google Maps Integration mit Ladesäulen</li>
       <li>✅ <strong>Responsive:</strong> Optimiert für Desktop, Tablet und Mobile</li>
       <li>✅ <strong>Kostenlos:</strong> Keine Registrierung oder versteckte Kosten</li>
