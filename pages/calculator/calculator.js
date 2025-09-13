@@ -1063,15 +1063,9 @@ class ChargingCalculator {
       parseFloat(document.getElementById("custom-price-per-kwh")?.value) || 0.5;
     const customBaseFee =
       parseFloat(document.getElementById("custom-base-fee")?.value) || 0.0;
-    console.debug(
-      "custom-blocking-fee",
-      document.getElementById("custom-blocking-fee")?.value,
-      parseFloat(document.getElementById("custom-blocking-fee")?.value)
-    );
     const customBlockingFee = parseFloat(
       document.getElementById("custom-blocking-fee")?.value
     ); // || 0.1;
-    console.debug("customBlockingFee", customBlockingFee);
     const pricePerSelectedKwh = customPricePerKwh * energyToCharge;
 
     // Calculate estimated time and blocking time
@@ -1088,6 +1082,7 @@ class ChargingCalculator {
 
     let totalCost = 0;
     let effectivePricePerKwh = 0;
+    let blockingFeeCost = 0;
 
     if (
       batteryCapacity > 0 &&
@@ -1102,6 +1097,7 @@ class ChargingCalculator {
         chargingPower,
         batteryCapacity
       );
+      // REVIEW: unused
       const estimatedTime = chargingResult.totalTime; // in minutes
       const totalParkingTime = DateTimeHelper.calculateTimeDifference(
         startTime,
@@ -1113,10 +1109,7 @@ class ChargingCalculator {
       const energyCost = energyToCharge * customPricePerKwh;
       const timeCost = 0; // Custom tariff doesn't have pricePerMin, so timeCost is always 0
 
-      const blockingFeeCost = blockingTime * customBlockingFee;
-      console.debug("blockingTime", blockingTime);
-      console.debug("customBlockingFee", customBlockingFee);
-      console.debug("blockingFeeCost", blockingFeeCost);
+      blockingFeeCost = blockingTime * customBlockingFee;
       totalCost = energyCost + timeCost + customBaseFee + blockingFeeCost;
       effectivePricePerKwh =
         energyToCharge > 0 ? totalCost / energyToCharge : 0;
@@ -1130,6 +1123,14 @@ class ChargingCalculator {
       pricePerSelectedKwhElement.textContent = `${pricePerSelectedKwh.toFixed(
         2
       )} €`;
+    }
+
+    // Update blocking fee cost
+    const blockingFeeCostElement = document.getElementById(
+      "custom-blocking-fee-cost"
+    );
+    if (blockingFeeCostElement) {
+      blockingFeeCostElement.textContent = `${blockingFeeCost.toFixed(2)} €`;
     }
 
     // Update total cost
@@ -1177,22 +1178,6 @@ class ChargingCalculator {
     const customBlockingFee = 0.1;
     const initialBlockingFee = energyToCharge * customBlockingFee;
 
-    // <td><span class="charging-type ac">AC/DC</span></td>
-
-    //   <td class="price">
-    //   <input type="number"
-    //          class="custom-tariff-input"
-    //          id="custom-base-fee"
-    //          value="0.00"
-    //          min="0"
-    //          max="50"
-    //          step="0.01"
-    //          title="Grundgebühr"
-    //          oninput="window.chargingCalculator.updateCustomTariffOnInput()"
-    //          style="width: 80px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; text-align: center;">
-    //   €
-    // </td>
-
     return `
       <tr class="custom-tariff-row" style="background-color: #f0f9ff; border-bottom: 2px solid var(--primary-color);">
         <td class="provider-name" style="font-weight: 600; color: var(--primary-color);">
@@ -1202,33 +1187,25 @@ class ChargingCalculator {
           </div>
         </td>
         <td class="price">
-          <input type="number"
-                 class="custom-tariff-input"
-                 id="custom-price-per-kwh"
-                 value="0.50"
-                 min="0"
-                 max="2"
-                 step="0.01"
+          <input type="number" class="custom-tariff-input" id="custom-price-per-kwh"
+                 value="0.50" min="0" max="2" step="0.01"
                  title="Preis pro kWh"
-                 style="width: 80px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; text-align: center;">
-          €
+                 >
+          €/kWh
         </td>
         <td class="price">
-          <input type="number"
-                 class="custom-tariff-input"
-                 id="custom-blocking-fee"
-                 value="0.10"
-                 min="0"
-                 max="2"
-                 step="0.01"
+          <input type="number" class="custom-tariff-input" id="custom-blocking-fee"
+                 value="0.10" min="0" max="2" step="0.01"
                  title="Blocking Fee pro Minute"
-                 style="width: 80px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; text-align: center;">
+                 >
           €/min
         </td>
         <td class="price" id="custom-price-per-selected-kwh">${initialEnergyCost.toFixed(
           2
         )} €</td>
-        <td class="price">${initialBlockingFee.toFixed(2)} €</td>
+        <td class="price" id="custom-blocking-fee-cost">${initialBlockingFee.toFixed(
+          2
+        )} €</td>
         <td class="total-cost" id="custom-total-cost">— €</td>
         <td class="effective-price" id="custom-effective-price">— €</td>
       </tr>
