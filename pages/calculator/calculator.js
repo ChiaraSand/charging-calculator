@@ -946,16 +946,18 @@ class ChargingCalculator {
         return result;
       });
 
-    // Calculate custom tariff separately
+    // REVIEW: unused
+    // Calculate custom tariff separately (for display purposes only)
     const customTariff = this.calculateCustomTariff(
       energyToCharge,
       estimatedTime,
       blockingTime
     );
 
-    // Combine and sort all tariffs
-    const allTariffs = [customTariff, ...sortedProviderTariffs];
-    const sortedTariffs = allTariffs.sort((a, b) => a.totalCost - b.totalCost);
+    // Sort provider tariffs only (custom tariff has its own input row)
+    const sortedTariffs = sortedProviderTariffs.sort(
+      (a, b) => a.totalCost - b.totalCost
+    );
 
     // Create custom tariff row
     const customTariffRow = this.createCustomBlockingFeeRow();
@@ -1003,7 +1005,8 @@ class ChargingCalculator {
         })
         .join("");
 
-    // Event listeners are now set up in createCustomBlockingFeeRow
+    // Set up event listeners for custom tariff inputs
+    this.setupCustomTariffEventListeners();
 
     // Update custom tariff display
     this.updateCustomTariffDisplay(energyToCharge);
@@ -1022,36 +1025,21 @@ class ChargingCalculator {
   }
 
   setupCustomTariffEventListeners() {
-    // Remove existing event listeners to prevent duplication
+    // Add event listeners to custom tariff inputs
     document.querySelectorAll(".custom-tariff-input").forEach((input) => {
-      // Clone the element to remove all event listeners
+      // Remove any existing event listeners by cloning
       const newInput = input.cloneNode(true);
       input.parentNode.replaceChild(newInput, input);
-    });
 
-    // Add fresh event listeners
-    document.querySelectorAll(".custom-tariff-input").forEach((input) => {
-      input.addEventListener("input", () => {
-        this.updateCalculations();
-        // Also update the custom tariff display immediately
-        const batteryCapacity =
-          parseFloat(document.getElementById("batteryCapacity").value) || 0;
-        const currentCharge =
-          parseFloat(document.getElementById("currentCharge").value) || 0;
-        const targetCharge =
-          parseFloat(document.getElementById("targetCharge").value) || 0;
-        if (batteryCapacity > 0 && targetCharge > currentCharge) {
-          const energyToCharge =
-            (batteryCapacity * (targetCharge - currentCharge)) / 100;
-          this.updateCustomTariffDisplay(energyToCharge);
-        }
+      // Add the event listener to the new element
+      newInput.addEventListener("input", (e) => {
+        this.updateCustomTariffOnInput();
       });
     });
   }
 
   updateCustomTariffOnInput() {
-    this.updateCalculations();
-    // Also update the custom tariff display immediately
+    // Update only the custom tariff display without recreating the entire table
     const batteryCapacity =
       parseFloat(document.getElementById("batteryCapacity").value) || 0;
     const currentCharge =
@@ -1065,19 +1053,25 @@ class ChargingCalculator {
     }
   }
 
-  setupBlockingFeeInputs() {
-    // This function is kept for backward compatibility but now just calls the new function
-    this.setupCustomTariffEventListeners();
-  }
+  // setupBlockingFeeInputs() {
+  //   // This function is kept for backward compatibility but now just calls the new function
+  //   this.setupCustomTariffEventListeners();
+  // }
 
   updateCustomTariffDisplay(energyToCharge) {
     const customPricePerKwh =
       parseFloat(document.getElementById("custom-price-per-kwh")?.value) || 0.5;
     const customBaseFee =
       parseFloat(document.getElementById("custom-base-fee")?.value) || 0.0;
-    const customBlockingFee =
-      parseFloat(document.getElementById("custom-blocking-fee")?.value) || 0.1;
-
+    console.debug(
+      "custom-blocking-fee",
+      document.getElementById("custom-blocking-fee")?.value,
+      parseFloat(document.getElementById("custom-blocking-fee")?.value)
+    );
+    const customBlockingFee = parseFloat(
+      document.getElementById("custom-blocking-fee")?.value
+    ); // || 0.1;
+    console.debug("customBlockingFee", customBlockingFee);
     const pricePerSelectedKwh = customPricePerKwh * energyToCharge;
 
     // Calculate estimated time and blocking time
@@ -1113,12 +1107,16 @@ class ChargingCalculator {
         startTime,
         endTime
       );
-      const blockingTime = Math.max(0, totalParkingTime - estimatedTime);
+      const blockingTime = Math.max(0, totalParkingTime);
 
       // Calculate total cost (matching calculateCustomTariff logic)
       const energyCost = energyToCharge * customPricePerKwh;
       const timeCost = 0; // Custom tariff doesn't have pricePerMin, so timeCost is always 0
+
       const blockingFeeCost = blockingTime * customBlockingFee;
+      console.debug("blockingTime", blockingTime);
+      console.debug("customBlockingFee", customBlockingFee);
+      console.debug("blockingFeeCost", blockingFeeCost);
       totalCost = energyCost + timeCost + customBaseFee + blockingFeeCost;
       effectivePricePerKwh =
         energyToCharge > 0 ? totalCost / energyToCharge : 0;
@@ -1212,7 +1210,6 @@ class ChargingCalculator {
                  max="2"
                  step="0.01"
                  title="Preis pro kWh"
-                 oninput="window.chargingCalculator.updateCustomTariffOnInput()"
                  style="width: 80px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; text-align: center;">
           €
         </td>
@@ -1225,7 +1222,6 @@ class ChargingCalculator {
                  max="2"
                  step="0.01"
                  title="Blocking Fee pro Minute"
-                 oninput="window.chargingCalculator.updateCustomTariffOnInput()"
                  style="width: 80px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; text-align: center;">
           €/min
         </td>
@@ -1248,7 +1244,7 @@ class ChargingCalculator {
         parseFloat(document.getElementById("custom-price-per-kwh")?.value) ||
         0.5,
       pricePerMin:
-        parseFloat(document.getElementById("custom-price-per-min")?.value) ||
+        parseFloat(document.getElementById("custom-blocking-fee")?.value) ||
         0.0,
       baseFee:
         parseFloat(document.getElementById("custom-base-fee")?.value) || 0.0,
@@ -1289,6 +1285,7 @@ class ChargingCalculator {
     };
   }
 
+  // REVIEW: unused
   getDefaultCustomBlockingFee(tariff) {
     // Use provider's blocking fee as default, or 0.10 if not available
     if (tariff.blockingFee && typeof tariff.blockingFee === "object") {
