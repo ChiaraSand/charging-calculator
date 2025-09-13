@@ -851,7 +851,16 @@ class ChargingCalculator {
 
     const energyToCharge =
       (batteryCapacity * (targetCharge - currentCharge)) / 100;
-    const estimatedTime = (energyToCharge / chargingPower) * 60;
+
+    // Use vehicle-specific charging curves for accurate time calculation
+    const chargingResult = this.vehicleCurves.calculateChargingTime(
+      this.selectedVehicle,
+      currentCharge,
+      targetCharge,
+      chargingPower,
+      batteryCapacity
+    );
+    const estimatedTime = chargingResult.totalTime; // in minutes
     let totalParkingTime = 0;
     if (endTime) {
       totalParkingTime = this.calculateTimeDifference(startTime, endTime);
@@ -1057,11 +1066,15 @@ class ChargingCalculator {
       targetCharge > currentCharge &&
       chargingPower > 0
     ) {
-      const estimatedTime =
-        ((batteryCapacity * (targetCharge - currentCharge)) /
-          100 /
-          chargingPower) *
-        60;
+      // Use vehicle-specific charging curves for accurate time calculation
+      const chargingResult = this.vehicleCurves.calculateChargingTime(
+        this.selectedVehicle,
+        currentCharge,
+        targetCharge,
+        chargingPower,
+        batteryCapacity
+      );
+      const estimatedTime = chargingResult.totalTime; // in minutes
       const totalParkingTime = this.calculateTimeDifference(startTime, endTime);
       const blockingTime = Math.max(0, totalParkingTime - estimatedTime);
 
@@ -1731,10 +1744,41 @@ class ChargingCalculator {
       );
       linearChargingLevels.push(linearLevel);
 
-      // Vehicle-specific realistic charging curve
-      const progress = Math.min(time / estimatedTime, 1);
-      const batteryLevel =
-        currentCharge + (targetCharge - currentCharge) * progress;
+      // Vehicle-specific realistic charging curve using chargingResult data
+      let batteryLevel = currentCharge;
+      if (chargingResult.timeSteps && chargingResult.timeSteps.length > 0) {
+        // Find the appropriate battery level based on time using the charging curve data
+        if (
+          time >= chargingResult.timeSteps[chargingResult.timeSteps.length - 1]
+        ) {
+          // If time exceeds the charging curve, use the final level
+          batteryLevel = chargingResult.finalBatteryLevel;
+        } else {
+          // Interpolate between time steps to find the current battery level
+          for (let i = 0; i < chargingResult.timeSteps.length - 1; i++) {
+            const currentTime = chargingResult.timeSteps[i];
+            const nextTime = chargingResult.timeSteps[i + 1];
+
+            if (time >= currentTime && time <= nextTime) {
+              // Calculate the battery level based on the step index
+              // Each step represents 1% of battery capacity
+              const stepProgress =
+                (time - currentTime) / (nextTime - currentTime);
+              const currentStepLevel = currentCharge + i;
+              const nextStepLevel = currentCharge + (i + 1);
+              batteryLevel =
+                currentStepLevel +
+                (nextStepLevel - currentStepLevel) * stepProgress;
+              break;
+            }
+          }
+        }
+      } else {
+        // Fallback to linear if no curve data available
+        const progress = Math.min(time / estimatedTime, 1);
+        batteryLevel =
+          currentCharge + (targetCharge - currentCharge) * progress;
+      }
       realisticChargingLevels.push(batteryLevel);
 
       // Calculate additional charging power curves

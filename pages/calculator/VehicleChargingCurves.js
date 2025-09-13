@@ -138,28 +138,7 @@ class VehicleChargingCurves {
       totalTime += timeForStep;
       totalEnergy += energyForStep;
       currentBatteryLevel += stepSize;
-      // console.log(
-      //   "currentBatteryLevel",
-      //   currentBatteryLevel,
-      //   "targetLevel",
-      //   targetLevel,
-      //   "totalTime",
-      //   totalTime,
-      //   "totalEnergy",
-      //   totalEnergy
-      // );
     }
-
-    // console.log(
-    //   "totalTime",
-    //   totalTime,
-    //   "totalEnergy",
-    //   totalEnergy,
-    //   "timeSteps",
-    //   timeSteps,
-    //   "powerSteps",
-    //   powerSteps
-    // );
 
     return {
       totalTime: totalTime,
@@ -261,7 +240,17 @@ class VehicleChargingCurves {
     batteryCapacity
   ) {
     const energyNeeded = (batteryCapacity * (targetLevel - currentLevel)) / 100;
-    const averagePower = chargerPower * 0.8; // Assume 80% average efficiency
+    console.log(
+      "batteryCapacity",
+      batteryCapacity,
+      "currentLevel",
+      currentLevel,
+      "targetLevel",
+      targetLevel,
+      "energyNeeded",
+      energyNeeded
+    );
+    const averagePower = chargerPower * 1; //0.8; // Assume 80% average efficiency
     const totalTime = (energyNeeded / averagePower) * 60; // in minutes
 
     return {
