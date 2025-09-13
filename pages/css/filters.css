@@ -2,7 +2,6 @@
 .filter-tabs {
   display: flex;
   gap: 8px;
-  margin-bottom: 24px;
   border-bottom: 2px solid var(--border-color);
 }
 
@@ -76,7 +75,7 @@
   padding: 12px 16px;
   background: #f8fafc;
   border-radius: 8px;
-  border: 2px solid transparent;
+  border: 2px solid var(--border-color);
   transition: var(--transition);
   cursor: pointer;
 }
@@ -109,4 +108,18 @@
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+}
+
+.filter-section-inline {
+  border: 1px solid var(--border-color);
+  box-shadow: none;
+}
+.filter-section-inline:hover {
+  box-shadow: none;
+}
+
+.filter-section-inline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }

@@ -19,7 +19,6 @@ async function loadEnums() {
 
     ConnectorType = connectorData.enumValues || {};
     ChargingType = chargingTypeData;
-    console.log("TariffClasses enums loaded from JSON successfully");
   } catch (error) {
     console.error("Error loading TariffClasses enums from JSON:", error);
     // Fallback to hardcoded enums

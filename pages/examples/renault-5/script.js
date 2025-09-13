@@ -9,7 +9,7 @@ async function loadChargingData() {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     renault5ChargingData = await response.json();
-    console.log("Renault 5 charging data loaded from JSON successfully");
+    console.info("Renault 5 charging data loaded from JSON successfully");
   } catch (error) {
     console.error("Error loading Renault 5 charging data from JSON:", error);
     // Fallback to hardcoded data

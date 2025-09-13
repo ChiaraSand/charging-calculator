@@ -89,6 +89,7 @@
 .calculator-form {
   width: 100%;
   display: flex;
+  /* flex-direction: row; */
   flex-direction: column;
   gap: 16px;
 }
@@ -300,17 +301,22 @@
 .preconfig-content {
   transition: all 0.3s ease;
   overflow: hidden;
+  display: none;
 }
 
 .preconfig-content.show {
-  display: block !important;
+  /* display: block !important; */
+  display: flex !important;
+  flex-direction: column;
+  /* flex-direction: row; */
+  gap: 24px;
 }
 
 .preconfig-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 24px;
-  margin-bottom: 24px;
+  /* margin-bottom: 24px; */
 }
 
 .preconfig-group {
@@ -345,8 +351,8 @@
   justify-content: center;
   gap: 16px;
   flex-wrap: wrap;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-color);
+  /* padding-top: 16px; */
+  /* border-top: 1px solid var(--border-color); */
 }
 
 .preconfig-actions .btn {
@@ -360,6 +366,7 @@
 
 #togglePreconfig.expanded i {
   transform: rotate(180deg);
+  transition: transform 0.3s ease;
 }
 
 /* Preconfiguration section specific card styling */

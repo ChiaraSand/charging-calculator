@@ -21,7 +21,7 @@ class GoogleMapsManager {
 
       this.defaultLocation = defaultLocation;
       this.connectorData = connectorData;
-      console.log("GoogleMapsManager data loaded from JSON successfully");
+      console.info("GoogleMapsManager data loaded from JSON successfully");
     } catch (error) {
       console.error("Error loading GoogleMapsManager data from JSON:", error);
       // Fallback data is already set in constructor
@@ -51,7 +51,7 @@ class GoogleMapsManager {
       this.showMapDisabledMessage();
       this.hideMapContainer();
       this.hideMapError();
-      console.log("map disabled");
+      console.warn("map disabled");
       return;
     } else {
       this.hideMapDisabledMessage();
@@ -74,7 +74,7 @@ class GoogleMapsManager {
       const userLocation = await this.getCurrentLocation();
       this.findRealChargingStations(userLocation);
     } catch (error) {
-      console.log("Could not get current location, using default location");
+      console.warn("Could not get current location, using default location");
       this.findRealChargingStations(defaultLocation);
     }
 
@@ -332,7 +332,7 @@ class GoogleMapsManager {
         this.addStationsToMap(places);
         // }
       } else {
-        console.log("No charging stations found");
+        console.warn("No charging stations found");
         this.showNoStationsMessage();
       }
     } catch (error) {

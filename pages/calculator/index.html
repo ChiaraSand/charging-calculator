@@ -44,11 +44,7 @@
                 <i class="fas fa-chevron-down"></i> Ein-/Ausblenden
               </button>
             </div>
-            <div
-              class="preconfig-content"
-              id="preconfigContent"
-              style="display: none"
-            >
+            <div class="preconfig-content" id="preconfigContent">
               <div class="preconfig-grid">
                 <div class="preconfig-group">
                   <label for="presetSelect"
@@ -133,44 +129,45 @@
                   <i class="fas fa-undo"></i> Zurücksetzen
                 </button>
               </div>
-
               <div id="vehicle-details"></div>
 
-              <div class="filter-section-inline">
+              <div class="card filter-section-inline">
                 <h3><i class="fas fa-filter"></i> Filter</h3>
-                <div class="filter-tabs">
-                  <button class="filter-tab active" data-tab="providers">
-                    <i class="fas fa-building"></i> Anbieter
-                  </button>
-                  <button class="filter-tab" data-tab="connectors">
-                    <i class="fas fa-plug"></i> Steckertypen
-                  </button>
-                </div>
+                <div class="filter-section-inline-content">
+                  <div class="filter-tabs">
+                    <button class="filter-tab active" data-tab="providers">
+                      <i class="fas fa-building"></i> Anbieter
+                    </button>
+                    <button class="filter-tab" data-tab="connectors">
+                      <i class="fas fa-plug"></i> Steckertypen
+                    </button>
+                  </div>
 
-                <!-- Provider Filter Tab -->
-                <div class="filter-content active" id="providers-tab">
-                  <div class="provider-filters">
-                    <div class="filter-group">
-                      <label>Ladetarife anzeigen:</label>
-                      <div class="checkbox-grid" id="providerCheckboxes">
-                        <!-- Will be populated by JavaScript -->
+                  <!-- Provider Filter Tab -->
+                  <div class="filter-content active" id="providers-tab">
+                    <div class="provider-filters">
+                      <div class="filter-group">
+                        <!-- <label>Ladetarife anzeigen:</label> -->
+                        <div class="checkbox-grid" id="providerCheckboxes">
+                          <!-- Will be populated by JavaScript -->
+                        </div>
                       </div>
-                    </div>
-                    <div class="filter-actions">
-                      <button
-                        type="button"
-                        id="selectAll"
-                        class="btn btn-secondary"
-                      >
-                        Alle auswählen
-                      </button>
-                      <button
-                        type="button"
-                        id="selectNone"
-                        class="btn btn-secondary"
-                      >
-                        Alle abwählen
-                      </button>
+                      <div class="filter-actions">
+                        <button
+                          type="button"
+                          id="selectAll"
+                          class="btn btn-secondary"
+                        >
+                          Alle auswählen
+                        </button>
+                        <button
+                          type="button"
+                          id="selectNone"
+                          class="btn btn-secondary"
+                        >
+                          Alle abwählen
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -415,90 +412,124 @@
                 <div class="legend-items">
                   <div class="legend-item active" data-dataset="0">
                     <div class="legend-color" style="background: #2563eb"></div>
-                    <span>Ladeverlauf (realistisch)</span>
+                    <span class="legend-item-text"
+                      >Ladeverlauf (realistisch)</span
+                    >
                     <button
                       type="button"
                       class="legend-toggle"
                       data-dataset="0"
                     >
-                      <i class="fas fa-eye"></i>
+                      <i id="legendToggle0-show" class="fas fa-eye"></i>
+                      <i id="legendToggle0-hide" class="fas fa-eye-slash"></i>
                     </button>
                   </div>
                   <div class="legend-item active" data-dataset="1">
                     <div class="legend-color" style="background: #10b981"></div>
-                    <span>Lineare Schätzung</span>
+                    <span class="legend-item-text">Lineare Schätzung</span>
                     <button
                       type="button"
                       class="legend-toggle"
                       data-dataset="1"
                     >
-                      <i class="fas fa-eye"></i>
+                      <i id="legendToggle1-show" class="fas fa-eye"></i>
+                      <i id="legendToggle1-hide" class="fas fa-eye-slash"></i>
                     </button>
                   </div>
                   <div class="legend-item active" data-dataset="2">
                     <div class="legend-color" style="background: #dc2626"></div>
-                    <span>400 kW (Ultra-Schnelllader)</span>
+                    <span class="legend-item-text"
+                      >400 kW <br /><small class="legend-item-text-sub"
+                        >Ultra-Schnelllader</small
+                      ></span
+                    >
                     <button
                       type="button"
                       class="legend-toggle"
                       data-dataset="2"
                     >
-                      <i class="fas fa-eye"></i>
+                      <i id="legendToggle2-show" class="fas fa-eye"></i>
+                      <i id="legendToggle2-hide" class="fas fa-eye-slash"></i>
                     </button>
                   </div>
                   <div class="legend-item active" data-dataset="3">
                     <div class="legend-color" style="background: #f59e0b"></div>
-                    <span>300 kW (Hochleistungslader)</span>
+                    <span class="legend-item-text"
+                      >300 kW <br /><small class="legend-item-text-sub"
+                        >Hochleistungslader</small
+                      ></span
+                    >
                     <button
                       type="button"
                       class="legend-toggle"
                       data-dataset="3"
                     >
-                      <i class="fas fa-eye"></i>
+                      <i id="legendToggle3-show" class="fas fa-eye"></i>
+                      <i id="legendToggle3-hide" class="fas fa-eye-slash"></i>
                     </button>
                   </div>
                   <div class="legend-item active" data-dataset="4">
                     <div class="legend-color" style="background: #8b5cf6"></div>
-                    <span>150 kW (Schnelllader)</span>
+                    <span class="legend-item-text"
+                      >150 kW <br /><small class="legend-item-text-sub"
+                        >Schnelllader</small
+                      ></span
+                    >
                     <button
                       type="button"
                       class="legend-toggle"
                       data-dataset="4"
                     >
-                      <i class="fas fa-eye"></i>
+                      <i id="legendToggle4-show" class="fas fa-eye"></i>
+                      <i id="legendToggle4-hide" class="fas fa-eye-slash"></i>
                     </button>
                   </div>
                   <div class="legend-item active" data-dataset="5">
                     <div class="legend-color" style="background: #06b6d4"></div>
-                    <span>50 kW (DC Schnelllader)</span>
+                    <span class="legend-item-text"
+                      >50 kW <br /><small class="legend-item-text-sub"
+                        >DC Schnelllader</small
+                      ></span
+                    >
                     <button
                       type="button"
                       class="legend-toggle"
                       data-dataset="5"
                     >
-                      <i class="fas fa-eye"></i>
+                      <i id="legendToggle5-show" class="fas fa-eye"></i>
+                      <i id="legendToggle5-hide" class="fas fa-eye-slash"></i>
                     </button>
                   </div>
                   <div class="legend-item active" data-dataset="6">
                     <div class="legend-color" style="background: #84cc16"></div>
-                    <span>22 kW (AC Wallbox)</span>
+                    <span class="legend-item-text"
+                      >22 kW <br /><small class="legend-item-text-sub"
+                        >AC Wallbox</small
+                      ></span
+                    >
                     <button
                       type="button"
                       class="legend-toggle"
                       data-dataset="6"
                     >
-                      <i class="fas fa-eye"></i>
+                      <i id="legendToggle6-show" class="fas fa-eye"></i>
+                      <i id="legendToggle6-hide" class="fas fa-eye-slash"></i>
                     </button>
                   </div>
                   <div class="legend-item active" data-dataset="7">
                     <div class="legend-color" style="background: #f97316"></div>
-                    <span>11 kW (AC Wallbox)</span>
+                    <span class="legend-item-text"
+                      >11 kW <br /><small class="legend-item-text-sub"
+                        >AC Wallbox</small
+                      ></span
+                    >
                     <button
                       type="button"
                       class="legend-toggle"
                       data-dataset="7"
                     >
-                      <i class="fas fa-eye"></i>
+                      <i id="legendToggle7-show" class="fas fa-eye"></i>
+                      <i id="legendToggle7-hide" class="fas fa-eye-slash"></i>
                     </button>
                   </div>
                 </div>
@@ -566,6 +597,8 @@
     <script src="TariffClasses.js"></script>
     <script src="VehicleChargingCurves.js"></script>
     <script src="GoogleMapsManager.js"></script>
+    <script src="DateTimeHelper.js"></script>
+    <script src="ChartManager.js"></script>
     <script src="calculator.js"></script>
   </body>
 </html>

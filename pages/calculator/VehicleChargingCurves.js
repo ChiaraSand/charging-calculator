@@ -15,7 +15,7 @@ class VehicleChargingCurves {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       this.vehicleData = await response.json();
-      console.log("Vehicle charging curves loaded from JSON successfully");
+      console.info("Vehicle charging curves loaded from JSON successfully");
     } catch (error) {
       console.error("Error loading vehicle charging curves from JSON:", error);
       // Fallback to hardcoded data
@@ -240,16 +240,6 @@ class VehicleChargingCurves {
     batteryCapacity
   ) {
     const energyNeeded = (batteryCapacity * (targetLevel - currentLevel)) / 100;
-    console.log(
-      "batteryCapacity",
-      batteryCapacity,
-      "currentLevel",
-      currentLevel,
-      "targetLevel",
-      targetLevel,
-      "energyNeeded",
-      energyNeeded
-    );
     const averagePower = chargerPower * 1; //0.8; // Assume 80% average efficiency
     const totalTime = (energyNeeded / averagePower) * 60; // in minutes
 
