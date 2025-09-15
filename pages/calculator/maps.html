@@ -1,10 +1,10 @@
-<section class="map-section">
-  <div class="card">
-    <div class="map-section-header">
-      <h2 class="map-section-header-title">
-        <i class="fas fa-map-marker-alt"></i> Ladesäulen in der Nähe
-      </h2>
-      <div class="map-section-header-right">
+<div class="card">
+  <div class="map-section-header card-header">
+    <h2 class="map-section-header-title">
+      <i class="fas fa-map-marker-alt"></i> Ladesäulen in der Nähe
+    </h2>
+    <div class="map-section-header-right">
+      <div class="map-section-header-right-controls">
         <div id="noStationsMessage" class="map-warning hidden">
           <i class="fas fa-info-circle"></i>
           <p>
@@ -20,31 +20,40 @@
           <i class="fa-solid fa-triangle-exclamation"></i>
           <p id="mapErrorMessage">Something went wrong.</p>
         </div>
-        <div id="apiKeyError" class="map-warning hidden">
+        <div id="apiKeyError" class="map-warning">
           <i class="fa-solid fa-triangle-exclamation"></i>
           <p id="apiKeyErrorMessage">Google Maps API key not configured.</p>
         </div>
         <button id="toggleEnableMap" class="btn btn-secondary"></button>
       </div>
+      <button
+        type="button"
+        id="maps-section-toggle"
+        data-toggle-section="maps-section"
+        class="btn btn-secondary section-toggle"
+      >
+        <i class="fas fa-chevron-up"></i> Ausblenden
+      </button>
     </div>
-    <div class="map-container">
-      <div id="map" class="map" title="Karte vertikal vergrößern/verkleinern">
-        <div id="mapLoading" class="map-loading">
-          <p id="mapLoadingMessage" class="hidden">
-            <i class="fas fa-spinner fa-spin"></i>
-            Lade Karte und Standort...
-          </p>
-        </div>
+  </div>
+  <div class="map-container section-content" id="maps-section-content">
+    <div id="map" class="map" title="Karte vertikal vergrößern/verkleinern">
+      <div id="mapLoading" class="map-loading">
+        <p id="mapLoadingMessage" class="hidden">
+          <i class="fas fa-spinner fa-spin"></i>
+          Lade Karte und Standort...
+        </p>
       </div>
-      <div class="map-controls">
-        <button id="locateMe" class="btn btn-primary">
-          <i class="fas fa-location-arrow"></i> Meine Position
-        </button>
-        <button id="refreshStations" class="btn btn-secondary">
-          <i class="fas fa-sync-alt"></i> Aktualisieren
-        </button>
-      </div>
-      <!-- <div class="controls">
+    </div>
+    <div class="map-controls">
+      <button id="locateMe" class="btn btn-primary">
+        <i class="fas fa-location-arrow"></i> Meine Position
+      </button>
+      <button id="refreshStations" class="btn btn-secondary">
+        <i class="fas fa-sync-alt"></i> Aktualisieren
+      </button>
+    </div>
+    <!-- <div class="controls">
         <select name="types" class="type-select">
           <option value="">Select a place type</option>
           <option value="cafe">Cafe</option>
@@ -66,6 +75,5 @@
           <gmp-place-all-content></gmp-place-all-content>
         </gmp-place-details-compact>
       </div> -->
-    </div>
   </div>
-</section>
+</div>

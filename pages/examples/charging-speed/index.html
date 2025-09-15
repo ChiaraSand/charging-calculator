@@ -197,8 +197,8 @@
 
     <script>
       // Simple demonstration of the charging calculation
-      console.log("Charging Speed Calculation Example");
-      console.log("==================================");
+      console.info("Charging Speed Calculation Example");
+      console.info("==================================");
 
       // Simulate the calculation
       const vehicleData = {
@@ -217,9 +217,9 @@
       let totalTime = 0;
       let totalEnergy = 0;
 
-      console.log("Charging from 20% to 80% on 150kW charger:");
-      console.log("Battery Level | Power Used | Time for 1% | Cumulative");
-      console.log("-------------|------------|-------------|----------");
+      console.info("Charging from 20% to 80% on 150kW charger:");
+      console.info("Battery Level | Power Used | Time for 1% | Cumulative");
+      console.info("-------------|------------|-------------|----------");
 
       for (let level = currentLevel; level < targetLevel; level += 10) {
         const power = Math.min(vehicleData[level], chargerPower);
@@ -229,7 +229,7 @@
         totalTime += timeFor10Percent;
         totalEnergy += energyFor10Percent;
 
-        console.log(
+        console.info(
           `${level}%         | ${power.toFixed(
             1
           )} kW    | ${timeFor10Percent.toFixed(
@@ -238,9 +238,9 @@
         );
       }
 
-      console.log(`\nTotal Energy: ${totalEnergy.toFixed(1)} kWh`);
-      console.log(`Total Time: ${totalTime.toFixed(1)} minutes`);
-      console.log(
+      console.info(`\nTotal Energy: ${totalEnergy.toFixed(1)} kWh`);
+      console.info(`Total Time: ${totalTime.toFixed(1)} minutes`);
+      console.info(
         `Average Power: ${(totalEnergy / (totalTime / 60)).toFixed(1)} kW`
       );
     </script>

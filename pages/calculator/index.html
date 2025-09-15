@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>E-Auto Ladekosten Rechner & Tarifvergleich</title>
-    <link rel="stylesheet" href="../css/main.css" />
+    <link rel="stylesheet" href="../../css/main.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
@@ -38,51 +38,33 @@
               <h2><i class="fas fa-cog"></i> Schnellkonfiguration</h2>
               <button
                 type="button"
-                id="togglePreconfig"
-                class="btn btn-secondary"
+                id="preconfiguration-section-toggle"
+                data-toggle-section="preconfiguration-section"
+                class="btn btn-secondary section-toggle"
               >
-                <i class="fas fa-chevron-down"></i> Ein-/Ausblenden
+                <i class="fas fa-chevron-up"></i> Ausblenden
               </button>
             </div>
-            <div class="preconfig-content" id="preconfigContent">
+            <div class="preconfig-content section-content" id="preconfiguration-section-content">
               <div class="preconfig-grid">
                 <div class="preconfig-group">
                   <label for="presetSelect"
                     >Vordefinierte Konfigurationen:</label
                   >
-                  <select id="presetSelect" name="presetSelect">
-                    <option value="">
-                      Wählen Sie eine Vorkonfiguration...
-                    </option>
-                    <option value="renault-5-daily">
-                      Renault 5 E-Tech - Tägliche Nutzung
-                    </option>
-                    <option value="renault-5-trip">
-                      Renault 5 E-Tech - Reise
-                    </option>
-                    <option value="generic-daily">
-                      Allgemeines Fahrzeug - Tägliche Nutzung
-                    </option>
-                    <option value="generic-trip">
-                      Allgemeines Fahrzeug - Reise
-                    </option>
-                    <option value="custom">Eigene Konfiguration</option>
-                  </select>
+                  <select id="presetSelect" name="presetSelect"></select>
+                  <small class="form-help">Ändert Ladestände, Ladeleistung und Tarife</small>
                 </div>
 
                 <div class="preconfig-group">
                   <label for="quickVehicleSelect">Fahrzeug:</label>
-                  <select id="quickVehicleSelect" name="quickVehicleSelect">
-                    <option value="renault-5-e-tech-52kwh">
-                      Renault 5 E-Tech 52 kWh
-                    </option>
-                    <option value="generic">Allgemeines Fahrzeug</option>
-                  </select>
+                  <select id="quickVehicleSelect" name="quickVehicleSelect"></select>
+                  <small class="form-help">Ändert Batteriekapazität</small>
                 </div>
 
                 <div class="preconfig-group">
                   <label for="quickChargingPower">Ladeleistung:</label>
                   <select id="quickChargingPower" name="quickChargingPower">
+                    <option value="">Ladeleistung wählen...</option>
                     <option value="3.7">AC 3,7 kW (Haushaltssteckdose)</option>
                     <option value="11">AC 11 kW (Wallbox)</option>
                     <option value="22">AC 22 kW (Wallbox)</option>
@@ -210,170 +192,203 @@
             <div class="card-header">
               <h2><i class="fas fa-calculator"></i> Ladedauer berechnen</h2>
               <div class="form-actions">
-                <button type="button" id="clearAll" class="btn btn-secondary">
+                <!--
+                <button type="button" id="clearAll" form="chargingForm" class="btn btn-secondary">
                   <i class="fas fa-eraser"></i> Alle Felder leeren
+                </button>
+                -->
+                <button
+                  type="button"
+                  id="calculator-section-toggle"
+                  data-toggle-section="calculator-section"
+                  class="btn btn-secondary section-toggle"
+                >
+                  <i class="fas fa-chevron-up"></i> Ausblenden
                 </button>
               </div>
             </div>
 
-            <form id="chargingForm" class="calculator-form">
-              <div class="form-grid">
-                <!-- <div class="form-group">
-                  <label for="vehicleSelect">Fahrzeug-Modell</label>
-                  <select id="vehicleSelect" name="vehicleSelect">
-                    <option value="renault-5-e-tech-52kwh" selected>
-                      Renault 5 E-Tech 52 kWh
-                    </option>
-                    <option value="generic">Allgemeines Fahrzeug</option>
-                  </select>
-                  <small class="form-help"
-                    >Wählen Sie Ihr Fahrzeug für präzise Ladekurven</small
-                  >
-                </div>-->
-
-                <div class="form-group">
-                  <label for="currentCharge">Aktueller Ladestand (%)</label>
-                  <div class="range-with-clear">
-                    <input
-                      type="range"
-                      id="currentCharge"
-                      name="currentCharge"
-                      value="20"
-                      min="0"
-                      max="100"
-                      step="1"
-                    />
-                    <span class="range-value" id="currentChargeValue">20%</span>
-                    <button
-                      type="button"
-                      class="clear-btn range-clear-btn"
-                      data-target="currentCharge"
-                      title="Löschen"
+            <div class="calculator-form-container section-content" id="calculator-section-content">
+              <form id="chargingForm" class="calculator-form">
+                <div class="form-grid">
+                  <!-- <div class="form-group">
+                    <label for="vehicleSelect">Fahrzeug-Modell</label>
+                    <select id="vehicleSelect" name="vehicleSelect">
+                      <option value="renault-5-e-tech-52kwh" selected>
+                        Renault 5 E-Tech 52 kWh
+                      </option>
+                      <option value="generic">Allgemeines Fahrzeug</option>
+                    </select>
+                    <small class="form-help"
+                      >Wählen Sie Ihr Fahrzeug für präzise Ladekurven</small
                     >
-                      <i class="fas fa-times"></i>
-                    </button>
+                  </div>-->
+
+                  <div class="form-column">
+                    <div class="form-group">
+                      <label for="currentCharge">Aktueller Ladestand (%)</label>
+                      <div class="range-with-clear">
+                        <input
+                          type="range"
+                          id="currentCharge"
+                          name="currentCharge"
+                          value="20"
+                          min="0"
+                          max="100"
+                          step="1"
+                        />
+                        <span class="range-value" id="currentChargeValue">20%</span>
+                        <!--
+                        <button
+                          type="button"
+                          class="clear-btn range-clear-btn"
+                          data-target="currentCharge"
+                          title="Löschen"
+                        >
+                          <i class="fas fa-times"></i>
+                        </button>
+                        -->
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="targetCharge">Ziel-Ladestand (%)</label>
+                      <div class="range-with-clear">
+                        <input
+                          type="range"
+                          id="targetCharge"
+                          name="targetCharge"
+                          value="80"
+                          min="0"
+                          max="100"
+                          step="1"
+                        />
+                        <span class="range-value" id="targetChargeValue">80%</span>
+                        <!--
+                        <button
+                          type="button"
+                          class="clear-btn range-clear-btn"
+                          data-target="targetCharge"
+                          title="Löschen"
+                        >
+                          <i class="fas fa-times"></i>
+                        </button>
+                        -->
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-column">
+                    <div class="form-group">
+                      <label for="batteryCapacity">Batteriekapazität (kWh)</label>
+                      <div class="input-with-clear">
+                        <input
+                          type="number"
+                          id="batteryCapacity"
+                          name="batteryCapacity"
+                          value="52"
+                          min="1"
+                          max="200"
+                          step="0.1"
+                        />
+                        <!--
+                        <button
+                          type="button"
+                          class="clear-btn"
+                          data-target="batteryCapacity"
+                          title="Löschen"
+                        >
+                          <i class="fas fa-times"></i>
+                        </button>
+                        -->
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="chargingPower">Ladeleistung (kW)</label>
+                      <select id="chargingPower" name="chargingPower">
+                        <option value="3.7">AC 3,7 kW (Haushaltssteckdose)</option>
+                        <option value="11">AC 11 kW (Wallbox)</option>
+                        <option value="22" selected>AC 22 kW (Wallbox)</option>
+                        <option value="50">DC 50 kW (Schnelllader)</option>
+                        <option value="150">DC 150 kW (Hochleistungslader)</option>
+                        <option value="300">DC 300 kW (Ultra-Schnelllader)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-column">
+                    <div class="form-group">
+                      <label for="startTime">Parken Beginn</label>
+                      <div class="input-with-clear">
+                        <input
+                          type="time"
+                          id="startTime"
+                          name="startTime"
+                          value=""
+                        />
+                        <button
+                          type="button"
+                          class="clear-btn"
+                          data-target="startTime"
+                          title="Löschen"
+                        >
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="endTime">Parken Ende</label>
+                      <div class="input-with-clear">
+                        <input type="time" id="endTime" name="endTime" value="" />
+                        <button
+                          type="button"
+                          class="clear-btn"
+                          data-target="endTime"
+                          title="Löschen"
+                        >
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div class="form-group">
-                  <label for="targetCharge">Ziel-Ladestand (%)</label>
-                  <div class="range-with-clear">
-                    <input
-                      type="range"
-                      id="targetCharge"
-                      name="targetCharge"
-                      value="80"
-                      min="0"
-                      max="100"
-                      step="1"
-                    />
-                    <span class="range-value" id="targetChargeValue">80%</span>
-                    <button
-                      type="button"
-                      class="clear-btn range-clear-btn"
-                      data-target="targetCharge"
-                      title="Löschen"
-                    >
-                      <i class="fas fa-times"></i>
-                    </button>
+                <div class="calculation-summary">
+                  <div class="summary-item">
+                    <span class="label">Zu ladende Energie:</span>
+                    <span class="value" id="energyToCharge"></span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="label">Geschätzte Ladezeit:</span>
+                    <span class="value" id="estimatedTime"></span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="label">Gesamte Parkzeit:</span>
+                    <span class="value" id="totalParkingTime"></span>
                   </div>
                 </div>
-
-                <div class="form-group">
-                  <label for="batteryCapacity">Batteriekapazität (kWh)</label>
-                  <div class="input-with-clear">
-                    <input
-                      type="number"
-                      id="batteryCapacity"
-                      name="batteryCapacity"
-                      value="52"
-                      min="1"
-                      max="200"
-                      step="0.1"
-                    />
-                    <button
-                      type="button"
-                      class="clear-btn"
-                      data-target="batteryCapacity"
-                      title="Löschen"
-                    >
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label for="chargingPower">Ladeleistung (kW)</label>
-                  <select id="chargingPower" name="chargingPower">
-                    <option value="3.7">AC 3,7 kW (Haushaltssteckdose)</option>
-                    <option value="11">AC 11 kW (Wallbox)</option>
-                    <option value="22" selected>AC 22 kW (Wallbox)</option>
-                    <option value="50">DC 50 kW (Schnelllader)</option>
-                    <option value="150">DC 150 kW (Hochleistungslader)</option>
-                    <option value="300">DC 300 kW (Ultra-Schnelllader)</option>
-                  </select>
-                </div>
-                <!-- <div class="form-group-double"> -->
-                <div class="form-group">
-                  <label for="startTime">Parken Beginn</label>
-                  <div class="input-with-clear">
-                    <input
-                      type="time"
-                      id="startTime"
-                      name="startTime"
-                      value=""
-                    />
-                    <button
-                      type="button"
-                      class="clear-btn"
-                      data-target="startTime"
-                      title="Löschen"
-                    >
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label for="endTime">Parken Ende</label>
-                  <div class="input-with-clear">
-                    <input type="time" id="endTime" name="endTime" value="" />
-                    <button
-                      type="button"
-                      class="clear-btn"
-                      data-target="endTime"
-                      title="Löschen"
-                    >
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
-                </div>
-                <!-- </div> -->
-              </div>
-
-              <div class="calculation-summary">
-                <div class="summary-item">
-                  <span class="label">Zu ladende Energie:</span>
-                  <span class="value" id="energyToCharge"></span>
-                </div>
-                <div class="summary-item">
-                  <span class="label">Geschätzte Ladezeit:</span>
-                  <span class="value" id="estimatedTime"></span>
-                </div>
-                <div class="summary-item">
-                  <span class="label">Gesamte Parkzeit:</span>
-                  <span class="value" id="totalParkingTime"></span>
-                </div>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
         </section>
 
         <!-- Charging Level Graph Section -->
         <section class="graph-section">
           <div class="card">
-            <h2><i class="fas fa-chart-line"></i> Ladeverlauf</h2>
-            <div class="graph-container">
+            <div class="card-header">
+              <h2><i class="fas fa-chart-line"></i> Ladeverlauf</h2>
+              <button
+                type="button"
+                id="graph-section-toggle"
+                data-toggle-section="graph-section"
+                class="btn btn-secondary section-toggle"
+              >
+                <i class="fas fa-chevron-up"></i> Ausblenden
+              </button>
+            </div>
+            <div class="graph-container section-content" id="graph-section-content">
               <div class="graph-info">
                 <p class="graph-description">
                   Realistische Darstellung des Ladeverlaufs basierend auf
@@ -541,10 +556,27 @@
         <!-- Tariff Comparison Section -->
         <section class="comparison-section">
           <div class="card">
-            <h2><i class="fas fa-chart-bar"></i> Tarifvergleich</h2>
-            <div class="table-container">
+            <div class="card-header">
+              <h2><i class="fas fa-chart-bar"></i> Tarifvergleich</h2>
+              <button
+                type="button"
+                id="comparison-section-toggle"
+                data-toggle-section="comparison-section"
+                class="btn btn-secondary section-toggle"
+              >
+                <i class="fas fa-chevron-up"></i> Ausblenden
+              </button>
+            </div>
+            <div class="table-container section-content" id="comparison-section-content">
               <table id="tariffTable" class="tariff-table">
                 <thead>
+                  <tr>
+                    <th></th>
+                    <th colspan="2">Tarif</th>
+                    <th colspan="3">
+                      Berechnung
+                    </th>
+                  </tr>
                   <tr>
                     <th>Anbieter</th>
                     <!-- <th>Ladeleistung (kW)</th> -->
@@ -556,8 +588,8 @@
                       <small>(<span id="pricePerSelectedKwh">kWh</span>)</small>
                     </th>
                     <th>Blocking Fee Total</th>
-                    <th>Gesamtkosten</th>
-                    <th>Effektiv €/kWh</th>
+                    <th>Gesamtkosten<br/><small class="effective-price">Effektiv €/kWh</small></th>
+                    <!-- <th>Effektiv €/kWh</th> -->
                   </tr>
                 </thead>
                 <tbody id="tariffTableBody">
@@ -573,7 +605,7 @@
         </section>
 
         <!-- Map Section -->
-        <div id="maps-section"></div>
+        <section id="maps-section"></section>
       </main>
 
       <!-- Footer -->
@@ -587,18 +619,14 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-      // FIXME
-      // $(function () {
-      //   $("#maps-section").load("maps.html");
-      // });
-    </script>
 
-    <script src="TariffClasses.js"></script>
-    <script src="VehicleChargingCurves.js"></script>
-    <script src="GoogleMapsManager.js"></script>
-    <script src="DateTimeHelper.js"></script>
-    <script src="ChartManager.js"></script>
+    <script src="services/JsonLoader.js"/></script>
+    <script src="services/ChartManager.js"></script>
+    <script src="services/TariffClasses.js"></script>
+    <script src="services/VehicleChargingCurves.js"></script>
+    <script src="services/GoogleMapsManager.js"></script>
+    <script src="services/DateTimeHelper.js"></script>
+
     <script src="calculator.js"></script>
   </body>
 </html>

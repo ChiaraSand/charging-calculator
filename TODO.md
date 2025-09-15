@@ -1,0 +1,21 @@
+# TODO
+
+- [] general
+  - [] update RADMEs
+- [] tests
+  - [] frontend
+- [] code logic
+  - [] check all calculations
+  - [] sync `chargingPower` and `quickChargingPower` // done?
+  - [] change presets tariffFilter to AC/DC select
+  - [] implement AC/DC switch
+- [] improve code quality
+  - [] reduce `calculator.js`
+  - [] remove unused code
+  - [] fix variable naming (use snake_case OR camelCase)
+  - [] improve/organize html snippets (components?)
+- [] styling
+  - [] fix height of inputs in calculator (parking is bigger than the others)
+- [] json assets
+  - [] move batteryCapacity from `presets.json` to `vehicles.json`
+  - [] Renault 5 AC max 11kW

@@ -249,8 +249,8 @@
 
     <script>
       // Simulate the chart data calculation
-      console.log("Multi-Charging Power Chart Simulation");
-      console.log("====================================");
+      console.info("Multi-Charging Power Chart Simulation");
+      console.info("====================================");
 
       const vehicleData = {
         20: 100.9,
@@ -265,11 +265,11 @@
       const currentLevel = 20;
       const targetLevel = 80;
 
-      console.log(
+      console.info(
         `Charging from ${currentLevel}% to ${targetLevel}% on different chargers:`
       );
-      console.log("Charger Power | Total Time | Avg Power | Efficiency");
-      console.log("-------------|------------|-----------|----------");
+      console.info("Charger Power | Total Time | Avg Power | Efficiency");
+      console.info("-------------|------------|-----------|----------");
 
       chargingPowers.forEach((power) => {
         // Simulate charging time calculation
@@ -291,7 +291,7 @@
         const avgPower = totalEnergy / (totalTime / 60);
         const efficiency = ((avgPower / power) * 100).toFixed(0);
 
-        console.log(
+        console.info(
           `${power} kW        | ${totalTime.toFixed(
             1
           )} min    | ${avgPower.toFixed(1)} kW   | ${efficiency}%`

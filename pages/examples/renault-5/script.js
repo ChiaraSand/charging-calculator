@@ -4,11 +4,13 @@ let renault5ChargingData = {};
 // Load charging data from JSON
 async function loadChargingData() {
   try {
-    const response = await fetch("./data/renault5-charging-data.json");
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    const response = await JsonLoader.load(
+      "./data/renault5-charging-data.json"
+    );
+    if (!response) {
+      throw new Error("No response from JsonLoader.load");
     }
-    renault5ChargingData = await response.json();
+    renault5ChargingData = response;
     console.info("Renault 5 charging data loaded from JSON successfully");
   } catch (error) {
     console.error("Error loading Renault 5 charging data from JSON:", error);

@@ -1,0 +1,26 @@
+{
+  "": {
+    "name": "Vorkonfiguration wählen..."
+  },
+  "custom": {
+    "name": "Eigene Konfiguration",
+    "currentCharge": 0,
+    "targetCharge": 100,
+    "chargingPower": 22,
+    "tariffFilter": "all"
+  },
+  "daily": {
+    "name": "Daily",
+    "currentCharge": 20,
+    "targetCharge": 80,
+    "chargingPower": 22,
+    "tariffFilter": "cheapest"
+  },
+  "trip": {
+    "name": "Trip",
+    "currentCharge": 10,
+    "targetCharge": 90,
+    "chargingPower": 150,
+    "tariffFilter": "premium"
+  }
+}

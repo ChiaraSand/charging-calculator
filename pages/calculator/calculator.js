@@ -1,3 +1,14 @@
+// Import required classes for tests
+if (typeof require !== "undefined") {
+  console.info("[Calculator] importing modules through require");
+  JsonLoader = require("./services/JsonLoader.js");
+  TariffManager = require("./services/TariffClasses.js").TariffManager;
+  VehicleChargingCurves = require("./services/VehicleChargingCurves.js");
+  GoogleMapsManager = require("./services/GoogleMapsManager.js");
+  ChartManager = require("./services/ChartManager.js");
+  DateTimeHelper = require("./services/DateTimeHelper.js");
+}
+
 class ChargingCalculator {
   constructor() {
     this.tariffManager = new TariffManager();
@@ -15,6 +26,7 @@ class ChargingCalculator {
     this.providerGroups = {};
     this.chargingPowers = [];
     this.inputFields = [];
+    this.vehicles = {};
 
     // Initialize helper classes
     this.chartManager = null; // Will be initialized after data is loaded
@@ -38,6 +50,8 @@ class ChargingCalculator {
     );
 
     this.setupEventListeners();
+    this.populatePresetSelect();
+    this.populateVehicleSelect();
     this.populateProviderFilters();
     this.populateConnectorFilters();
     this.populateTariffTable();
@@ -45,18 +59,19 @@ class ChargingCalculator {
     this.updateCalculations();
     this.chartManager.initializeChargingChart();
 
-    // Update chart with current form values after initialization
-    this.chartManager.updateChargingChart({
-      batteryCapacity:
-        parseFloat(document.getElementById("batteryCapacity").value) || 0,
-      currentCharge:
-        parseFloat(document.getElementById("currentCharge").value) || 0,
-      targetCharge:
-        parseFloat(document.getElementById("targetCharge").value) || 0,
-      chargingPower:
-        parseFloat(document.getElementById("chargingPower").value) || 0,
-      selectedVehicle: this.selectedVehicle,
-    });
+    // REVIEW: why is this duplicated?
+    // // Update chart with current form values after initialization
+    // this.chartManager.updateChargingChart({
+    //   batteryCapacity:
+    //     parseFloat(document.getElementById("batteryCapacity").value) || 0,
+    //   currentCharge:
+    //     parseFloat(document.getElementById("currentCharge").value) || 0,
+    //   targetCharge:
+    //     parseFloat(document.getElementById("targetCharge").value) || 0,
+    //   chargingPower:
+    //     parseFloat(document.getElementById("chargingPower").value) || 0,
+    //   selectedVehicle: this.selectedVehicle,
+    // });
 
     await this.mapsManager.initializeMap("map");
 
@@ -85,35 +100,41 @@ class ChargingCalculator {
         connectorData,
         providerGroups,
         chargingPowers,
-        inputFields,
+        // inputFields,
+        tariffs,
+        vehicles,
       ] = await Promise.all([
-        fetch("./data/presets.json").then((r) => r.json()),
-        fetch("./data/connectors.json").then((r) => r.json()),
-        fetch("./data/provider-groups.json").then((r) => r.json()),
-        fetch("./data/charging-powers.json").then((r) => r.json()),
-        fetch("./data/input-fields.json").then((r) => r.json()),
+        JsonLoader.loadAsset("data/presets.json"),
+        JsonLoader.loadAsset("data/connectors.json"),
+        JsonLoader.loadAsset("data/provider-groups.json"),
+        JsonLoader.loadAsset("data/charging-powers.json"),
+        // JsonLoader.loadAsset("data/input-fields.json"),
+        JsonLoader.loadAsset("data/tariffs.json"),
+        JsonLoader.loadAsset("data/vehicles.json"),
       ]);
 
       this.presets = presets;
       this.connectorData = connectorData;
       this.providerGroups = providerGroups;
       this.chargingPowers = chargingPowers;
-      this.inputFields = inputFields;
+      this.inputFields = [
+        "batteryCapacity",
+        "currentCharge",
+        "targetCharge",
+        "startTime",
+        "endTime",
+      ];
+      this.tariffs = tariffs;
+      this.vehicles = vehicles;
     } catch (error) {
       console.error("Error loading data from JSON files:", error);
-      // Fallback to hardcoded data if JSON loading fails
-      // this.loadFallbackData();
     }
   }
 
   // Load tariff data from JSON file
   async loadTariffs() {
     try {
-      const response = await fetch("tariffs.json");
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const providersData = await response.json();
+      const providersData = this.tariffs;
 
       // Load data into TariffManager
       this.tariffManager.loadFromJson(providersData);
@@ -125,6 +146,20 @@ class ChargingCalculator {
       this.tariffManager = new TariffManager();
       alert("Fehler beim Laden der Tarifdaten. Bitte laden Sie die Seite neu.");
     }
+  }
+
+  populatePresetSelect() {
+    const presetSelect = document.getElementById("presetSelect");
+    presetSelect.innerHTML = Object.entries(this.presets)
+      .map(([value, { name }]) => `<option value="${value}">${name}</option>`)
+      .join("");
+  }
+
+  populateVehicleSelect() {
+    const vehicleSelect = document.getElementById("quickVehicleSelect");
+    vehicleSelect.innerHTML = Object.entries(this.vehicles)
+      .map(([value, { name }]) => `<option value="${value}">${name}</option>`)
+      .join("");
   }
 
   setupEventListeners() {
@@ -167,12 +202,14 @@ class ChargingCalculator {
     });
 
     // Legend toggle functionality
-    this.setupLegendToggles();
+    // this.setupLegendToggles();
+    this.chartManager?.setupLegendToggles();
 
     // Clear all button
-    document.getElementById("clearAll").addEventListener("click", () => {
-      this.clearAllInputs();
-    });
+    // document.getElementById("clearAll").addEventListener("click", (e) => {
+    //   e.preventDefault();
+    //   this.clearAllInputs(e.target.form);
+    // });
 
     // Filter buttons
     document
@@ -198,26 +235,18 @@ class ChargingCalculator {
       });
     });
 
-    // Map controls
-    // document
-    //   .getElementById("locateMe")
-    //   .addEventListener("click", () => this.mapsManager.locateUser());
-    // document
-    //   .getElementById("refreshStations")
-    //   .addEventListener("click", () =>
-    //     this.mapsManager.refreshChargingStations()
-    //   );
+    // Section toggle functionality
+    document.querySelectorAll(".section-toggle").forEach((button) => {
+      button.addEventListener("click", () => {
+        this.toggleSection(button.dataset.toggleSection);
+      });
+    });
 
     // Preconfiguration controls
     this.setupPreconfigurationEventListeners();
   }
 
   setupPreconfigurationEventListeners() {
-    // Toggle preconfiguration section
-    document.getElementById("togglePreconfig").addEventListener("click", () => {
-      this.togglePreconfiguration();
-    });
-
     // Preset selection
     document.getElementById("presetSelect").addEventListener("change", (e) => {
       this.handlePresetSelection(e.target.value);
@@ -243,18 +272,23 @@ class ChargingCalculator {
       .getElementById("quickVehicleSelect")
       .addEventListener("change", (e) => {
         this.selectedVehicle = e.target.value;
+        document.getElementById("batteryCapacity").value =
+          this.vehicles[this.selectedVehicle].batteryCapacity;
         this.updateCalculations();
-        this.chartManager.updateChargingChart({
-          batteryCapacity:
-            parseFloat(document.getElementById("batteryCapacity").value) || 0,
-          currentCharge:
-            parseFloat(document.getElementById("currentCharge").value) || 0,
-          targetCharge:
-            parseFloat(document.getElementById("targetCharge").value) || 0,
-          chargingPower:
-            parseFloat(document.getElementById("chargingPower").value) || 0,
-          selectedVehicle: this.selectedVehicle,
-        });
+        // REVIEW: presetId needed instead of vehicleId (why does this work?)
+        // this.handlePresetSelection(e.target.value); // REVIEW: why was this not used?
+        // this.chartManager.updateChargingChart({
+        //   batteryCapacity:
+        //     parseFloat(document.getElementById("batteryCapacity").value) || 0,
+        //   currentCharge:
+        //     parseFloat(document.getElementById("currentCharge").value) || 0,
+        //   targetCharge:
+        //     parseFloat(document.getElementById("targetCharge").value) || 0,
+        //   chargingPower: parseFloat(
+        //     document.getElementById("chargingPower").value
+        //   ),
+        //   selectedVehicle: this.selectedVehicle,
+        // });
       });
 
     // Quick charging power selection
@@ -274,26 +308,45 @@ class ChargingCalculator {
   }
 
   togglePreconfiguration() {
-    const content = document.getElementById("preconfigContent");
-    const button = document.getElementById("togglePreconfig");
+    this.toggleSection("preconfig");
+  }
 
-    if (content.classList.contains("show")) {
-      // content.style.display = "none";
-      content.classList.remove("show");
-      button.classList.remove("expanded");
-      button.innerHTML = '<i class="fas fa-chevron-down"></i> Einblenden';
+  toggleGraphSection() {
+    this.toggleSection("graph-section");
+  }
+
+  toggleSection(sectionId) {
+    const content = document.getElementById(sectionId + "-content");
+    // const button = document.getElementById(sectionId + "-toggle");
+
+    if (content.classList.contains("toggle-hide")) {
+      this.showSection(sectionId);
     } else {
-      // content.style.display = "flex";
-      content.classList.add("show");
-      button.classList.add("expanded");
-      // chevron is rotated 180deg by .expanded class
-      button.innerHTML = '<i class="fas fa-chevron-down"></i> Ausblenden';
-      // button.innerHTML = '<i class="fas fa-chevron-up"></i> Ausblenden';
+      this.hideSection(sectionId);
     }
   }
 
+  showSection(sectionId) {
+    const content = document.getElementById(sectionId + "-content");
+    const button = document.getElementById(sectionId + "-toggle");
+
+    content.classList.remove("toggle-hide");
+    button.classList.remove("expanded");
+    button.innerHTML = '<i class="fas fa-chevron-up"></i> Ausblenden';
+  }
+
+  hideSection(sectionId) {
+    const content = document.getElementById(sectionId + "-content");
+    const button = document.getElementById(sectionId + "-toggle");
+
+    content.classList.add("toggle-hide");
+    button.classList.add("expanded");
+    // NOTE: chevron is rotated 180deg by .expanded class -> equals chevron down
+    button.innerHTML = '<i class="fas fa-chevron-up"></i> Einblenden';
+  }
+
   handlePresetSelection(presetId) {
-    if (!presetId || presetId === "custom") {
+    if (!presetId) {
       return;
     }
 
@@ -304,8 +357,8 @@ class ChargingCalculator {
 
     // Apply preset values to form fields
     // document.getElementById("vehicleSelect").value = preset.vehicle;
-    document.getElementById("quickVehicleSelect").value = preset.vehicle;
-    document.getElementById("batteryCapacity").value = preset.batteryCapacity;
+    // document.getElementById("quickVehicleSelect").value = preset.vehicle;
+    // document.getElementById("batteryCapacity").value = preset.batteryCapacity;
     document.getElementById("currentCharge").value = preset.currentCharge;
     document.getElementById("currentChargeValue").textContent =
       preset.currentCharge + "%";
@@ -317,10 +370,12 @@ class ChargingCalculator {
     document.getElementById("quickTariffSelect").value = preset.tariffFilter;
 
     // Update selected vehicle
-    this.selectedVehicle = preset.vehicle;
+    // this.selectedVehicle = preset.vehicle;
 
     // Apply tariff filter
-    this.applyTariffFilter(preset.tariffFilter);
+    if (preset.tariffFilter) {
+      this.applyTariffFilter(preset.tariffFilter);
+    }
 
     // Update calculations
     this.updateCalculations();
@@ -769,10 +824,7 @@ class ChargingCalculator {
         totalParkingTimeString;
 
       // Update charging speed information
-      this.chartManager.updateChargingSpeedInfo(
-        chargingResult,
-        this.selectedVehicle
-      );
+      this.updateChargingSpeedInfo(chargingResult, this.selectedVehicle);
     } else {
       // Show placeholder values when inputs are empty or invalid
       document.getElementById("energyToCharge").textContent = "— kWh";
@@ -785,6 +837,84 @@ class ChargingCalculator {
     this.populateTariffTable();
   }
 
+  /**
+   * Update charging speed information display (blue box in preconfig section)
+   * @param {Object} chargingResult - Result from vehicle charging curves calculation
+   * @param {string} selectedVehicle - Selected vehicle ID
+   */
+  updateChargingSpeedInfo(chargingResult, selectedVehicle) {
+    // Find or create charging speed info element
+    let speedInfoElement = document.getElementById("chargingSpeedInfo");
+    if (!speedInfoElement) {
+      speedInfoElement = document.createElement("div");
+      speedInfoElement.id = "chargingSpeedInfo";
+      speedInfoElement.className = "charging-speed-info";
+
+      // Insert into the vehicle-details element
+      const parentElement = document.getElementById("vehicle-details");
+      parentElement.appendChild(speedInfoElement);
+    }
+
+    const vehicle = this.vehicleCurves.vehicleData[selectedVehicle];
+    const vehicleName = vehicle ? vehicle.name : "Allgemeines Fahrzeug";
+
+    // Calculate charging speed statistics
+    const chargingPowers = Object.values(vehicle.chargingCurves["400"]); // FIXME: use the actual charging power and get closest value
+    const maxPower = vehicle.maxChargingPower || Math.max(...chargingPowers);
+    const minPower = vehicle.minChargingPower || Math.min(...chargingPowers);
+
+    const maxPowerSession = Math.max(...chargingResult.powerSteps);
+    const minPowerSession = Math.min(...chargingResult.powerSteps);
+    const avgPower = chargingResult.averagePower;
+
+    speedInfoElement.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-car" style="color: #0ea5e9;"></i>
+        <strong>Ladegeschwindigkeit - ${vehicleName}</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; font-size: 0.8rem;">
+        <div>
+          <div style="color: #64748b; font-weight: 500;">Max. Leistung</div>
+          <div style="font-weight: 600; color: #0ea5e9;">${vehicle.maxChargingPower.toFixed(
+            1
+          )} kW</div>
+        </div>
+        <div>
+          <div style="color: #64748b; font-weight: 500;">Min. Leistung</div>
+          <div style="font-weight: 600; color: #0ea5e9;">${minPower.toFixed(
+            1
+          )} kW</div>
+        </div>
+        <div>
+          <div style="color: #64748b; font-weight: 500;">Max. Leistung (Ladevorgang)</div>
+          <div style="font-weight: 600; color: #0ea5e9;">${maxPowerSession.toFixed(
+            1
+          )} kW</div>
+        </div>
+        <div>
+          <div style="color: #64748b; font-weight: 500;">Min. Leistung (Ladevorgang)</div>
+          <div style="font-weight: 600; color: #0ea5e9;">${minPowerSession.toFixed(
+            1
+          )} kW</div>
+        </div>
+        <div>
+          <div style="color: #64748b; font-weight: 500;">Ø Leistung</div>
+          <div style="font-weight: 600; color: #0ea5e9;">${avgPower.toFixed(
+            1
+          )} kW</div>
+        </div>
+        <div>
+          <div style="color: #64748b; font-weight: 500;">Effizienz</div>
+          <div style="font-weight: 600; color: #0ea5e9;">${(
+            (avgPower /
+              parseFloat(document.getElementById("chargingPower").value)) *
+            100
+          ).toFixed(0)}%</div>
+        </div>
+      </div>
+    `;
+  }
+
   clearInput(inputId) {
     const input = document.getElementById(inputId);
     if (!input) return;
@@ -795,7 +925,7 @@ class ChargingCalculator {
         input.value = "0";
         document.getElementById("currentChargeValue").textContent = "0%";
       } else if (inputId === "targetCharge") {
-        input.value = "0";
+        input.value = "100";
         document.getElementById("targetChargeValue").textContent = "0%";
       }
     } else {
@@ -808,7 +938,12 @@ class ChargingCalculator {
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  clearAllInputs() {
+  // REVIEW: needed?
+  clearAllInputs(form = null) {
+    // if (form) {
+    //   form.reset();
+    // }
+
     // Clear all individual inputs
     const inputsToClear =
       this.inputFields.length > 0
@@ -918,47 +1053,46 @@ class ChargingCalculator {
 
     // Sort provider tariffs by total cost using the new class methods
     const blockingTime = Math.max(0, totalParkingTime);
-    const sortedProviderTariffs = this.tariffManager
-      .sortByCost(
-        filteredTariffs,
-        energyToCharge,
-        estimatedTime,
-        blockingTime,
-        startTime,
-        endTime
-      )
-      .map((result) => {
-        const tariff = result.tariff;
-        result.name = tariff.name;
-        result.providerName = tariff.providerName;
-        // Preserve the class instance and add calculated properties
-        result.energyCost = energyToCharge * tariff.pricePerKwh;
-        // tariff.energyCost = energyToCharge * tariff.pricePerKwh;
-        result.timeCost = this.calculateTimeCost(tariff, estimatedTime);
-        // tariff.timeCost = this.calculateTimeCost(tariff, estimatedTime);
-        // tariff.blockingFeeString =
-        result.pricePerKwh = tariff.pricePerKwh;
-        // const blockingFeePerMin = this.getBlockingFeeForTariff(tariff);
-        // tariff.blockingFee = tariff.blockingFee; // ? blockingTime * blockingFeePerMin : 0;
-        // tariff.totalCost = result.totalCost;
-        // tariff.effectivePricePerKwh = result.effectivePricePerKwh;
-        result.tariff = tariff;
-        return result;
-      });
-
-    // REVIEW: unused
-    // Calculate custom tariff separately (for display purposes only)
-    const customTariff = this.calculateCustomTariff(
+    const sortedProviderTariffs = this.tariffManager.sortByCost(
+      filteredTariffs,
       energyToCharge,
       estimatedTime,
-      blockingTime
+      blockingTime,
+      startTime,
+      endTime
     );
+    // .map((result) => {
+    //   const tariff = result.tariff;
+    //   // result.name = tariff.name;
+    //   // result.providerName = tariff.providerName;
+    //   // Preserve the class instance and add calculated properties
+    //   // result.energyCost = tariff.energyCost;
+    //   // console.log("energyCost", result.energyCost);
+    //   // tariff.energyCost = energyToCharge * tariff.pricePerKwh;
+    //   // result.timeCost = this.calculateTimeCost(tariff, estimatedTime);
+    //   // tariff.timeCost = this.calculateTimeCost(tariff, estimatedTime);
+    //   // tariff.blockingFeeString =
+    //   // result.pricePerKwh = tariff.pricePerKwh;
+    //   // const blockingFeePerMin = this.getBlockingFeeForTariff(tariff);
+    //   // tariff.blockingFee = tariff.blockingFee; // ? blockingTime * blockingFeePerMin : 0;
+    //   // tariff.totalCost = result.totalCost;
+    //   // tariff.effectivePricePerKwh = result.effectivePricePerKwh;
+    //   // result.tariff = tariff;
+    //   return result;
+    // });
+
+    // REVIEW: unused
+    // // Calculate custom tariff separately (for display purposes only)
+    // const customTariff = this.calculateCustomTariff(
+    //   energyToCharge,
+    //   estimatedTime,
+    //   blockingTime
+    // );
 
     // Sort provider tariffs only (custom tariff has its own input row)
     const sortedTariffs = sortedProviderTariffs.sort(
       (a, b) => a.totalCost - b.totalCost
     );
-
     // Create custom tariff row
     const customTariffRow = this.createCustomBlockingFeeRow();
 
@@ -966,16 +1100,6 @@ class ChargingCalculator {
       customTariffRow +
       sortedTariffs
         .map((tariff) => {
-          // <td class="price">${
-          //   tariff.baseFee ? tariff.baseFee.toFixed(2) + " €" : "-"
-          // }</td>
-          //       <td><span class="charging-type ${(
-          //         tariff.type ||
-          //         tariff.providerType ||
-          //         "AC"
-          //       ).toLowerCase()}">${
-          //   tariff.type || tariff.providerType || "AC"
-          // }</span></td>
           return `
             <tr>
                 <td class="provider-name">
@@ -988,18 +1112,46 @@ class ChargingCalculator {
                     }
                   </div>
                 </td>
-                <td class="price">${tariff.pricePerKwh.toFixed(2)} €/kWh</td>
-                <td class="price">${tariff.blockingFeeString}</td>
-                <td class="price">${tariff.energyCost.toFixed(2)} €</td>
-                <td class="price">${
-                  tariff.blockingFee
-                    ? tariff.blockingFee.toFixed(2) + " €"
-                    : "-"
-                }</td>
-                <td class="total-cost">${tariff.totalCost.toFixed(2)} €</td>
-                <td class="effective-price">${tariff.effectivePricePerKwh.toFixed(
-                  2
-                )} €</td>
+                <td class="price">
+                  <span class="price-value">
+                    ${tariff.pricePerKwh.toFixed(2)}
+                  </span>
+                  <span class="price-unit">€/kWh</span>
+                </td>
+                <td class="price">
+                  <span class="price-value">
+                   ${tariff.blockingFeeString}
+                  </span>
+                </td>
+                <td class="price">
+                  <span class="price-value">
+                    ${tariff.energyCost.toFixed(2)}
+                  </span>
+                  <span class="price-unit">€</span>
+                </td>
+                <td class="price ${tariff.blockingFee ? "price-bad" : ""}">
+                    ${
+                      tariff.blockingFee
+                        ? "<span class='price-value'>" +
+                          tariff.blockingFee.toFixed(2) +
+                          "</span>" +
+                          " <span class='price-unit'>€</span>"
+                        : "-"
+                    }
+                </td>
+                <td class="total-cost">
+                  <span class="price-value">
+                    ${tariff.totalCost.toFixed(2)}
+                  </span>
+                  <span class="price-unit">€</span>
+                  <br/>
+                  <small class="effective-price">
+                    <span class="price-value">
+                      ${tariff.effectivePricePerKwh.toFixed(2)}
+                    </span>
+                    <span class="price-unit">€/kWh</span>
+                  </small>
+                </td>
             </tr>
         `;
         })
@@ -1061,11 +1213,11 @@ class ChargingCalculator {
   updateCustomTariffDisplay(energyToCharge) {
     const customPricePerKwh =
       parseFloat(document.getElementById("custom-price-per-kwh")?.value) || 0.5;
-    const customBaseFee =
-      parseFloat(document.getElementById("custom-base-fee")?.value) || 0.0;
+    // const customBaseFee =
+    //   parseFloat(document.getElementById("custom-base-fee")?.value) || 0.0;
     const customBlockingFee = parseFloat(
       document.getElementById("custom-blocking-fee")?.value
-    ); // || 0.1;
+    );
     const pricePerSelectedKwh = customPricePerKwh * energyToCharge;
 
     // Calculate estimated time and blocking time
@@ -1110,43 +1262,41 @@ class ChargingCalculator {
       const timeCost = 0; // Custom tariff doesn't have pricePerMin, so timeCost is always 0
 
       blockingFeeCost = blockingTime * customBlockingFee;
-      totalCost = energyCost + timeCost + customBaseFee + blockingFeeCost;
+      totalCost = energyCost + timeCost + blockingFeeCost; // + customBaseFee
       effectivePricePerKwh =
         energyToCharge > 0 ? totalCost / energyToCharge : 0;
     }
 
     // Update price per selected kWh
     const pricePerSelectedKwhElement = document.getElementById(
-      "custom-price-per-selected-kwh"
+      "custom-price-per-selected-kwh-value"
     );
     if (pricePerSelectedKwhElement) {
       pricePerSelectedKwhElement.textContent = `${pricePerSelectedKwh.toFixed(
         2
-      )} €`;
+      )}`;
     }
 
     // Update blocking fee cost
     const blockingFeeCostElement = document.getElementById(
-      "custom-blocking-fee-cost"
+      "custom-blocking-fee-cost-value"
     );
     if (blockingFeeCostElement) {
-      blockingFeeCostElement.textContent = `${blockingFeeCost.toFixed(2)} €`;
+      blockingFeeCostElement.textContent = `${blockingFeeCost.toFixed(2)}`;
     }
 
     // Update total cost
-    const totalCostElement = document.getElementById("custom-total-cost");
+    const totalCostElement = document.getElementById("custom-total-cost-value");
     if (totalCostElement) {
-      totalCostElement.textContent = `${totalCost.toFixed(2)} €`;
+      totalCostElement.textContent = `${totalCost.toFixed(2)}`;
     }
 
     // Update effective price per kWh
     const effectivePriceElement = document.getElementById(
-      "custom-effective-price"
+      "custom-effective-price-value"
     );
     if (effectivePriceElement) {
-      effectivePriceElement.textContent = `${effectivePricePerKwh.toFixed(
-        2
-      )} €`;
+      effectivePriceElement.textContent = `${effectivePricePerKwh.toFixed(2)}`;
     }
   }
 
@@ -1174,8 +1324,7 @@ class ChargingCalculator {
     const customPricePerKwh = 0.5; // Default value
     const initialEnergyCost = energyToCharge * customPricePerKwh;
 
-    // REVIEW
-    const customBlockingFee = 0.1;
+    const customBlockingFee = 0.02;
     const initialBlockingFee = energyToCharge * customBlockingFee;
 
     return `
@@ -1188,26 +1337,47 @@ class ChargingCalculator {
         </td>
         <td class="price">
           <input type="number" class="custom-tariff-input" id="custom-price-per-kwh"
-                 value="0.50" min="0" max="2" step="0.01"
+                 value="${customPricePerKwh.toFixed(2)}" min="0" step="0.01"
                  title="Preis pro kWh"
                  >
-          €/kWh
+          <span class="price-unit">€/kWh</span>
         </td>
         <td class="price">
           <input type="number" class="custom-tariff-input" id="custom-blocking-fee"
-                 value="0.10" min="0" max="2" step="0.01"
+                 value="${customBlockingFee}" min="0" step="0.01"
                  title="Blocking Fee pro Minute"
                  >
-          €/min
+          <span class="price-unit">€/min</span>
         </td>
-        <td class="price" id="custom-price-per-selected-kwh">${initialEnergyCost.toFixed(
-          2
-        )} €</td>
-        <td class="price" id="custom-blocking-fee-cost">${initialBlockingFee.toFixed(
-          2
-        )} €</td>
-        <td class="total-cost" id="custom-total-cost">— €</td>
-        <td class="effective-price" id="custom-effective-price">— €</td>
+        <td class="price" id="custom-price-per-selected-kwh">
+          <span class="price-value" id="custom-price-per-selected-kwh-value">
+            ${initialEnergyCost.toFixed(2)}
+          </span>
+          <span class="price-unit">€</span>
+        </td>
+        <td class="price ${
+          initialBlockingFee > 0 ? "price-bad" : ""
+        }" id="custom-blocking-fee-cost">
+          <span class="price-value" id="custom-blocking-fee-cost-value">
+            ${initialBlockingFee.toFixed(2)}
+          </span>
+          <span class="price-unit">€</span>
+        </td>
+        <td class="total-cost" id="custom-total-cost">
+          <span>
+            <span class="price-value" id="custom-total-cost-value">
+              —
+            </span>
+            <span class="price-unit">€</span>
+          </span>
+          <br/>
+          <small class="effective-price" id="custom-effective-price">
+            <span class="price-value" id="custom-effective-price-value">
+              —
+            </span>
+            <span class="price-unit">€/kWh</span>
+          </small>
+        </td>
       </tr>
     `;
   }
@@ -1217,17 +1387,17 @@ class ChargingCalculator {
       name: "Eigener Tarif",
       providerName: "Eigener Tarif",
       type: "AC/DC",
-      pricePerKwh:
-        parseFloat(document.getElementById("custom-price-per-kwh")?.value) ||
-        0.5,
-      pricePerMin:
-        parseFloat(document.getElementById("custom-blocking-fee")?.value) ||
-        0.0,
-      baseFee:
-        parseFloat(document.getElementById("custom-base-fee")?.value) || 0.0,
-      blockingFee:
-        parseFloat(document.getElementById("custom-blocking-fee")?.value) ||
-        0.1,
+      pricePerKwh: parseFloat(
+        document.getElementById("custom-price-per-kwh")?.value
+      ),
+      pricePerMin: parseFloat(
+        document.getElementById("custom-blocking-fee")?.value
+      ),
+      // baseFee:
+      //   parseFloat(document.getElementById("custom-base-fee")?.value) || 0.0,
+      blockingFee: parseFloat(
+        document.getElementById("custom-blocking-fee")?.value
+      ),
       connectors: [
         "TYPE_1",
         "TYPE_2",
@@ -1240,66 +1410,6 @@ class ChargingCalculator {
     };
   }
 
-  calculateCustomTariff(energyToCharge, estimatedTime, blockingTime) {
-    const customData = this.getCustomTariffData();
-
-    // Calculate costs
-    const energyCost = energyToCharge * customData.pricePerKwh;
-    const timeCost = Math.min(estimatedTime * customData.pricePerMin, 12); // Cap at 12€ like other tariffs
-    const blockingFee = blockingTime * customData.blockingFee;
-    const totalCost = energyCost + timeCost + customData.baseFee + blockingFee;
-    const effectivePricePerKwh = totalCost / energyToCharge;
-
-    return {
-      ...customData,
-      energyCost,
-      timeCost,
-      blockingFee,
-      totalCost,
-      effectivePricePerKwh,
-      getBaseFee: () => customData.baseFee,
-      isCompatibleWithConnectors: () => true,
-    };
-  }
-
-  // REVIEW: unused
-  getDefaultCustomBlockingFee(tariff) {
-    // Use provider's blocking fee as default, or 0.10 if not available
-    if (tariff.blockingFee && typeof tariff.blockingFee === "object") {
-      return tariff.blockingFee.pricePerMin.toFixed(2);
-    } else if (tariff.blockingFee === false) {
-      return "0.00";
-    }
-    return "0.10";
-  }
-
-  getBlockingFeeForTariff(tariff) {
-    // For custom tariff, use the blocking fee directly (it's already calculated)
-    if (tariff.name === "Eigener Tarif") {
-      return tariff.blockingFee;
-    }
-
-    // For provider tariffs, use their blocking fee
-    if (tariff.blockingFee === false) {
-      return 0;
-    } else if (tariff.blockingFee && typeof tariff.blockingFee === "object") {
-      // Handle conditional blocking fees
-      if (tariff.blockingFee.conditions) {
-        if (tariff.blockingFee.conditions.daytime) {
-          // TODO: Calculate price per min with maxPrice for specific time window
-          // For now, return the base pricePerMin
-        } else if (tariff.blockingFee.conditions.durationHours) {
-          // TODO: Calculate price per min with maxPrice for specific duration
-          // For now, return the base pricePerMin
-        }
-      }
-      return tariff.blockingFee.pricePerMin || 0;
-    }
-
-    // Default fallback
-    return 0;
-  }
-
   isTariffCompatibleWithSelectedConnectors(tariff) {
     // If no connectors are selected, show all tariffs
     if (this.selectedConnectors.size === 0) {
@@ -1310,84 +1420,6 @@ class ChargingCalculator {
     return tariff.isCompatibleWithConnectors(
       Array.from(this.selectedConnectors)
     );
-  }
-
-  getTariffConnectors(tariff) {
-    // If tariff has explicit connector information, use it
-    if (tariff.connectors && Array.isArray(tariff.connectors)) {
-      return tariff.connectors;
-    }
-
-    // Check provider-level connectors
-    if (tariff.providerConnectors && Array.isArray(tariff.providerConnectors)) {
-      return tariff.providerConnectors;
-    }
-
-    // Fallback: Map tariff types to compatible connectors
-    const connectorMapping = this.connectorData.chargingTypeMapping || {
-      AC: ["TYPE_1", "TYPE_2", "SCHUKO"],
-      DC: ["CCS_1", "CCS_2", "CHAdeMO", "TESLA"],
-    };
-
-    // Get base connectors for the tariff type
-    const tariffType = tariff.type || tariff.providerType;
-    let connectors = connectorMapping[tariffType] || [];
-
-    // Add specific connectors based on tariff name/description
-    const name = (tariff.name || "").toLowerCase();
-    const providerName = (tariff.providerName || "").toLowerCase();
-    const description = (tariff.description || "").toLowerCase();
-
-    if (
-      name.includes("tesla") ||
-      providerName.includes("tesla") ||
-      description.includes("tesla")
-    ) {
-      connectors = ["TESLA"];
-    } else if (
-      name.includes("ccs") ||
-      providerName.includes("ccs") ||
-      description.includes("ccs")
-    ) {
-      if (tariffType === "DC") {
-        connectors = ["CCS_1", "CCS_2"];
-      }
-    } else if (
-      name.includes("chademo") ||
-      providerName.includes("chademo") ||
-      description.includes("chademo")
-    ) {
-      connectors = ["CHAdeMO"];
-    } else if (
-      name.includes("type 1") ||
-      providerName.includes("type 1") ||
-      description.includes("type 1")
-    ) {
-      connectors = ["TYPE_1"];
-    } else if (
-      name.includes("type 2") ||
-      providerName.includes("type 2") ||
-      description.includes("type 2")
-    ) {
-      connectors = ["TYPE_2"];
-    } else if (
-      name.includes("schuko") ||
-      providerName.includes("schuko") ||
-      description.includes("schuko")
-    ) {
-      connectors = ["SCHUKO"];
-    }
-
-    return connectors;
-  }
-
-  getAvailableTariffsForStation(station) {
-    // Return relevant tariffs for the station type using the new class system
-    const stationType =
-      station.type === "DC" && station.power.includes("kW") ? "DC" : "AC";
-    return this.tariffManager.getFilteredTariffs({
-      types: [stationType],
-    });
   }
 
   calculateTimeCost(tariff, estimatedTime) {
@@ -1461,43 +1493,6 @@ class ChargingCalculator {
 
     // If no time cost applies
     return 0;
-  }
-
-  /**
-   * Setup legend toggle functionality
-   */
-  setupLegendToggles() {
-    if (this.chartManager) {
-      this.chartManager.setupLegendToggles();
-    }
-  }
-
-  /**
-   * Toggle a specific dataset visibility
-   * @param {number} datasetIndex - Index of the dataset to toggle
-   */
-  toggleDataset(datasetIndex) {
-    if (this.chartManager) {
-      this.chartManager.toggleDataset(datasetIndex);
-    }
-  }
-
-  /**
-   * Show all datasets
-   */
-  showAllDatasets() {
-    if (this.chartManager) {
-      this.chartManager.showAllDatasets();
-    }
-  }
-
-  /**
-   * Hide all datasets except the first two (realistic and linear)
-   */
-  hideAllDatasets() {
-    if (this.chartManager) {
-      this.chartManager.hideAllDatasets();
-    }
   }
 }
 
@@ -1661,3 +1656,8 @@ document.addEventListener("DOMContentLoaded", () => {
 //     "endTime",
 //   ];
 // }
+
+// Export for use in other modules
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = ChargingCalculator;
+}
