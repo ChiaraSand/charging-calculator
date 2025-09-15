@@ -262,6 +262,13 @@ class ChargingCalculator {
       this.savePreconfiguration();
     });
 
+    // Load saved preconfiguration
+    document
+      .getElementById("loadSavedPreconfig")
+      .addEventListener("click", () => {
+        this.loadSavedPreconfiguration();
+      });
+
     // Reset preconfiguration
     document.getElementById("resetPreconfig").addEventListener("click", () => {
       this.resetPreconfiguration();
@@ -609,13 +616,14 @@ class ChargingCalculator {
       try {
         const config = JSON.parse(saved);
 
+        document.getElementById("presetSelect").value = "custom";
+
         // Apply saved configuration
-        document.getElementById("quickVehicleSelect").value =
-          config.vehicle || "renault-5-e-tech-52kwh";
+        document.getElementById("quickVehicleSelect").value = config.vehicle; // || "renault-5-e-tech-52kwh";
         document.getElementById("quickChargingPower").value =
-          config.chargingPower || "22";
+          config.chargingPower; // || "22";
         document.getElementById("quickTariffSelect").value =
-          config.tariffFilter || "all";
+          config.tariffFilter; // || "all";
 
         if (config.batteryCapacity) {
           document.getElementById("batteryCapacity").value =

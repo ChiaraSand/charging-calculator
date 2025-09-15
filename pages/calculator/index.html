@@ -36,6 +36,30 @@
           <div class="card">
             <div class="card-header">
               <h2><i class="fas fa-cog"></i> Schnellkonfiguration</h2>
+                <div class="btn-group">
+                  <h3>Voreinstellungen</h3>
+                <button
+                  type="button"
+                  id="savePreconfig"
+                  class="btn btn-secondary"
+                >
+                  <i class="fas fa-save"></i> Speichern
+                </button>
+                <button
+                  type="button"
+                  id="loadSavedPreconfig"
+                  class="btn btn-secondary"
+                >
+                  <i class="fas fa-save"></i> Laden
+                </button>
+                <button
+                  type="button"
+                  id="resetPreconfig"
+                  class="btn btn-secondary"
+                >
+                  <i class="fas fa-undo"></i> Löschen
+                </button>
+              </div>
               <button
                 type="button"
                 id="preconfiguration-section-toggle"
@@ -94,22 +118,31 @@
                   id="applyPreconfig"
                   class="btn btn-primary"
                 >
-                  <i class="fas fa-check"></i> Konfiguration anwenden
+                  <i class="fas fa-check"></i> Aktualisieren
                 </button>
+                <!--
                 <button
                   type="button"
                   id="savePreconfig"
                   class="btn btn-secondary"
                 >
-                  <i class="fas fa-save"></i> Als Voreinstellung speichern
+                  <i class="fas fa-save"></i> Speichern
+                </button>
+                <button
+                  type="button"
+                  id="loadSavedPreconfig"
+                  class="btn btn-secondary"
+                >
+                  <i class="fas fa-save"></i> Laden
                 </button>
                 <button
                   type="button"
                   id="resetPreconfig"
                   class="btn btn-secondary"
                 >
-                  <i class="fas fa-undo"></i> Zurücksetzen
+                  <i class="fas fa-undo"></i> Löschen
                 </button>
+                -->
               </div>
               <div id="vehicle-details"></div>
 
