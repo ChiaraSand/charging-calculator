@@ -2,7 +2,7 @@
   "name": "charging-calculator",
   "version": "1.0.0",
   "description": "E-Auto Ladekosten Rechner & Tarifvergleich",
-  "main": "public/calculator/calculator.js",
+  "main": "docs/calculator/calculator.js",
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
@@ -26,9 +26,9 @@
       "<rootDir>/tests/suits/**/*.test.js"
     ],
     "collectCoverageFrom": [
-      "public/calculator/**/*.js",
-      "!public/calculator/index.html",
-      "!public/calculator/maps.html"
+      "docs/calculator/**/*.js",
+      "!docs/calculator/index.html",
+      "!docs/calculator/maps.html"
     ],
     "coverageDirectory": "coverage",
     "coverageReporters": [
@@ -37,10 +37,10 @@
       "html"
     ],
     "moduleNameMapper": {
-      "assets/(.*)$": "<rootDir>/public/assets/$1",
-      "services/(.*)$": "<rootDir>/public/calculator/services/$1",
-      "utils/(.*)$": "<rootDir>/public/calculator/utils/$1",
-      "^@/(.*)$": "<rootDir>/public/calculator/$1",
+      "assets/(.*)$": "<rootDir>/docs/assets/$1",
+      "services/(.*)$": "<rootDir>/docs/calculator/services/$1",
+      "utils/(.*)$": "<rootDir>/docs/calculator/utils/$1",
+      "^@/(.*)$": "<rootDir>/docs/calculator/$1",
       "mocks/(.*)$": "<rootDir>/tests/mocks/$1",
       "\\.(css|less|scss|sass)$": "identity-obj-proxy"
     },

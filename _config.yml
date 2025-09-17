@@ -27,8 +27,8 @@ description: >- # this means to ignore newlines until "baseurl:"
 url: "https://chiarasand.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 baseurl: "/charging-calculator" # the subpath of your site, e.g. /blog or /repo-name
 
-source: ./public/
-destination: ./_site/
+# source: ./public/
+# destination: ./
 
 # Build settings
 theme: minima
