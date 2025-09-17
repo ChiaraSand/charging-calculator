@@ -28,7 +28,7 @@ url: "https://chiarasand.github.io" # the base hostname & protocol for your site
 baseurl: "/charging-calculator" # the subpath of your site, e.g. /blog or /repo-name
 
 source: ./public/
-destination: _site
+destination: ./_site/
 
 # Build settings
 theme: minima
