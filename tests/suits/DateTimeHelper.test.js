@@ -2,17 +2,9 @@
  * Tests for DateTimeHelper class
  */
 
-// Import the DateTimeHelper class
-// Note: In a real setup, you'd need to properly import the class
-// For now, we'll assume it's available globally or we'll mock it
+import DateTimeHelper from "../../pages/calculator/services/DateTimeHelper.js";
 
 describe("DateTimeHelper", () => {
-  let DateTimeHelper;
-
-  beforeAll(() => {
-    DateTimeHelper = require("../../pages/calculator/services/DateTimeHelper.js");
-  });
-
   describe("timeToMinutes", () => {
     test("should convert time string to minutes correctly", () => {
       expect(DateTimeHelper.timeToMinutes("00:00")).toBe(0);

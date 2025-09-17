@@ -1,6 +1,4 @@
-if (typeof require !== "undefined" || typeof window === "undefined") {
-  JsonLoader = require("./JsonLoader.js");
-}
+import JsonLoader from "./JsonLoader.js";
 
 class GoogleMapsManager {
   constructor(enableInit = true) {
@@ -820,7 +818,4 @@ class GoogleMapsManager {
   }
 }
 
-// Export for use in other modules
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = GoogleMapsManager;
-}
+export default GoogleMapsManager;

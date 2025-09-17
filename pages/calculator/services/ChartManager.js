@@ -565,7 +565,4 @@ class ChartManager {
   }
 }
 
-// Export for use in other modules
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = ChartManager;
-}
+export default ChartManager;

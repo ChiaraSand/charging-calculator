@@ -3,6 +3,8 @@
  * This file can be removed once you're familiar with the test setup
  */
 
+import { mockVehicleData } from "../mocks/testData.js";
+
 describe("Example Test Suite", () => {
   test("should demonstrate basic test structure", () => {
     // Arrange
@@ -62,9 +64,6 @@ describe("Example Test Suite", () => {
   });
 
   test("should demonstrate test data usage", () => {
-    // This test shows how to use the mock data from testData.js
-    const { mockVehicleData } = require("../mocks/testData.js");
-
     // Arrange
     const vehicleId = "renault-5-e-tech-52kwh";
     const vehicle = mockVehicleData[vehicleId];

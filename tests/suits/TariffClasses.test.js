@@ -2,41 +2,19 @@
  * Tests for Tariff Classes (BaseTariff, ACTariff, DCTariff, etc.)
  */
 
-const { mockTariffData, mockConnectorData } = require("../mocks/testData.js");
-const DateTimeHelper = require("../../pages/calculator/services/DateTimeHelper.js");
+import DateTimeHelper from "../../pages/calculator/services/DateTimeHelper.js";
+import {
+  BlockingFee,
+  SpecialAttributes,
+  BaseTariff,
+  ACTariff,
+  DCTariff,
+  Provider,
+  TariffManager,
+} from "../../pages/calculator/services/TariffClasses.js";
+import { mockTariffData } from "../mocks/testData.js";
 
 describe("Tariff Classes", () => {
-  let BaseTariff,
-    ACTariff,
-    DCTariff,
-    BlockingFee,
-    SpecialAttributes,
-    TariffManager,
-    Provider;
-  let ConnectorType, ChargingType;
-
-  beforeAll(() => {
-    // Import the actual tariff classes
-    const TariffClasses = require("../../pages/calculator/services/TariffClasses.js");
-    ({
-      ConnectorType,
-      ChargingType,
-      BlockingFeeCondition,
-      TimeBasedCondition,
-      DurationBasedCondition,
-      BlockingFee,
-      SpecialAttributes,
-      BaseTariff,
-      ACTariff,
-      DCTariff,
-      Provider,
-      TariffManager,
-    } = TariffClasses);
-
-    // Set up the enums for the classes to use
-    global.TariffClasses = TariffClasses;
-  });
-
   describe("BaseTariff", () => {
     let tariff;
 

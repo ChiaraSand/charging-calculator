@@ -2,16 +2,10 @@
  * Tests for ChartManager class
  */
 
-const { mockVehicleData, mockChargingPowers } = require("../mocks/testData.js");
+import ChartManager from "../../pages/calculator/services/ChartManager.js";
+import { mockChargingPowers } from "../mocks/testData.js";
 
 describe("ChartManager", () => {
-  let ChartManager;
-
-  beforeAll(() => {
-    // Import the actual ChartManager class
-    ChartManager = require("../../pages/calculator/services/ChartManager.js");
-  });
-
   let chartManager;
   let mockVehicleCurves;
 

@@ -1,8 +1,4 @@
-if (typeof require !== "undefined") {
-  console.info("[TariffClasses] importing modules through require");
-  // const
-  JsonLoader = require("./JsonLoader.js");
-}
+import JsonLoader from "./JsonLoader.js";
 
 /**
  * Tariff Classes and Types for Charging Calculator
@@ -641,21 +637,18 @@ class TariffManager {
   }
 }
 
-// Export classes and enums
-if (typeof module !== "undefined" && module.exports) {
-  // Node.js environment
-  module.exports = {
-    ConnectorType,
-    ChargingType,
-    BlockingFeeCondition,
-    TimeBasedCondition,
-    DurationBasedCondition,
-    BlockingFee,
-    SpecialAttributes,
-    BaseTariff,
-    ACTariff,
-    DCTariff,
-    Provider,
-    TariffManager,
-  };
-}
+export {
+  ConnectorType,
+  ChargingType,
+  BlockingFeeCondition,
+  TimeBasedCondition,
+  DurationBasedCondition,
+  BlockingFee,
+  SpecialAttributes,
+  BaseTariff,
+  ACTariff,
+  DCTariff,
+  Provider,
+  TariffManager,
+};
+export default TariffManager;

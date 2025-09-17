@@ -2,7 +2,9 @@
  * Integration tests for ChargingCalculator main class
  */
 
-const {
+import ChargingCalculator from "../../pages/calculator/calculator.js";
+
+import {
   mockTariffData,
   mockVehicleData,
   mockConnectorData,
@@ -12,17 +14,9 @@ const {
   mockInputFields,
   setupFetchMocks,
   createMockElement,
-} = require("../mocks/testData.js");
+} from "../mocks/testData.js";
 
 describe("ChargingCalculator Integration Tests", () => {
-  let ChargingCalculator;
-
-  beforeAll(() => {
-    // Import the actual ChargingCalculator class
-    ChargingCalculator = require("../../pages/calculator/calculator.js");
-    // throw new Error("EEEEEEEEE ChargingCalculator: " + ChargingCalculator);
-  });
-
   let calculator;
   let mockElements;
 

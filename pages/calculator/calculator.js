@@ -1,13 +1,10 @@
-// Import required classes for tests
-if (typeof require !== "undefined") {
-  console.info("[Calculator] importing modules through require");
-  JsonLoader = require("./services/JsonLoader.js");
-  TariffManager = require("./services/TariffClasses.js").TariffManager;
-  VehicleChargingCurves = require("./services/VehicleChargingCurves.js");
-  GoogleMapsManager = require("./services/GoogleMapsManager.js");
-  ChartManager = require("./services/ChartManager.js");
-  DateTimeHelper = require("./services/DateTimeHelper.js");
-}
+"use strict";
+import JsonLoader from "./services/JsonLoader.js";
+import TariffManager from "./services/TariffClasses.js";
+import VehicleChargingCurves from "./services/VehicleChargingCurves.js";
+import GoogleMapsManager from "./services/GoogleMapsManager.js";
+import ChartManager from "./services/ChartManager.js";
+import DateTimeHelper from "./services/DateTimeHelper.js";
 
 class ChargingCalculator {
   constructor() {
@@ -1665,7 +1662,4 @@ document.addEventListener("DOMContentLoaded", () => {
 //   ];
 // }
 
-// Export for use in other modules
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = ChargingCalculator;
-}
+export default ChargingCalculator;

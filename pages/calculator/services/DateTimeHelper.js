@@ -110,7 +110,4 @@ class DateTimeHelper {
   }
 }
 
-// Export for use in other modules
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = DateTimeHelper;
-}
+export default DateTimeHelper;

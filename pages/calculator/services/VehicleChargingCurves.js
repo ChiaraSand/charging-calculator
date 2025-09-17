@@ -1,7 +1,4 @@
-if (typeof require !== "undefined") {
-  console.info("[VehicleChargingCurves] importing modules through require");
-  const JsonLoader = require("./JsonLoader.js");
-}
+import JsonLoader from "./JsonLoader.js";
 
 /**
  * Vehicle-specific charging curve data and calculations
@@ -275,10 +272,7 @@ class VehicleChargingCurves {
   }
 }
 
-// Export for use in other modules
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = VehicleChargingCurves;
-}
+export default VehicleChargingCurves;
 
 // loadFallbackVehicleData() {
 //   this.vehicleData = {

@@ -36,8 +36,8 @@
           <div class="card">
             <div class="card-header">
               <h2><i class="fas fa-cog"></i> Schnellkonfiguration</h2>
-                <div class="btn-group">
-                  <h3>Voreinstellungen</h3>
+              <div class="btn-group">
+                <h3>Voreinstellungen</h3>
                 <button
                   type="button"
                   id="savePreconfig"
@@ -57,7 +57,7 @@
                   id="resetPreconfig"
                   class="btn btn-secondary"
                 >
-                  <i class="fas fa-undo"></i> Löschen
+                  <i class="fas fa-trash"></i> Löschen
                 </button>
               </div>
               <button
@@ -69,19 +69,27 @@
                 <i class="fas fa-chevron-up"></i> Ausblenden
               </button>
             </div>
-            <div class="preconfig-content section-content" id="preconfiguration-section-content">
+            <div
+              class="preconfig-content section-content"
+              id="preconfiguration-section-content"
+            >
               <div class="preconfig-grid">
                 <div class="preconfig-group">
                   <label for="presetSelect"
                     >Vordefinierte Konfigurationen:</label
                   >
                   <select id="presetSelect" name="presetSelect"></select>
-                  <small class="form-help">Ändert Ladestände, Ladeleistung und Tarife</small>
+                  <small class="form-help"
+                    >Ändert Ladestände, Ladeleistung und Tarife</small
+                  >
                 </div>
 
                 <div class="preconfig-group">
                   <label for="quickVehicleSelect">Fahrzeug:</label>
-                  <select id="quickVehicleSelect" name="quickVehicleSelect"></select>
+                  <select
+                    id="quickVehicleSelect"
+                    name="quickVehicleSelect"
+                  ></select>
                   <small class="form-help">Ändert Batteriekapazität</small>
                 </div>
 
@@ -241,7 +249,10 @@
               </div>
             </div>
 
-            <div class="calculator-form-container section-content" id="calculator-section-content">
+            <div
+              class="calculator-form-container section-content"
+              id="calculator-section-content"
+            >
               <form id="chargingForm" class="calculator-form">
                 <div class="form-grid">
                   <!-- <div class="form-group">
@@ -270,7 +281,9 @@
                           max="100"
                           step="1"
                         />
-                        <span class="range-value" id="currentChargeValue">20%</span>
+                        <span class="range-value" id="currentChargeValue"
+                          >20%</span
+                        >
                         <!--
                         <button
                           type="button"
@@ -296,7 +309,9 @@
                           max="100"
                           step="1"
                         />
-                        <span class="range-value" id="targetChargeValue">80%</span>
+                        <span class="range-value" id="targetChargeValue"
+                          >80%</span
+                        >
                         <!--
                         <button
                           type="button"
@@ -313,7 +328,9 @@
 
                   <div class="form-column">
                     <div class="form-group">
-                      <label for="batteryCapacity">Batteriekapazität (kWh)</label>
+                      <label for="batteryCapacity"
+                        >Batteriekapazität (kWh)</label
+                      >
                       <div class="input-with-clear">
                         <input
                           type="number"
@@ -340,12 +357,18 @@
                     <div class="form-group">
                       <label for="chargingPower">Ladeleistung (kW)</label>
                       <select id="chargingPower" name="chargingPower">
-                        <option value="3.7">AC 3,7 kW (Haushaltssteckdose)</option>
+                        <option value="3.7">
+                          AC 3,7 kW (Haushaltssteckdose)
+                        </option>
                         <option value="11">AC 11 kW (Wallbox)</option>
                         <option value="22" selected>AC 22 kW (Wallbox)</option>
                         <option value="50">DC 50 kW (Schnelllader)</option>
-                        <option value="150">DC 150 kW (Hochleistungslader)</option>
-                        <option value="300">DC 300 kW (Ultra-Schnelllader)</option>
+                        <option value="150">
+                          DC 150 kW (Hochleistungslader)
+                        </option>
+                        <option value="300">
+                          DC 300 kW (Ultra-Schnelllader)
+                        </option>
                       </select>
                     </div>
                   </div>
@@ -374,7 +397,12 @@
                     <div class="form-group">
                       <label for="endTime">Parken Ende</label>
                       <div class="input-with-clear">
-                        <input type="time" id="endTime" name="endTime" value="" />
+                        <input
+                          type="time"
+                          id="endTime"
+                          name="endTime"
+                          value=""
+                        />
                         <button
                           type="button"
                           class="clear-btn"
@@ -421,7 +449,10 @@
                 <i class="fas fa-chevron-up"></i> Ausblenden
               </button>
             </div>
-            <div class="graph-container section-content" id="graph-section-content">
+            <div
+              class="graph-container section-content"
+              id="graph-section-content"
+            >
               <div class="graph-info">
                 <p class="graph-description">
                   Realistische Darstellung des Ladeverlaufs basierend auf
@@ -600,15 +631,16 @@
                 <i class="fas fa-chevron-up"></i> Ausblenden
               </button>
             </div>
-            <div class="table-container section-content" id="comparison-section-content">
+            <div
+              class="table-container section-content"
+              id="comparison-section-content"
+            >
               <table id="tariffTable" class="tariff-table">
                 <thead>
                   <tr>
                     <th></th>
                     <th colspan="2">Tarif</th>
-                    <th colspan="3">
-                      Berechnung
-                    </th>
+                    <th colspan="3">Berechnung</th>
                   </tr>
                   <tr>
                     <th>Anbieter</th>
@@ -621,7 +653,11 @@
                       <small>(<span id="pricePerSelectedKwh">kWh</span>)</small>
                     </th>
                     <th>Blocking Fee Total</th>
-                    <th>Gesamtkosten<br/><small class="effective-price">Effektiv €/kWh</small></th>
+                    <th>
+                      Gesamtkosten<br /><small class="effective-price"
+                        >Effektiv €/kWh</small
+                      >
+                    </th>
                     <!-- <th>Effektiv €/kWh</th> -->
                   </tr>
                 </thead>
@@ -653,13 +689,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script src="services/JsonLoader.js"/></script>
-    <script src="services/ChartManager.js"></script>
-    <script src="services/TariffClasses.js"></script>
-    <script src="services/VehicleChargingCurves.js"></script>
-    <script src="services/GoogleMapsManager.js"></script>
-    <script src="services/DateTimeHelper.js"></script>
-
-    <script src="calculator.js"></script>
+    <script type="module" src="calculator.js"></script>
   </body>
 </html>

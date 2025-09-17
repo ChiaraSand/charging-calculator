@@ -2,20 +2,14 @@
  * Tests for GoogleMapsManager class
  */
 
-const {
+import GoogleMapsManager from "../../pages/calculator/services/GoogleMapsManager.js";
+import {
   mockDefaultLocation,
   mockChargingStations,
   mockConnectorData,
-} = require("../mocks/testData.js");
+} from "../mocks/testData.js";
 
 describe("GoogleMapsManager", () => {
-  let GoogleMapsManager;
-
-  beforeAll(() => {
-    // Import the actual GoogleMapsManager class
-    GoogleMapsManager = require("../../pages/calculator/services/GoogleMapsManager.js");
-  });
-
   let mapsManager;
 
   beforeEach(() => {

@@ -2,16 +2,10 @@
  * Tests for VehicleChargingCurves class
  */
 
-const { mockVehicleData } = require("../mocks/testData.js");
+import VehicleChargingCurves from "../../pages/calculator/services/VehicleChargingCurves.js";
+import { mockVehicleData } from "../mocks/testData.js";
 
 describe("VehicleChargingCurves", () => {
-  let VehicleChargingCurves;
-
-  beforeAll(() => {
-    // Import the actual VehicleChargingCurves class
-    VehicleChargingCurves = require("../../pages/calculator/services/VehicleChargingCurves.js");
-  });
-
   let vehicleCurves;
 
   beforeEach(() => {
