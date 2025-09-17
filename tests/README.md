@@ -4,19 +4,21 @@ This directory contains comprehensive tests for the Charging Calculator applicat
 
 ## 📁 Test Structure
 
-```
+```ini
 tests/
 ├── README.md                    # This file
 ├── setup.js                     # Jest setup and global mocks
 ├── run-tests.js                 # Test runner script
 ├── mocks/
-│   └── testData.js             # Mock data and test fixtures
-├── DateTimeHelper.test.js       # Tests for DateTimeHelper class
-├── TariffClasses.test.js        # Tests for tariff-related classes
-├── VehicleChargingCurves.test.js # Tests for vehicle charging calculations
-├── ChartManager.test.js         # Tests for chart functionality
-├── GoogleMapsManager.test.js    # Tests for maps integration
-└── ChargingCalculator.test.js   # Integration tests for main class
+│   ├── testData.js             # Mock data and test fixtures
+│   └── secrets.json             # Secrets for tests (e.g. google maps api key)
+└── suits/
+    ├── DateTimeHelper.test.js       # Tests for DateTimeHelper class
+    ├── TariffClasses.test.js        # Tests for tariff-related classes
+    ├── VehicleChargingCurves.test.js # Tests for vehicle charging calculations
+    ├── ChartManager.test.js         # Tests for chart functionality
+    ├── GoogleMapsManager.test.js    # Tests for maps integration
+    └── ChargingCalculator.test.js   # Integration tests for main class
 ```
 
 ## 🧪 Test Coverage
@@ -68,7 +70,7 @@ npm run test:coverage
 ### Run Specific Test File
 
 ```bash
-npx jest tests/DateTimeHelper.test.js
+npx jest tests/suits/DateTimeHelper.test.js
 ```
 
 ### Run Test Suite Script

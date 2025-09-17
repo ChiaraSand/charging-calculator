@@ -17,43 +17,6 @@ layout: default
       <li><a href="pages/examples">Examples</a></li>
     </ul>
   </div>
-
-  <div class="features">
-    <div class="feature-grid">
-      <div class="feature-card">
-        <div class="feature-icon">📊</div>
-        <h3>Tarifvergleich</h3>
-        <p>Übersicht verschiedener Ladetarife basierend auf aktuellen ADAC-Daten</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔍</div>
-        <h3>Anbieter-Filter</h3>
-        <p>Mehrfach-Auswahl von Ladetarifen für personalisierte Ergebnisse</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🗺️</div>
-        <h3>Kartenintegration</h3>
-        <p>Google Maps mit Ladesäulen und verfügbaren Tarifen</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">💡</div>
-        <h3>Echtzeit-Berechnung</h3>
-        <p>Automatische Kostenberechnung mit sofortigen Updates</p>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="info-section">
-    <h2>Warum unser Rechner?</h2>
-    <ul>
-      <li>✅ <strong>Aktuelle Daten:</strong> Basierend auf ADAC-Informationen von 2025</li>
-      <!-- <li>✅ <strong>Vollständig:</strong> Über 12 verschiedene Ladetarife im Vergleich</li> -->
-      <li>✅ <strong>Interaktiv:</strong> Google Maps Integration mit Ladesäulen</li>
-      <li>✅ <strong>Responsive:</strong> Optimiert für Desktop, Tablet und Mobile</li>
-      <li>✅ <strong>Kostenlos:</strong> Keine Registrierung oder versteckte Kosten</li>
-    </ul>
-  </div>
 </div>
 
 <style>
@@ -179,3 +142,46 @@ layout: default
   }
 }
 </style>
+
+<!--
+
+
+  <div class="features">
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Tarifvergleich</h3>
+        <p>Übersicht verschiedener Ladetarife basierend auf aktuellen ADAC-Daten</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3>Anbieter-Filter</h3>
+        <p>Mehrfach-Auswahl von Ladetarifen für personalisierte Ergebnisse</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗺️</div>
+        <h3>Kartenintegration</h3>
+        <p>Google Maps mit Ladesäulen und verfügbaren Tarifen</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💡</div>
+        <h3>Echtzeit-Berechnung</h3>
+        <p>Automatische Kostenberechnung mit sofortigen Updates</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="info-section">
+    <h2>Warum unser Rechner?</h2>
+    <ul>
+      <li>✅ <strong>Aktuelle Daten:</strong> Basierend auf ADAC-Informationen von 2025</li>
+      <li>✅ <strong>Vollständig:</strong> Über 12 verschiedene Ladetarife im Vergleich</li>
+
+      <li>✅ <strong>Interaktiv:</strong> Google Maps Integration mit Ladesäulen</li>
+      <li>✅ <strong>Responsive:</strong> Optimiert für Desktop, Tablet und Mobile</li>
+      <li>✅ <strong>Kostenlos:</strong> Keine Registrierung oder versteckte Kosten</li>
+    </ul>
+
+  </div>
+-->

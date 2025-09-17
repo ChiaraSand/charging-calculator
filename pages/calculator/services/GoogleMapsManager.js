@@ -191,8 +191,7 @@ class GoogleMapsManager {
 
     this.showApiKeyError();
 
-    // Fallback to placeholder - will show error message
-    return undefined; //"YOUR_API_KEY_HERE";
+    return undefined;
   }
 
   askForApiKey() {
