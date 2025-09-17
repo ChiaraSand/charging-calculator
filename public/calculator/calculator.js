@@ -1,10 +1,10 @@
 "use strict";
-import JsonLoader from "./services/JsonLoader.js";
+import JsonLoader from "./utils/JsonLoader.js";
 import TariffManager from "./services/TariffClasses.js";
 import VehicleChargingCurves from "./services/VehicleChargingCurves.js";
 import GoogleMapsManager from "./services/GoogleMapsManager.js";
 import ChartManager from "./services/ChartManager.js";
-import DateTimeHelper from "./services/DateTimeHelper.js";
+import DateTimeHelper from "./utils/DateTimeHelper.js";
 
 class ChargingCalculator {
   constructor() {

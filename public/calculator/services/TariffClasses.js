@@ -1,5 +1,3 @@
-import JsonLoader from "./JsonLoader.js";
-
 /**
  * Tariff Classes and Types for Charging Calculator
  *
@@ -7,6 +5,9 @@ import JsonLoader from "./JsonLoader.js";
  * providers, and related structures used in the charging calculator.
  */
 // Enums for connector types and charging types - will be loaded from JSON
+
+import JsonLoader from "../utils/JsonLoader.js";
+
 let ConnectorType = {};
 let ChargingType = {
   AC: "AC",

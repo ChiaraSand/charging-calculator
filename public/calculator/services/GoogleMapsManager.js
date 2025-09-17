@@ -1,4 +1,4 @@
-import JsonLoader from "./JsonLoader.js";
+import JsonLoader from "../utils/JsonLoader.js";
 
 class GoogleMapsManager {
   constructor(enableInit = true) {

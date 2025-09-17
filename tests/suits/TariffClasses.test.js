@@ -2,7 +2,7 @@
  * Tests for Tariff Classes (BaseTariff, ACTariff, DCTariff, etc.)
  */
 
-import DateTimeHelper from "services/DateTimeHelper.js";
+import DateTimeHelper from "utils/DateTimeHelper.js";
 import {
   BlockingFee,
   SpecialAttributes,

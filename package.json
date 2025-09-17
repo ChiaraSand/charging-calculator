@@ -39,6 +39,7 @@
     "moduleNameMapper": {
       "assets/(.*)$": "<rootDir>/public/assets/$1",
       "services/(.*)$": "<rootDir>/public/calculator/services/$1",
+      "utils/(.*)$": "<rootDir>/public/calculator/utils/$1",
       "^@/(.*)$": "<rootDir>/public/calculator/$1",
       "mocks/(.*)$": "<rootDir>/tests/mocks/$1",
       "\\.(css|less|scss|sass)$": "identity-obj-proxy"

@@ -1,9 +1,10 @@
-import JsonLoader from "./JsonLoader.js";
-
 /**
  * Vehicle-specific charging curve data and calculations
  * Based on real-world charging data from various sources
  */
+
+import JsonLoader from "../utils/JsonLoader.js";
+
 class VehicleChargingCurves {
   constructor() {
     this.vehicleData = {};
