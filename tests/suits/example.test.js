@@ -3,7 +3,7 @@
  * This file can be removed once you're familiar with the test setup
  */
 
-import { mockVehicleData } from "../mocks/testData.js";
+import { mockVehicleData } from "mocks/testData.js";
 
 describe("Example Test Suite", () => {
   test("should demonstrate basic test structure", () => {

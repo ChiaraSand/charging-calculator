@@ -2,7 +2,7 @@
  * Tests for DateTimeHelper class
  */
 
-import DateTimeHelper from "../../pages/calculator/services/DateTimeHelper.js";
+import DateTimeHelper from "services/DateTimeHelper.js";
 
 describe("DateTimeHelper", () => {
   describe("timeToMinutes", () => {

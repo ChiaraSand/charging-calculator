@@ -2,7 +2,7 @@
  * Tests for Tariff Classes (BaseTariff, ACTariff, DCTariff, etc.)
  */
 
-import DateTimeHelper from "../../pages/calculator/services/DateTimeHelper.js";
+import DateTimeHelper from "services/DateTimeHelper.js";
 import {
   BlockingFee,
   SpecialAttributes,
@@ -11,8 +11,8 @@ import {
   DCTariff,
   Provider,
   TariffManager,
-} from "../../pages/calculator/services/TariffClasses.js";
-import { mockTariffData } from "../mocks/testData.js";
+} from "services/TariffClasses.js";
+import { mockTariffData } from "mocks/testData.js";
 
 describe("Tariff Classes", () => {
   describe("BaseTariff", () => {

@@ -6,15 +6,15 @@ layout: default
   <div class="hero">
     <h1 class="hero-title">🔌 E-Auto Ladekosten Rechner</h1>
     <p class="hero-subtitle">Vergleiche Ladetarife und finde die günstigsten Ladesäulen in deiner Nähe</p>
-    <a href="pages/calculator" class="cta-button">
+    <a href="calculator" class="cta-button">
       <i class="fas fa-calculator"></i> Jetzt berechnen
     </a>
   </div>
 
   <div>
     <ul>
-      <li><a href="pages/calculator">Calculator</a></li>
-      <li><a href="pages/examples">Examples</a></li>
+      <li><a href="calculator">Calculator</a></li>
+      <li><a href="examples">Examples</a></li>
     </ul>
   </div>
 </div>

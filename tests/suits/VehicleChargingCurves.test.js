@@ -2,8 +2,8 @@
  * Tests for VehicleChargingCurves class
  */
 
-import VehicleChargingCurves from "../../pages/calculator/services/VehicleChargingCurves.js";
-import { mockVehicleData } from "../mocks/testData.js";
+import VehicleChargingCurves from "services/VehicleChargingCurves.js";
+import { mockVehicleData } from "mocks/testData.js";
 
 describe("VehicleChargingCurves", () => {
   let vehicleCurves;

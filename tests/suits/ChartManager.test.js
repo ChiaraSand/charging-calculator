@@ -2,8 +2,8 @@
  * Tests for ChartManager class
  */
 
-import ChartManager from "../../pages/calculator/services/ChartManager.js";
-import { mockChargingPowers } from "../mocks/testData.js";
+import ChartManager from "services/ChartManager.js";
+import { mockChargingPowers } from "mocks/testData.js";
 
 describe("ChartManager", () => {
   let chartManager;
