@@ -102,6 +102,14 @@
   color: var(--primary-color);
 }
 
+.tariff-table .provider-tag {
+  background: #f0f9ff;
+  color: var(--primary-color);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
 /* Custom tariff input styling */
 .custom-tariff-input {
   width: 70px !important;
