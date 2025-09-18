@@ -4,10 +4,11 @@
  * This file contains all the class definitions for different types of tariffs,
  * providers, and related structures used in the charging calculator.
  */
-// Enums for connector types and charging types - will be loaded from JSON
 
 import JsonLoader from "../utils/JsonLoader.js";
+import DateTimeHelper from "../utils/DateTimeHelper.js";
 
+// Enums for connector types and charging types
 let ConnectorType = {};
 let ChargingType = {
   AC: "AC",
@@ -31,6 +32,43 @@ async function loadEnums() {
 loadEnums();
 
 /**
+ * Time range for time-based pricing
+ */
+class TimeRange {
+  constructor(data = {}) {
+    this.from = data.from || "00:00"; // e.g., "09:00"
+    this.to = data.to || "23:59"; // e.g., "22:00"
+    this.pricePerMin = data.pricePerMin || 0;
+    this.maxPrice = data.maxPrice || null;
+    this.maxBilledMinutes = data.maxBilledMinutes || null;
+  }
+
+  /**
+   * Check if a time falls within this range
+   */
+  isTimeInRange(timeString) {
+    const timeMinutes = DateTimeHelper.timeToMinutes(timeString);
+    const fromMinutes = DateTimeHelper.timeToMinutes(this.from);
+    let toMinutes = DateTimeHelper.timeToMinutes(this.to);
+
+    // Handle overnight ranges (e.g., 22:00 to 09:00)
+    if (toMinutes < fromMinutes) {
+      toMinutes += 24 * 60;
+      return timeMinutes >= fromMinutes || timeMinutes <= toMinutes - 24 * 60;
+    }
+
+    return timeMinutes >= fromMinutes && timeMinutes <= toMinutes;
+  }
+
+  /**
+   * Get the price per minute for a given time
+   */
+  getPriceForTime(timeString) {
+    return this.isTimeInRange(timeString) ? this.pricePerMin : 0;
+  }
+}
+
+/**
  * Base class for all blocking fee conditions
  */
 class BlockingFeeCondition {
@@ -46,83 +84,239 @@ class BlockingFeeCondition {
 class TimeBasedCondition extends BlockingFeeCondition {
   constructor(data = {}) {
     super(data);
-    this.description = data.daytime.description || "";
-    this.from = data.daytime.from || null; // e.g., "21:00"
-    this.to = data.daytime.to || null; // e.g., "07:00"
-    this.maxPrice = data.daytime.maxPrice || null;
-    this.maxBilledMinutes = data.daytime.maxBilledMinutes || null;
+    this.description = data.description || "";
+    this.timeRanges = data.timeRanges
+      ? data.timeRanges.map((range) => new TimeRange(range))
+      : [];
   }
 
   /**
    * Check if start time falls within the time window
    */
   removedBillableTimeInWindow(startTime, endTime) {
-    if (!this.from || !this.to) return true;
+    if (!this.timeRanges || this.timeRanges.length === 0) return 0;
 
-    const startMinutes = this.timeToMinutes(startTime);
-    let endMinutes = this.timeToMinutes(endTime);
+    const startMinutes = DateTimeHelper.timeToMinutes(startTime);
+    let endMinutes = DateTimeHelper.timeToMinutes(endTime);
     if (endMinutes < startMinutes) {
       endMinutes += 24 * 60;
     }
 
-    const fromMinutes = this.timeToMinutes(this.from);
-    let toMinutes = this.timeToMinutes(this.to);
-    if (toMinutes < fromMinutes) {
-      toMinutes += 24 * 60;
+    let totalRemovedTime = 0;
+
+    // Check each time range
+    for (const timeRange of this.timeRanges) {
+      const fromMinutes = DateTimeHelper.timeToMinutes(timeRange.from);
+      let toMinutes = DateTimeHelper.timeToMinutes(timeRange.to);
+      if (toMinutes < fromMinutes) {
+        toMinutes += 24 * 60;
+      }
+
+      // Check if the charging session overlaps with this time range
+      if (endMinutes >= fromMinutes && startMinutes <= toMinutes) {
+        const startTimeInWindow = Math.max(startMinutes, fromMinutes);
+        const endTimeInWindow = Math.min(endMinutes, toMinutes);
+        const totalTimeInWindow = endTimeInWindow - startTimeInWindow;
+
+        // Apply max billed minutes if specified
+        if (timeRange.maxBilledMinutes) {
+          const removedTime =
+            totalTimeInWindow -
+            Math.min(totalTimeInWindow, timeRange.maxBilledMinutes);
+          totalRemovedTime += removedTime;
+        }
+      }
     }
 
-    if (endMinutes < fromMinutes || startMinutes > toMinutes) {
-      return 0;
-    }
-
-    // const totalTime = endTime - startTime;
-    const startTimeInWindow = Math.max(startMinutes, fromMinutes);
-    const endTimeInWindow = Math.min(endMinutes, toMinutes);
-    const totalTimeInWindow = endTimeInWindow - startTimeInWindow;
-
-    const removedBillableTimeInWindow =
-      totalTimeInWindow - Math.min(totalTimeInWindow, this.maxBilledMinutes);
-
-    return removedBillableTimeInWindow;
-  }
-
-  // FIXME: move to a better place
-  timeToMinutes(timeString) {
-    const [hours, minutes] = timeString.split(":").map(Number);
-    return hours * 60 + minutes;
-  }
-
-  // FIXME: move to a better place
-  minutesToTime(minutes) {
-    const hours = (Math.floor(minutes / 60) % 24).toString().padStart(2, "0");
-    const remainingMinutes = Math.round(minutes % 60)
-      .toString()
-      .padStart(2, "0");
-    return `${hours}:${remainingMinutes}`;
+    return totalRemovedTime;
   }
 }
 
 /**
- * Duration-based blocking fee condition (e.g., after 4 hours)
+ * Duration-based blocking fee condition (e.g., after 4 hours or 45 minutes)
  */
 class DurationBasedCondition extends BlockingFeeCondition {
   constructor(data = {}) {
     super(data);
     this.description = data.description || "";
-    this.from = data.from || 0; // hours
+    this.from = data.from || 0;
     this.maxPrice = data.maxPrice || 0;
+    this.unit = data.unit || "hours"; // "hours" or "minutes"
   }
 
   /**
    * Check if duration exceeds the threshold
    */
   isDurationExceeded(durationHours) {
+    if (this.unit === "minutes") {
+      const durationMinutes = durationHours * 60;
+      return durationMinutes >= this.from;
+    }
     return durationHours >= this.from;
+  }
+
+  /**
+   * Get the excess duration in the appropriate unit
+   */
+  getExcessDuration(durationHours) {
+    if (this.unit === "minutes") {
+      const durationMinutes = durationHours * 60;
+      return Math.max(0, durationMinutes - this.from);
+    }
+    return Math.max(0, durationHours - this.from);
   }
 }
 
 /**
- * Blocking fee structure for tariffs
+ * Provider-specific blocking fee condition
+ */
+class ProviderBasedCondition extends BlockingFeeCondition {
+  constructor(data = {}) {
+    super(data);
+    this.providerId = data.providerId || "";
+    this.pricePerMin = data.pricePerMin || 0;
+    this.conditions = this.parseConditions(data.conditions || {});
+  }
+
+  parseConditions(conditionsData) {
+    const conditions = {};
+
+    if (conditionsData.daytime) {
+      conditions.daytime = new TimeBasedCondition(conditionsData.daytime);
+    }
+
+    if (conditionsData.durationHours) {
+      conditions.durationHours = new DurationBasedCondition({
+        ...conditionsData.durationHours,
+        unit: "hours",
+      });
+    }
+
+    if (conditionsData.durationMinutes) {
+      conditions.durationMinutes = new DurationBasedCondition({
+        ...conditionsData.durationMinutes,
+        unit: "minutes",
+      });
+    }
+
+    // Copy other conditions
+    Object.keys(conditionsData).forEach((key) => {
+      if (!conditions[key]) {
+        conditions[key] = conditionsData[key];
+      }
+    });
+
+    return conditions;
+  }
+
+  /**
+   * Calculate blocking fee for this specific provider
+   */
+  calculateFee(
+    blockingTimeMinutes,
+    chargingTimeMinutes = 0,
+    startTime,
+    endTime,
+    providerId = null
+  ) {
+    if (this.pricePerMin <= 0) return 0;
+    if (providerId && this.providerId !== providerId) return 0;
+
+    let applicableMinutes = 0;
+
+    // Apply time-based conditions
+    if (this.conditions.daytime) {
+      // Use the time-based condition logic
+      const timeCondition = this.conditions.daytime;
+      let removedBillableTimeInWindow = 0;
+
+      if (startTime && endTime) {
+        removedBillableTimeInWindow = timeCondition.removedBillableTimeInWindow(
+          startTime,
+          endTime
+        );
+      } else if (startTime) {
+        removedBillableTimeInWindow = timeCondition.removedBillableTimeInWindow(
+          startTime,
+          startTime + chargingTimeMinutes
+        );
+      } else if (endTime) {
+        removedBillableTimeInWindow = timeCondition.removedBillableTimeInWindow(
+          endTime - chargingTimeMinutes,
+          endTime
+        );
+      }
+
+      applicableMinutes = blockingTimeMinutes - removedBillableTimeInWindow;
+
+      // Calculate fee based on time ranges instead of base price
+      if (timeCondition.timeRanges && timeCondition.timeRanges.length > 0) {
+        let totalFee = 0;
+        const startMinutes = DateTimeHelper.timeToMinutes(startTime);
+        let endMinutes = DateTimeHelper.timeToMinutes(endTime);
+        if (endMinutes < startMinutes) {
+          endMinutes += 24 * 60;
+        }
+
+        for (const timeRange of timeCondition.timeRanges) {
+          const fromMinutes = DateTimeHelper.timeToMinutes(timeRange.from);
+          let toMinutes = DateTimeHelper.timeToMinutes(timeRange.to);
+          if (toMinutes < fromMinutes) {
+            toMinutes += 24 * 60;
+          }
+
+          // Check if the charging session overlaps with this time range
+          if (endMinutes >= fromMinutes && startMinutes <= toMinutes) {
+            const startTimeInWindow = Math.max(startMinutes, fromMinutes);
+            const endTimeInWindow = Math.min(endMinutes, toMinutes);
+            const timeInWindow = endTimeInWindow - startTimeInWindow;
+
+            // Apply max billed minutes if specified
+            const billableTime = timeRange.maxBilledMinutes
+              ? Math.min(timeInWindow, timeRange.maxBilledMinutes)
+              : timeInWindow;
+
+            totalFee += billableTime * timeRange.pricePerMin;
+          }
+        }
+
+        return totalFee;
+      }
+    }
+    // Apply duration-based conditions
+    else if (this.conditions.durationHours) {
+      const totalTimeHours = blockingTimeMinutes / 60;
+      if (!this.conditions.durationHours.isDurationExceeded(totalTimeHours)) {
+        applicableMinutes = 0;
+      } else {
+        applicableMinutes =
+          this.conditions.durationHours.getExcessDuration(totalTimeHours) * 60;
+      }
+    } else if (this.conditions.durationMinutes) {
+      const totalTimeMinutes = blockingTimeMinutes;
+      if (
+        !this.conditions.durationMinutes.isDurationExceeded(
+          totalTimeMinutes / 60
+        )
+      ) {
+        applicableMinutes = 0;
+      } else {
+        applicableMinutes = this.conditions.durationMinutes.getExcessDuration(
+          totalTimeMinutes / 60
+        );
+      }
+    }
+    // No specific conditions, bill all blocking time
+    else {
+      applicableMinutes = blockingTimeMinutes;
+    }
+
+    return applicableMinutes * this.pricePerMin;
+  }
+}
+
+/**
+ * Blocking fee
  */
 class BlockingFee {
   constructor(data = {}) {
@@ -136,14 +330,39 @@ class BlockingFee {
   parseConditions(conditionsData) {
     const conditions = {};
 
+    // Handle provider-specific conditions
+    if (conditionsData.providerSpecific) {
+      conditions.providerSpecific = {};
+      Object.keys(conditionsData.providerSpecific).forEach((providerId) => {
+        const providerData = conditionsData.providerSpecific[providerId];
+        if (providerData === false) {
+          conditions.providerSpecific[providerId] = false;
+        } else {
+          conditions.providerSpecific[providerId] = new ProviderBasedCondition({
+            providerId,
+            ...providerData,
+          });
+        }
+      });
+    }
+
+    // Handle legacy conditions
     if (conditionsData.daytime) {
-      conditions.daytime = new TimeBasedCondition(conditionsData);
+      conditions.daytime = new TimeBasedCondition(conditionsData.daytime);
     }
 
     if (conditionsData.durationHours) {
-      conditions.durationHours = new DurationBasedCondition(
-        conditionsData.durationHours
-      );
+      conditions.durationHours = new DurationBasedCondition({
+        ...conditionsData.durationHours,
+        unit: "hours",
+      });
+    }
+
+    if (conditionsData.durationMinutes) {
+      conditions.durationMinutes = new DurationBasedCondition({
+        ...conditionsData.durationMinutes,
+        unit: "minutes",
+      });
     }
 
     // Copy other conditions
@@ -163,8 +382,29 @@ class BlockingFee {
     blockingTimeMinutes,
     chargingTimeMinutes = 0,
     startTime,
-    endTime
+    endTime,
+    providerId = null
   ) {
+    // Handle provider-specific conditions
+    if (this.conditions.providerSpecific && providerId) {
+      const providerCondition = this.conditions.providerSpecific[providerId];
+      if (providerCondition === false) {
+        return 0; // No blocking fee for this provider
+      } else if (
+        providerCondition &&
+        typeof providerCondition.calculateFee === "function"
+      ) {
+        return providerCondition.calculateFee(
+          blockingTimeMinutes,
+          chargingTimeMinutes,
+          startTime,
+          endTime,
+          providerId
+        );
+      }
+    }
+
+    // Fallback to legacy calculation
     if (this.pricePerMin <= 0) return 0;
 
     let applicableMinutes = 0;
@@ -204,7 +444,20 @@ class BlockingFee {
         applicableMinutes = 0;
       } else {
         applicableMinutes =
-          (totalTimeHours - this.conditions.durationHours.from) * 60;
+          this.conditions.durationHours.getExcessDuration(totalTimeHours) * 60;
+      }
+    } else if (this.conditions.durationMinutes) {
+      const totalTimeMinutes = blockingTimeMinutes;
+      if (
+        !this.conditions.durationMinutes.isDurationExceeded(
+          totalTimeMinutes / 60
+        )
+      ) {
+        applicableMinutes = 0;
+      } else {
+        applicableMinutes = this.conditions.durationMinutes.getExcessDuration(
+          totalTimeMinutes / 60
+        );
       }
     }
 
@@ -239,24 +492,57 @@ class BlockingFee {
     return fee;
   }
 
-  getBlockingFeeString() {
+  getBlockingFeeString(conditions = this.conditions) {
     let blockingFeeString = "";
-    if (this.conditions.daytime) {
-      const icon =
-        this.conditions.daytime.to < this.conditions.daytime.from ? "🌙" : "☀️";
+    if (conditions.daytime) {
+      const perTimeRangeString = conditions.daytime.timeRanges
+        .map((timeRange) => {
+          const { from, to, pricePerMin, maxPrice, maxBilledMinutes } =
+            timeRange;
+
+          const differentPrice = pricePerMin !== this.pricePerMin;
+
+          const fromString = from
+            .split(":")
+            .filter((part) => part !== "00")
+            .join(":");
+
+          const toString = to
+            .split(":")
+            .filter((part) => part !== "00")
+            .join(":");
+
+          if (differentPrice || maxPrice || maxBilledMinutes) {
+            return [
+              to < from ? "🌙" : "☀️",
+              `🕙${fromString}-${toString}h: `,
+              [
+                differentPrice &&
+                  `${pricePerMin.toFixed(
+                    2
+                  )} <span class='price-unit'>€/min</span>`,
+                maxPrice &&
+                  `max ${maxPrice.toFixed(
+                    2
+                  )} <span class='price-unit'>€</span>`,
+                maxBilledMinutes &&
+                  `max ${maxBilledMinutes} <span class='price-unit'>min</span>`,
+              ]
+                .filter((string) => string)
+                .join(", "),
+            ].join("");
+          }
+        })
+        .filter((string) => string)
+        .join("<br/>");
+
       blockingFeeString =
         this.pricePerMin.toFixed(2) +
         " <span class='price-unit'>€/min</span><br/><small><i style='font-weight: normal;'>" +
-        icon +
-        "🕙" +
-        this.conditions.daytime.from.split(":")[0] +
-        "-" +
-        this.conditions.daytime.to.split(":")[0] +
-        "h: max " +
-        this.conditions.daytime.maxPrice.toFixed(2) +
-        " <span class='price-unit'>€</span></i></small>";
-    } else if (this.conditions.durationHours) {
-      const details = this.conditions.durationHours;
+        perTimeRangeString +
+        "</i></small>";
+    } else if (conditions.durationHours) {
+      const details = conditions.durationHours;
       blockingFeeString =
         "<small><i style='font-weight: normal;'>" +
         "⏳>" +
@@ -266,9 +552,56 @@ class BlockingFee {
         "<span class='price-unit'>€/min</span><br/>max " +
         details.maxPrice.toFixed(2) +
         " <span class='price-unit'>€</span></i></small>";
-    } else {
+    } else if (conditions.providerSpecific) {
+      const freeProviders = [];
+      const paidProviders = [];
+      Object.entries(conditions.providerSpecific).forEach(
+        ([provider, data]) => {
+          if (data) {
+            paidProviders.push(
+              `<div><span class="provider-tag">${provider}</span>: ${new BlockingFee(
+                data
+              ).getBlockingFeeString()}</div>`
+            );
+          } else {
+            freeProviders.push(`<span class="provider-tag">${provider}</span>`);
+          }
+        }
+      );
+      const paidProvidersString =
+        paidProviders.length > 0
+          ? `<div class="paid-providers">${paidProviders.join("")}</div>`
+          : "";
+      const freeProvidersString =
+        freeProviders.length > 0
+          ? `<div class="free-providers">free<br/>${freeProviders.join(
+              " "
+            )}</div>`
+          : "";
+
+      const tootltipString = paidProvidersString + freeProvidersString;
+      const tooltip = [
+        "<div class='tooltip-container'>" +
+          "<i class='tooltip-icon fa-solid fa-info-circle'></i>" +
+          "<div class='tooltip-content'>" +
+          "<div class='tooltip-content-header'>Providers</div>" +
+          tootltipString +
+          "</div>" +
+          "</div>",
+      ].join("");
+
+      const visibleBlockingFeeString =
+        "<small><i>Depends on Provider</i></small>";
+
+      blockingFeeString = visibleBlockingFeeString + tooltip;
+
+      console.log("blockingFeeString", blockingFeeString);
+    } else if (this.pricePerMin) {
       blockingFeeString =
-        this.description + " " + JSON.stringify(this.conditions);
+        this.pricePerMin.toFixed(2) + " <span class='price-unit'>€/min</span>";
+    } else {
+      console.log("else conditions", conditions);
+      blockingFeeString = this.description + " " + JSON.stringify(conditions);
     }
     return blockingFeeString;
   }
@@ -339,7 +672,8 @@ class BaseTariff {
     blockingTimeMinutes = 0,
     chargingTimeMinutes,
     startTime,
-    endTime
+    endTime,
+    providerId = null
   ) {
     if (!this.blockingFee) return 0;
     else if (typeof this.blockingFee === "object") {
@@ -347,7 +681,8 @@ class BaseTariff {
         blockingTimeMinutes,
         chargingTimeMinutes,
         startTime,
-        endTime
+        endTime,
+        providerId
       );
     }
   }
@@ -360,7 +695,8 @@ class BaseTariff {
     chargingTimeMinutes,
     blockingTimeMinutes = 0,
     startTime,
-    endTime
+    endTime,
+    providerId = null
   ) {
     const energyCost = this.calculateEnergyCost(energyKwh);
     // const timeCost = chargingTimeMinutes * this.pricePerMin;
@@ -370,7 +706,8 @@ class BaseTariff {
       blockingTimeMinutes,
       chargingTimeMinutes,
       startTime,
-      endTime
+      endTime,
+      providerId
     );
 
     return energyCost + baseFee + blockingFee;
@@ -388,14 +725,16 @@ class BaseTariff {
     chargingTimeMinutes,
     blockingTimeMinutes = 0,
     startTime,
-    endTime
+    endTime,
+    providerId = null
   ) {
     const totalCost = this.calculateTotalCost(
       energyKwh,
       chargingTimeMinutes,
       blockingTimeMinutes,
       startTime,
-      endTime
+      endTime,
+      providerId
     );
     return energyKwh > 0 ? totalCost / energyKwh : 0;
   }
@@ -579,7 +918,8 @@ class TariffManager {
     chargingTimeMinutes,
     blockingTimeMinutes = 0,
     startTime,
-    endTime
+    endTime,
+    providerId = null
   ) {
     return tariffs
       .map((tariff) => ({
@@ -593,13 +933,15 @@ class TariffManager {
           chargingTimeMinutes,
           blockingTimeMinutes,
           startTime,
-          endTime
+          endTime,
+          providerId
         ),
         blockingFee: tariff.calculateBlockingFee(
           blockingTimeMinutes,
           chargingTimeMinutes,
           startTime,
-          endTime
+          endTime,
+          providerId
         ),
         blockingFeeString:
           (tariff.blockingFee &&
@@ -612,7 +954,8 @@ class TariffManager {
           chargingTimeMinutes,
           blockingTimeMinutes,
           startTime,
-          endTime
+          endTime,
+          providerId
         ),
         energyCost: tariff.calculateEnergyCost(energyKwh),
       }))
@@ -641,9 +984,11 @@ class TariffManager {
 export {
   ConnectorType,
   ChargingType,
+  TimeRange,
   BlockingFeeCondition,
   TimeBasedCondition,
   DurationBasedCondition,
+  ProviderBasedCondition,
   BlockingFee,
   SpecialAttributes,
   BaseTariff,

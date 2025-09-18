@@ -82,10 +82,20 @@ export const mockTariffData = [
       conditions: {
         daytime: {
           description: "night cap",
-          from: "21:00",
-          to: "07:00",
-          maxPrice: 3.6,
-          maxBilledMinutes: 180,
+          timeRanges: [
+            {
+              from: "21:00",
+              to: "07:00",
+              pricePerMin: 0.02,
+              maxPrice: 3.6,
+              maxBilledMinutes: 180,
+            },
+            {
+              from: "07:00",
+              to: "21:00",
+              pricePerMin: 0.02,
+            },
+          ],
         },
         whileCharging: true,
         whileIdle: true,
@@ -116,6 +126,57 @@ export const mockTariffData = [
     blockingFee: false,
     connectors: ["CCS_2"],
     description: "Ionity DC Schnelllader",
+  },
+  {
+    id: "eon-light-dc",
+    name: "E.ON Light DC",
+    type: "DC",
+    pricePerKwh: 0.61,
+    baseFee: 0,
+    blockingFee: {
+      description:
+        "Depends on Provider (and Station?). \nE.ON Drive: ⏳>45min: 0.10€/min\nIonity: 0.00€/min\nE.ON Drive Infrastructure: ⏳>1h: {🕙9-22h: 0.15€/min, 🕙22-9h: 0.00€/min.}",
+      conditions: {
+        providerSpecific: {
+          ionity: false,
+          "eon-drive": {
+            pricePerMin: 0.1,
+            conditions: {
+              durationMinutes: {
+                description: ">45min",
+                from: 45,
+              },
+            },
+          },
+          "eon-drive-infrastructure": {
+            pricePerMin: 0.15,
+            conditions: {
+              durationHours: {
+                description: ">1h",
+                from: 1,
+              },
+              daytime: {
+                description: "9-22h: 0.15€/min, 22-9h: 0.00€/min",
+                timeRanges: [
+                  {
+                    from: "09:00",
+                    to: "22:00",
+                    pricePerMin: 0.15,
+                  },
+                  {
+                    from: "22:00",
+                    to: "09:00",
+                    pricePerMin: 0.0,
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    connectors: ["CCS_2"],
+    description: "E.ON & Partner",
   },
 ];
 

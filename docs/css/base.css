@@ -83,3 +83,42 @@ body {
 .hidden {
   display: none !important;
 }
+
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+  cursor: pointer;
+}
+
+.tooltip-content {
+  visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: white;
+  color: black;
+  text-align: left;
+  border: 1px solid black; /* var(--border-color); */
+  border-radius: 6px;
+  padding: 12px;
+  position: absolute;
+  z-index: 1;
+  text-wrap-mode: nowrap;
+}
+
+.tooltip-content .paid-providers {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* .tooltiptext .free-providers {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+} */
+
+.tooltip-container:hover .tooltip-content {
+  visibility: visible;
+}
