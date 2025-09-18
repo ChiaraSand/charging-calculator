@@ -94,7 +94,7 @@ class TimeBasedCondition extends BlockingFeeCondition {
    * Check if start time falls within the time window
    */
   removedBillableTimeInWindow(startTime, endTime) {
-    if (!this.from || !this.to) return true;
+    if (!this.timeRanges || this.timeRanges.length === 0) return 0;
 
     const startMinutes = DateTimeHelper.timeToMinutes(startTime);
     let endMinutes = DateTimeHelper.timeToMinutes(endTime);
@@ -102,25 +102,33 @@ class TimeBasedCondition extends BlockingFeeCondition {
       endMinutes += 24 * 60;
     }
 
-    const fromMinutes = DateTimeHelper.timeToMinutes(this.from);
-    let toMinutes = DateTimeHelper.timeToMinutes(this.to);
-    if (toMinutes < fromMinutes) {
-      toMinutes += 24 * 60;
+    let totalRemovedTime = 0;
+
+    // Check each time range
+    for (const timeRange of this.timeRanges) {
+      const fromMinutes = DateTimeHelper.timeToMinutes(timeRange.from);
+      let toMinutes = DateTimeHelper.timeToMinutes(timeRange.to);
+      if (toMinutes < fromMinutes) {
+        toMinutes += 24 * 60;
+      }
+
+      // Check if the charging session overlaps with this time range
+      if (endMinutes >= fromMinutes && startMinutes <= toMinutes) {
+        const startTimeInWindow = Math.max(startMinutes, fromMinutes);
+        const endTimeInWindow = Math.min(endMinutes, toMinutes);
+        const totalTimeInWindow = endTimeInWindow - startTimeInWindow;
+
+        // Apply max billed minutes if specified
+        if (timeRange.maxBilledMinutes) {
+          const removedTime =
+            totalTimeInWindow -
+            Math.min(totalTimeInWindow, timeRange.maxBilledMinutes);
+          totalRemovedTime += removedTime;
+        }
+      }
     }
 
-    if (endMinutes < fromMinutes || startMinutes > toMinutes) {
-      return 0;
-    }
-
-    // const totalTime = endTime - startTime;
-    const startTimeInWindow = Math.max(startMinutes, fromMinutes);
-    const endTimeInWindow = Math.min(endMinutes, toMinutes);
-    const totalTimeInWindow = endTimeInWindow - startTimeInWindow;
-
-    const removedBillableTimeInWindow =
-      totalTimeInWindow - Math.min(totalTimeInWindow, this.maxBilledMinutes);
-
-    return removedBillableTimeInWindow;
+    return totalRemovedTime;
   }
 }
 
@@ -240,6 +248,40 @@ class ProviderBasedCondition extends BlockingFeeCondition {
       }
 
       applicableMinutes = blockingTimeMinutes - removedBillableTimeInWindow;
+
+      // Calculate fee based on time ranges instead of base price
+      if (timeCondition.timeRanges && timeCondition.timeRanges.length > 0) {
+        let totalFee = 0;
+        const startMinutes = DateTimeHelper.timeToMinutes(startTime);
+        let endMinutes = DateTimeHelper.timeToMinutes(endTime);
+        if (endMinutes < startMinutes) {
+          endMinutes += 24 * 60;
+        }
+
+        for (const timeRange of timeCondition.timeRanges) {
+          const fromMinutes = DateTimeHelper.timeToMinutes(timeRange.from);
+          let toMinutes = DateTimeHelper.timeToMinutes(timeRange.to);
+          if (toMinutes < fromMinutes) {
+            toMinutes += 24 * 60;
+          }
+
+          // Check if the charging session overlaps with this time range
+          if (endMinutes >= fromMinutes && startMinutes <= toMinutes) {
+            const startTimeInWindow = Math.max(startMinutes, fromMinutes);
+            const endTimeInWindow = Math.min(endMinutes, toMinutes);
+            const timeInWindow = endTimeInWindow - startTimeInWindow;
+
+            // Apply max billed minutes if specified
+            const billableTime = timeRange.maxBilledMinutes
+              ? Math.min(timeInWindow, timeRange.maxBilledMinutes)
+              : timeInWindow;
+
+            totalFee += billableTime * timeRange.pricePerMin;
+          }
+        }
+
+        return totalFee;
+      }
     }
     // Apply duration-based conditions
     else if (this.conditions.durationHours) {

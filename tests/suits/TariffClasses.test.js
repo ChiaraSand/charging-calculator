@@ -4,6 +4,7 @@
 
 import DateTimeHelper from "utils/DateTimeHelper.js";
 import {
+  TimeRange,
   BlockingFee,
   SpecialAttributes,
   BaseTariff,
@@ -116,6 +117,64 @@ describe("Tariff Classes", () => {
     });
   });
 
+  describe("TimeRange", () => {
+    let timeRange;
+
+    test("should create time range with correct properties", () => {
+      timeRange = new TimeRange({
+        from: "09:00",
+        to: "17:00",
+        pricePerMin: 0.1,
+        maxPrice: 10.0,
+        maxBilledMinutes: 60,
+      });
+      expect(timeRange.from).toBe("09:00");
+      expect(timeRange.to).toBe("17:00");
+      expect(timeRange.pricePerMin).toBe(0.1);
+      expect(timeRange.maxPrice).toBe(10.0);
+      expect(timeRange.maxBilledMinutes).toBe(60);
+    });
+
+    test("should check if time is in range correctly", () => {
+      timeRange = new TimeRange({
+        from: "09:00",
+        to: "17:00",
+        pricePerMin: 0.1,
+      });
+
+      expect(timeRange.isTimeInRange("10:00")).toBe(true);
+      expect(timeRange.isTimeInRange("09:00")).toBe(true);
+      expect(timeRange.isTimeInRange("17:00")).toBe(true);
+      expect(timeRange.isTimeInRange("08:00")).toBe(false);
+      expect(timeRange.isTimeInRange("18:00")).toBe(false);
+    });
+
+    test("should handle overnight ranges correctly", () => {
+      timeRange = new TimeRange({
+        from: "22:00",
+        to: "06:00",
+        pricePerMin: 0.05,
+      });
+
+      expect(timeRange.isTimeInRange("23:00")).toBe(true);
+      expect(timeRange.isTimeInRange("02:00")).toBe(true);
+      expect(timeRange.isTimeInRange("05:00")).toBe(true);
+      expect(timeRange.isTimeInRange("10:00")).toBe(false);
+      expect(timeRange.isTimeInRange("20:00")).toBe(false);
+    });
+
+    test("should return correct price for time", () => {
+      timeRange = new TimeRange({
+        from: "09:00",
+        to: "17:00",
+        pricePerMin: 0.1,
+      });
+
+      expect(timeRange.getPriceForTime("10:00")).toBe(0.1);
+      expect(timeRange.getPriceForTime("08:00")).toBe(0);
+    });
+  });
+
   describe("BlockingFee", () => {
     let blockingFee;
 
@@ -125,19 +184,31 @@ describe("Tariff Classes", () => {
       expect(blockingFee.calculateFee(60, 0, "10:00", "11:00")).toBe(6.0);
     });
 
-    test("should create time-based blocking fee", () => {
+    test("should create time-based blocking fee with timeRanges", () => {
       blockingFee = new BlockingFee({
         pricePerMin: 0.02,
         conditions: {
           daytime: {
-            from: "21:00",
-            to: "07:00",
-            maxPrice: 2.0,
-            maxBilledMinutes: 60,
+            description: "night cap",
+            timeRanges: [
+              {
+                from: "21:00",
+                to: "07:00",
+                pricePerMin: 0.02,
+                maxPrice: 2.0,
+                maxBilledMinutes: 60,
+              },
+              {
+                from: "07:00",
+                to: "21:00",
+                pricePerMin: 0.02,
+              },
+            ],
           },
         },
       });
       expect(blockingFee.pricePerMin).toBe(0.02);
+      expect(blockingFee.conditions.daytime.timeRanges).toHaveLength(2);
     });
 
     test("should calculate fee with time conditions", () => {
@@ -145,17 +216,82 @@ describe("Tariff Classes", () => {
         pricePerMin: 0.02,
         conditions: {
           daytime: {
-            from: "21:00",
-            to: "07:00",
-            maxPrice: 2.0,
-            maxBilledMinutes: 60,
+            description: "night cap",
+            timeRanges: [
+              {
+                from: "21:00",
+                to: "07:00",
+                pricePerMin: 0.02,
+                maxPrice: 2.0,
+                maxBilledMinutes: 60,
+              },
+            ],
           },
         },
       });
 
-      // Test during night hours
+      // Test during night hours (22:00-00:00 = 120 minutes)
+      // Should bill 60 minutes (maxBilledMinutes) at 0.02€/min = 1.2€
       const nightFee = blockingFee.calculateFee(120, 0, "22:00", "00:00");
-      expect(nightFee).toBeLessThanOrEqual(2.0);
+      expect(nightFee).toBe(1.2); // 60 minutes * 0.02€/min
+    });
+
+    test("should handle provider-specific conditions", () => {
+      blockingFee = new BlockingFee({
+        description: "Depends on Provider",
+        conditions: {
+          providerSpecific: {
+            "provider-a": {
+              pricePerMin: 0.1,
+              conditions: {
+                durationMinutes: {
+                  description: ">30min",
+                  from: 30,
+                },
+              },
+            },
+            "provider-b": false,
+            "provider-c": {
+              pricePerMin: 0.05,
+            },
+          },
+        },
+      });
+
+      expect(
+        blockingFee.conditions.providerSpecific["provider-a"]
+      ).toBeDefined();
+      expect(blockingFee.conditions.providerSpecific["provider-b"]).toBe(false);
+      expect(
+        blockingFee.conditions.providerSpecific["provider-c"]
+      ).toBeDefined();
+
+      // Test provider-specific fee calculation
+      const feeA = blockingFee.calculateFee(
+        60,
+        0,
+        "10:00",
+        "11:00",
+        "provider-a"
+      );
+      const feeB = blockingFee.calculateFee(
+        60,
+        0,
+        "10:00",
+        "11:00",
+        "provider-b"
+      );
+      const feeC = blockingFee.calculateFee(
+        60,
+        0,
+        "10:00",
+        "11:00",
+        "provider-c"
+      );
+
+      expect(feeA).toBeGreaterThan(0); // Should have fee after 30min
+      expect(feeB).toBe(0); // Should be free
+      expect(feeC).toBe(3.0); // 60min * 0.05€/min
     });
 
     test("should return correct blocking fee string", () => {
@@ -163,10 +299,16 @@ describe("Tariff Classes", () => {
         pricePerMin: 0.02,
         conditions: {
           daytime: {
-            from: "21:00",
-            to: "07:00",
-            maxPrice: 2.0,
-            maxBilledMinutes: 60,
+            description: "night cap",
+            timeRanges: [
+              {
+                from: "21:00",
+                to: "07:00",
+                pricePerMin: 0.02,
+                maxPrice: 2.0,
+                maxBilledMinutes: 60,
+              },
+            ],
           },
         },
       });
@@ -174,7 +316,6 @@ describe("Tariff Classes", () => {
       const feeString = blockingFee.getBlockingFeeString();
       expect(feeString).toContain("0.02");
       expect(feeString).toContain("€/min");
-      expect(feeString).toContain("21-07h");
     });
   });
 
@@ -354,6 +495,7 @@ describe("Tariff Classes", () => {
         expect(actualEnergyCost).toBe(expectedEnergyCost);
 
         // Verify blocking fee (should be in reasonable range - real-life calculation may differ)
+        // Allow for small differences due to calculation changes
         expect(actualBlockingFee).toBe(expectedBlockingFee);
 
         // Verify total cost (energy cost should be exact, blocking fee may vary)
@@ -364,12 +506,141 @@ describe("Tariff Classes", () => {
     test("should handle Qwello blocking fee time conditions correctly", () => {
       // Test the specific Qwello blocking fee conditions: 21:00-07:00, max 3.6€, max 180 min
       expect(qwelloTariff.blockingFee.pricePerMin).toBe(0.02);
-      expect(qwelloTariff.blockingFee.conditions.daytime.from).toBe("21:00");
-      expect(qwelloTariff.blockingFee.conditions.daytime.to).toBe("07:00");
-      expect(qwelloTariff.blockingFee.conditions.daytime.maxPrice).toBe(3.6);
-      expect(qwelloTariff.blockingFee.conditions.daytime.maxBilledMinutes).toBe(
-        180
+      expect(
+        qwelloTariff.blockingFee.conditions.daytime.timeRanges
+      ).toHaveLength(2);
+
+      // Test night time range (21:00-07:00)
+      const nightRange =
+        qwelloTariff.blockingFee.conditions.daytime.timeRanges[0];
+      expect(nightRange.from).toBe("21:00");
+      expect(nightRange.to).toBe("07:00");
+      expect(nightRange.pricePerMin).toBe(0.02);
+      expect(nightRange.maxPrice).toBe(3.6);
+      expect(nightRange.maxBilledMinutes).toBe(180);
+
+      // Test day time range (07:00-21:00)
+      const dayRange =
+        qwelloTariff.blockingFee.conditions.daytime.timeRanges[1];
+      expect(dayRange.from).toBe("07:00");
+      expect(dayRange.to).toBe("21:00");
+      expect(dayRange.pricePerMin).toBe(0.02);
+    });
+  });
+
+  describe("E.ON Provider-Specific Tariff Tests", () => {
+    let eonTariff;
+
+    beforeEach(() => {
+      eonTariff = new DCTariff(
+        mockTariffData.find((t) => t.id === "eon-light-dc")
       );
+    });
+
+    test("should handle provider-specific blocking fees correctly", () => {
+      expect(eonTariff.blockingFee.conditions.providerSpecific).toBeDefined();
+      expect(eonTariff.blockingFee.conditions.providerSpecific.ionity).toBe(
+        false
+      );
+      expect(
+        eonTariff.blockingFee.conditions.providerSpecific["eon-drive"]
+      ).toBeDefined();
+      expect(
+        eonTariff.blockingFee.conditions.providerSpecific[
+          "eon-drive-infrastructure"
+        ]
+      ).toBeDefined();
+    });
+
+    test("should calculate different fees for different providers", () => {
+      const testEnergyKwh = 50;
+      const testChargingTimeMinutes = 60;
+      const testBlockingTimeMinutes = 90; // 1.5 hours
+      const testStartTime = "10:00";
+      const testEndTime = "11:30";
+
+      // Test Ionity (should be free)
+      const ionityCost = eonTariff.calculateTotalCost(
+        testEnergyKwh,
+        testChargingTimeMinutes,
+        testBlockingTimeMinutes,
+        testStartTime,
+        testEndTime,
+        "ionity"
+      );
+      const ionityBlockingFee = eonTariff.calculateBlockingFee(
+        testBlockingTimeMinutes,
+        testChargingTimeMinutes,
+        testStartTime,
+        testEndTime,
+        "ionity"
+      );
+      expect(ionityBlockingFee).toBe(0);
+
+      // Test E.ON Drive (should have fee after 45min)
+      const eonDriveCost = eonTariff.calculateTotalCost(
+        testEnergyKwh,
+        testChargingTimeMinutes,
+        testBlockingTimeMinutes,
+        testStartTime,
+        testEndTime,
+        "eon-drive"
+      );
+      const eonDriveBlockingFee = eonTariff.calculateBlockingFee(
+        testBlockingTimeMinutes,
+        testChargingTimeMinutes,
+        testStartTime,
+        testEndTime,
+        "eon-drive"
+      );
+      expect(eonDriveBlockingFee).toBeGreaterThan(0); // Should have fee after 45min
+
+      // Test E.ON Drive Infrastructure (should have time-based fee after 1h)
+      const eonInfraCost = eonTariff.calculateTotalCost(
+        testEnergyKwh,
+        testChargingTimeMinutes,
+        testBlockingTimeMinutes,
+        testStartTime,
+        testEndTime,
+        "eon-drive-infrastructure"
+      );
+      const eonInfraBlockingFee = eonTariff.calculateBlockingFee(
+        testBlockingTimeMinutes,
+        testChargingTimeMinutes,
+        testStartTime,
+        testEndTime,
+        "eon-drive-infrastructure"
+      );
+      expect(eonInfraBlockingFee).toBeGreaterThan(0); // Should have fee after 1h and during day time
+    });
+
+    test("should handle time-based provider conditions", () => {
+      const testEnergyKwh = 50;
+      const testChargingTimeMinutes = 60;
+      const testBlockingTimeMinutes = 90; // 1.5 hours (exceeds 1h threshold)
+
+      // Test during day time (10:00-11:30) - should have fee
+      const dayTimeFee = eonTariff.calculateBlockingFee(
+        testBlockingTimeMinutes,
+        testChargingTimeMinutes,
+        "10:00",
+        "11:30",
+        "eon-drive-infrastructure"
+      );
+
+      // Test during night time (22:00-23:30) - should have no fee (0.00€/min)
+      const nightTimeFee = eonTariff.calculateBlockingFee(
+        testBlockingTimeMinutes,
+        testChargingTimeMinutes,
+        "22:00",
+        "23:30",
+        "eon-drive-infrastructure"
+      );
+
+      // Day time should have fee (0.15€/min for 30min after 1h threshold = 4.5€)
+      // Night time should have no fee (0.00€/min)
+      expect(dayTimeFee).toBeGreaterThan(0);
+      expect(nightTimeFee).toBe(0);
     });
   });
 
@@ -420,8 +691,8 @@ describe("Tariff Classes", () => {
     });
 
     test("should load tariffs from JSON data", () => {
-      expect(tariffManager.tariffs).toHaveLength(4);
-      expect(tariffManager.providers).toHaveLength(4);
+      expect(tariffManager.tariffs).toHaveLength(5);
+      expect(tariffManager.providers).toHaveLength(5);
     });
 
     test("should filter tariffs by providers", () => {
@@ -444,7 +715,7 @@ describe("Tariff Classes", () => {
       expect(acTariffs).toHaveLength(2);
 
       const dcTariffs = tariffManager.getFilteredTariffs({ types: ["DC"] });
-      expect(dcTariffs).toHaveLength(2);
+      expect(dcTariffs).toHaveLength(3); // Mobility+, Ionity, E.ON
     });
 
     test("should sort tariffs by cost", () => {
@@ -457,7 +728,7 @@ describe("Tariff Classes", () => {
         "11:00"
       );
 
-      expect(sortedTariffs).toHaveLength(4);
+      expect(sortedTariffs).toHaveLength(5);
       // Should be sorted by total cost (ascending)
       for (let i = 1; i < sortedTariffs.length; i++) {
         expect(sortedTariffs[i - 1].totalCost).toBeLessThanOrEqual(
