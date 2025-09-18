@@ -155,7 +155,32 @@
               <div id="vehicle-details"></div>
 
               <div class="card filter-section-inline">
-                <h3><i class="fas fa-filter"></i> Filter</h3>
+                <!-- TODO: Set default selected tab via JavaScript -->
+                <div>
+                  <div>
+                    <h3><i class="fas fa-filter"></i> Filter</h3>
+                  </div>
+                  <div>
+                    <div class="filter-actions">
+                      <button
+                        type="button"
+                        id="filter-selectAll"
+                        data-target="providers"
+                        class="btn btn-secondary"
+                      >
+                        Alle auswählen
+                      </button>
+                      <button
+                        type="button"
+                        id="filter-selectNone"
+                        data-target="providers"
+                        class="btn btn-secondary"
+                      >
+                        Alle abwählen
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 <div class="filter-section-inline-content">
                   <div class="filter-tabs">
                     <button class="filter-tab active" data-tab="providers">
@@ -175,22 +200,24 @@
                           <!-- Will be populated by JavaScript -->
                         </div>
                       </div>
+                      <!--
                       <div class="filter-actions">
                         <button
                           type="button"
-                          id="selectAll"
+                          id="selectAllProviders"
                           class="btn btn-secondary"
                         >
                           Alle auswählen
                         </button>
                         <button
                           type="button"
-                          id="selectNone"
+                          id="selectNoProviders"
                           class="btn btn-secondary"
                         >
                           Alle abwählen
                         </button>
                       </div>
+                      -->
                     </div>
                   </div>
                 </div>
@@ -204,6 +231,7 @@
                         <!-- Will be populated by JavaScript -->
                       </div>
                     </div>
+                    <!--
                     <div class="filter-actions">
                       <button
                         type="button"
@@ -220,6 +248,7 @@
                         Alle abwählen
                       </button>
                     </div>
+                    -->
                   </div>
                 </div>
               </div>
@@ -270,59 +299,26 @@
 
                   <div class="form-column">
                     <div class="form-group">
-                      <label for="currentCharge">Aktueller Ladestand (%)</label>
-                      <div class="range-with-clear">
-                        <input
-                          type="range"
-                          id="currentCharge"
-                          name="currentCharge"
-                          value="20"
-                          min="0"
-                          max="100"
-                          step="1"
-                        />
-                        <span class="range-value" id="currentChargeValue"
-                          >20%</span
-                        >
-                        <!--
-                        <button
-                          type="button"
-                          class="clear-btn range-clear-btn"
-                          data-target="currentCharge"
-                          title="Löschen"
-                        >
-                          <i class="fas fa-times"></i>
-                        </button>
-                        -->
-                      </div>
-                    </div>
-
-                    <div class="form-group">
-                      <label for="targetCharge">Ziel-Ladestand (%)</label>
-                      <div class="range-with-clear">
-                        <input
-                          type="range"
-                          id="targetCharge"
-                          name="targetCharge"
-                          value="80"
-                          min="0"
-                          max="100"
-                          step="1"
-                        />
-                        <span class="range-value" id="targetChargeValue"
-                          >80%</span
-                        >
-                        <!--
-                        <button
-                          type="button"
-                          class="clear-btn range-clear-btn"
-                          data-target="targetCharge"
-                          title="Löschen"
-                        >
-                          <i class="fas fa-times"></i>
-                        </button>
-                        -->
-                      </div>
+                      <div id="chargeLevelSlider"></div>
+                      <!-- Hidden inputs for compatibility with existing code -->
+                      <input
+                        type="hidden"
+                        id="currentCharge"
+                        name="currentCharge"
+                        value="20"
+                      />
+                      <input
+                        type="hidden"
+                        id="targetCharge"
+                        name="targetCharge"
+                        value="80"
+                      />
+                      <span id="currentChargeValue" style="display: none"
+                        >20%</span
+                      >
+                      <span id="targetChargeValue" style="display: none"
+                        >80%</span
+                      >
                     </div>
                   </div>
 

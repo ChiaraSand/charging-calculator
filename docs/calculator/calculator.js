@@ -5,6 +5,7 @@ import VehicleChargingCurves from "./services/VehicleChargingCurves.js";
 import GoogleMapsManager from "./services/GoogleMapsManager.js";
 import ChartManager from "./services/ChartManager.js";
 import DateTimeHelper from "./utils/DateTimeHelper.js";
+import DualSlider from "./components/DualSlider.js";
 
 class ChargingCalculator {
   constructor() {
@@ -27,6 +28,7 @@ class ChargingCalculator {
 
     // Initialize helper classes
     this.chartManager = null; // Will be initialized after data is loaded
+    this.dualSlider = null; // Will be initialized after DOM is ready
 
     this.init();
   }
@@ -46,6 +48,7 @@ class ChargingCalculator {
       this.chargingPowers
     );
 
+    this.initializeDualSlider();
     this.setupEventListeners();
     this.populatePresetSelect();
     this.populateVehicleSelect();
@@ -159,21 +162,50 @@ class ChargingCalculator {
       .join("");
   }
 
+  initializeDualSlider() {
+    const container = document.getElementById("chargeLevelSlider");
+    if (!container) return;
+
+    this.dualSlider = new DualSlider({
+      container: container,
+      min: 0,
+      max: 100,
+      step: 1,
+      currentValue: 20,
+      targetValue: 80,
+      unit: "%",
+      label: "Ladestand",
+      currentLabel: "Aktuell",
+      targetLabel: "Ziel",
+      onChange: (values) => {
+        this.handleChargeLevelChange(values);
+      },
+    });
+  }
+
+  handleChargeLevelChange(values) {
+    // Update the hidden form inputs for compatibility with existing code
+    const currentChargeInput = document.getElementById("currentCharge");
+    const targetChargeInput = document.getElementById("targetCharge");
+    const currentChargeValue = document.getElementById("currentChargeValue");
+    const targetChargeValue = document.getElementById("targetChargeValue");
+
+    if (currentChargeInput) currentChargeInput.value = values.current;
+    if (targetChargeInput) targetChargeInput.value = values.target;
+    if (currentChargeValue)
+      currentChargeValue.textContent = values.current + "%";
+    if (targetChargeValue) targetChargeValue.textContent = values.target + "%";
+
+    // Trigger calculations
+    this.updateCalculations();
+  }
+
   setupEventListeners() {
     // Form inputs
     document
       .getElementById("batteryCapacity")
       .addEventListener("input", () => this.updateCalculations());
-    document.getElementById("currentCharge").addEventListener("input", (e) => {
-      document.getElementById("currentChargeValue").textContent =
-        e.target.value + "%";
-      this.updateCalculations();
-    });
-    document.getElementById("targetCharge").addEventListener("input", (e) => {
-      document.getElementById("targetChargeValue").textContent =
-        e.target.value + "%";
-      this.updateCalculations();
-    });
+    // Note: currentCharge and targetCharge are now handled by the dual slider
     document.getElementById("chargingPower").addEventListener("change", (e) => {
       document.getElementById("quickChargingPower").value = e.target.value;
       this.updateCalculations();
@@ -208,21 +240,33 @@ class ChargingCalculator {
     //   this.clearAllInputs(e.target.form);
     // });
 
-    // Filter buttons
-    document
-      .getElementById("selectAll")
-      .addEventListener("click", () => this.selectAllProviders());
-    document
-      .getElementById("selectNone")
-      .addEventListener("click", () => this.selectNoProviders());
+    // // Provider filter buttons
+    // document
+    //   .getElementById("selectAllProviders")
+    //   .addEventListener("click", () => this.selectAllProviders());
+    // document
+    //   .getElementById("selectNoProviders")
+    //   .addEventListener("click", () => this.selectNoProviders());
 
-    // Connector filter buttons
+    // // Connector filter buttons
+    // document
+    //   .getElementById("selectAllConnectors")
+    //   .addEventListener("click", () => this.selectAllConnectors());
+    // document
+    //   .getElementById("selectNoConnectors")
+    //   .addEventListener("click", () => this.selectNoConnectors());
+
+    // filter buttons
     document
-      .getElementById("selectAllConnectors")
-      .addEventListener("click", () => this.selectAllConnectors());
+      .getElementById("filter-selectAll")
+      .addEventListener("click", (e) =>
+        this.selectAll(e.target.dataset.target)
+      );
     document
-      .getElementById("selectNoConnectors")
-      .addEventListener("click", () => this.selectNoConnectors());
+      .getElementById("filter-selectNone")
+      .addEventListener("click", (e) =>
+        this.selectNone(e.target.dataset.target)
+      );
 
     // Filter tabs
     document.querySelectorAll(".filter-tab").forEach((tab) => {
@@ -363,6 +407,13 @@ class ChargingCalculator {
     // document.getElementById("vehicleSelect").value = preset.vehicle;
     // document.getElementById("quickVehicleSelect").value = preset.vehicle;
     // document.getElementById("batteryCapacity").value = preset.batteryCapacity;
+
+    // Update dual slider with preset values
+    if (this.dualSlider) {
+      this.dualSlider.setValues(preset.currentCharge, preset.targetCharge);
+    }
+
+    // Update hidden inputs for compatibility
     document.getElementById("currentCharge").value = preset.currentCharge;
     document.getElementById("currentChargeValue").textContent =
       preset.currentCharge + "%";
@@ -626,12 +677,19 @@ class ChargingCalculator {
           document.getElementById("batteryCapacity").value =
             config.batteryCapacity;
         }
-        if (config.currentCharge) {
+        if (config.currentCharge && config.targetCharge) {
+          // Update dual slider with saved values
+          if (this.dualSlider) {
+            this.dualSlider.setValues(
+              config.currentCharge,
+              config.targetCharge
+            );
+          }
+
+          // Update hidden inputs for compatibility
           document.getElementById("currentCharge").value = config.currentCharge;
           document.getElementById("currentChargeValue").textContent =
             config.currentCharge + "%";
-        }
-        if (config.targetCharge) {
           document.getElementById("targetCharge").value = config.targetCharge;
           document.getElementById("targetChargeValue").textContent =
             config.targetCharge + "%";
@@ -740,24 +798,42 @@ class ChargingCalculator {
     this.selectedConnectors = new Set(connectorTypes.map((c) => c.id));
   }
 
-  selectAllConnectors() {
+  // selectAllConnectors() {
+  //   document
+  //     .querySelectorAll('#connectorCheckboxes input[type="checkbox"]')
+  //     .forEach((checkbox) => {
+  //       checkbox.checked = true;
+  //       this.selectedConnectors.add(checkbox.value);
+  //     });
+  //   this.populateTariffTable();
+  // }
+
+  // selectNoConnectors() {
+  //   document
+  //     .querySelectorAll('#connectorCheckboxes input[type="checkbox"]')
+  //     .forEach((checkbox) => {
+  //       checkbox.checked = false;
+  //     });
+  //   this.selectedConnectors.clear();
+  //   this.populateTariffTable();
+  // }
+
+  selectAll(tabName) {
     document
-      .querySelectorAll('#connectorCheckboxes input[type="checkbox"]')
+      .getElementById(`${tabName}-tab`)
+      .querySelectorAll('input[type="checkbox"]')
       .forEach((checkbox) => {
         checkbox.checked = true;
-        this.selectedConnectors.add(checkbox.value);
       });
-    this.populateTariffTable();
   }
 
-  selectNoConnectors() {
+  selectNone(tabName) {
     document
-      .querySelectorAll('#connectorCheckboxes input[type="checkbox"]')
+      .getElementById(`${tabName}-tab`)
+      .querySelectorAll('input[type="checkbox"]')
       .forEach((checkbox) => {
         checkbox.checked = false;
       });
-    this.selectedConnectors.clear();
-    this.populateTariffTable();
   }
 
   switchFilterTab(tabName) {
@@ -766,6 +842,10 @@ class ChargingCalculator {
       tab.classList.remove("active");
     });
     document.querySelector(`[data-tab="${tabName}"]`).classList.add("active");
+
+    // Update target of filter buttons
+    document.getElementById("filter-selectAll").dataset.target = tabName;
+    document.getElementById("filter-selectNone").dataset.target = tabName;
 
     // Update tab content
     document.querySelectorAll(".filter-content").forEach((content) => {
@@ -924,14 +1004,23 @@ class ChargingCalculator {
     const input = document.getElementById(inputId);
     if (!input) return;
 
-    if (input.type === "range") {
-      // For range inputs, set to minimum value
+    if (inputId === "currentCharge" || inputId === "targetCharge") {
+      // Handle charge level clearing with dual slider
+      if (this.dualSlider) {
+        if (inputId === "currentCharge") {
+          this.dualSlider.setValues(0, this.dualSlider.getValues().target);
+        } else if (inputId === "targetCharge") {
+          this.dualSlider.setValues(this.dualSlider.getValues().current, 100);
+        }
+      }
+
+      // Update hidden inputs for compatibility
       if (inputId === "currentCharge") {
         input.value = "0";
         document.getElementById("currentChargeValue").textContent = "0%";
       } else if (inputId === "targetCharge") {
         input.value = "100";
-        document.getElementById("targetChargeValue").textContent = "0%";
+        document.getElementById("targetChargeValue").textContent = "100%";
       }
     } else {
       // Empty the input
