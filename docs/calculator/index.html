@@ -37,27 +37,26 @@
             <div class="card-header">
               <h2><i class="fas fa-cog"></i> Schnellkonfiguration</h2>
               <div class="btn-group">
-                <h3>Voreinstellungen</h3>
                 <button
                   type="button"
                   id="savePreconfig"
                   class="btn btn-secondary"
                 >
-                  <i class="fas fa-save"></i> Speichern
+                  <i class="fas fa-download"></i>
                 </button>
                 <button
                   type="button"
                   id="loadSavedPreconfig"
                   class="btn btn-secondary"
                 >
-                  <i class="fas fa-save"></i> Laden
+                  <i class="fas fa-upload"></i>
                 </button>
                 <button
                   type="button"
                   id="resetPreconfig"
                   class="btn btn-secondary"
                 >
-                  <i class="fas fa-trash"></i> Löschen
+                  <i class="fas fa-trash"></i>
                 </button>
               </div>
               <button
@@ -156,11 +155,11 @@
 
               <div class="card filter-section-inline">
                 <!-- TODO: Set default selected tab via JavaScript -->
-                <div>
-                  <div>
+                <div class="filter-section-inline-header">
+                  <div class="filter-section-inline-header-title">
                     <h3><i class="fas fa-filter"></i> Filter</h3>
                   </div>
-                  <div>
+                  <div class="filter-section-inline-header-actions">
                     <div class="filter-actions">
                       <button
                         type="button"
@@ -379,6 +378,7 @@
                           name="startTime"
                           value=""
                         />
+                        <!--
                         <button
                           type="button"
                           class="clear-btn"
@@ -387,6 +387,7 @@
                         >
                           <i class="fas fa-times"></i>
                         </button>
+                        -->
                       </div>
                     </div>
 

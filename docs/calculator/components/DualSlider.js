@@ -44,18 +44,23 @@ class DualSlider {
         <label for="chargeLevelSlider" class="dual-slider-label">${
           this.options.label
         }</label>
+      </div>
+      <div class="dual-slider-container">
         <div class="dual-slider-values">
-          <input
-            type="number"
-            class="dual-slider-current-value"
-            value="${this.currentValue}"
-            min="${this.options.min}"
-            max="${this.options.max}"
-            step="${this.options.step}"
-            aria-label="${this.options.currentLabel} charge level"
-          />
-          <span class="dual-slider-unit">${this.options.unit}</span>
+          <div>
+            <input
+              type="number"
+              class="dual-slider-current-value"
+              value="${this.currentValue}"
+              min="${this.options.min}"
+              max="${this.options.max}"
+              step="${this.options.step}"
+              aria-label="${this.options.currentLabel} charge level"
+            />
+            <span class="dual-slider-unit">${this.options.unit}</span>
+          </div>
           <span class="dual-slider-separator">→</span>
+          <div>
           <input
             type="number"
             class="dual-slider-target-value"
@@ -64,11 +69,10 @@ class DualSlider {
             max="${this.options.max}"
             step="${this.options.step}"
             aria-label="${this.options.targetLabel} charge level"
-          />
-          <span class="dual-slider-unit">${this.options.unit}</span>
+            />
+            <span class="dual-slider-unit">${this.options.unit}</span>
+          </div>
         </div>
-      </div>
-      <div class="dual-slider-container">
         <div class="dual-slider-track">
           <div class="dual-slider-progress" style="left: ${this.getPercentage(
             this.currentValue
@@ -115,18 +119,26 @@ class DualSlider {
     track.addEventListener("mousedown", (e) => this.handleTrackClick(e));
 
     // Touch events
-    currentHandle.addEventListener("touchstart", (e) =>
-      this.startDrag(e, "current")
+    currentHandle.addEventListener(
+      "touchstart",
+      (e) => this.startDrag(e, "current"),
+      { passive: false }
     );
-    targetHandle.addEventListener("touchstart", (e) =>
-      this.startDrag(e, "target")
+    targetHandle.addEventListener(
+      "touchstart",
+      (e) => this.startDrag(e, "target"),
+      { passive: false }
     );
-    track.addEventListener("touchstart", (e) => this.handleTrackClick(e));
+    track.addEventListener("touchstart", (e) => this.handleTrackClick(e), {
+      passive: false,
+    });
 
     // Global events
     document.addEventListener("mousemove", (e) => this.handleDrag(e));
     document.addEventListener("mouseup", () => this.endDrag());
-    document.addEventListener("touchmove", (e) => this.handleDrag(e));
+    document.addEventListener("touchmove", (e) => this.handleDrag(e), {
+      passive: false,
+    });
     document.addEventListener("touchend", () => this.endDrag());
 
     // Keyboard events

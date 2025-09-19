@@ -55,10 +55,13 @@ class DateTimeHelper {
    * @returns {string} Formatted duration string
    */
   static formatDuration(minutes) {
-    if (minutes < 60) {
-      return Math.round(minutes) + " min";
+    const roundedMinutes = Math.round(minutes);
+    if (roundedMinutes < 60) {
+      return roundedMinutes + " min";
     } else {
-      return `${Math.floor(minutes / 60)}:${Math.round(minutes % 60)
+      return `${Math.floor(roundedMinutes / 60)}:${Math.round(
+        roundedMinutes % 60
+      )
         .toString()
         .padStart(2, "0")} h`;
     }

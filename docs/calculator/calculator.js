@@ -73,7 +73,7 @@ class ChargingCalculator {
     //   selectedVehicle: this.selectedVehicle,
     // });
 
-    await this.mapsManager.initializeMap("map");
+    await this.mapsManager.initializeMap();
 
     // Load saved preconfiguration after everything is initialized
     this.loadSavedPreconfiguration();
@@ -915,6 +915,7 @@ class ChargingCalculator {
       document.getElementById("energyToCharge").textContent = "— kWh";
       document.getElementById("estimatedTime").textContent = "— min";
       document.getElementById("totalParkingTime").textContent = "— min";
+      document.getElementById("endTime").value = "";
       // document.getElementById("endTime").value =
       //   endTime || startTime + totalParkingTime;
     }
@@ -952,41 +953,67 @@ class ChargingCalculator {
     const minPowerSession = Math.min(...chargingResult.powerSteps);
     const avgPower = chargingResult.averagePower;
 
+    // Calculate progress bar values (percentage of vehicle's max charging power)
+    const maxPowerProgress = Math.min(
+      (maxPowerSession / vehicle.maxChargingPower) * 100,
+      100
+    );
+    const minPowerProgress = Math.min(
+      (minPowerSession / vehicle.maxChargingPower) * 100,
+      100
+    );
+    const avgPowerProgress = Math.min(
+      (avgPower / vehicle.maxChargingPower) * 100,
+      100
+    );
+
     speedInfoElement.innerHTML = `
       <div style="display: flex; align-items: center; gap: 8px;">
         <i class="fas fa-car" style="color: #0ea5e9;"></i>
         <strong>Ladegeschwindigkeit - ${vehicleName}</strong>
       </div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; font-size: 0.8rem;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; font-size: 0.8rem;">
         <div>
-          <div style="color: #64748b; font-weight: 500;">Max. Leistung</div>
-          <div style="font-weight: 600; color: #0ea5e9;">${vehicle.maxChargingPower.toFixed(
-            1
-          )} kW</div>
+          <div style="color: #64748b; font-weight: 500;">Max. Leistung (Session)</div>
+          <div style="font-weight: 600; color: #0ea5e9;">
+          ${maxPowerSession.toFixed(1)} kW
+          (${maxPower.toFixed(1)} kW)</div>
+          <div class="power-progress-container">
+            <div class="power-progress-bar">
+              <div class="power-progress-fill" style="width: ${maxPowerProgress}%"></div>
+            </div>
+            <div class="power-progress-label">${maxPowerProgress.toFixed(
+              0
+            )}% der Fahrzeugleistung</div>
+          </div>
         </div>
         <div>
-          <div style="color: #64748b; font-weight: 500;">Min. Leistung</div>
-          <div style="font-weight: 600; color: #0ea5e9;">${minPower.toFixed(
-            1
-          )} kW</div>
-        </div>
-        <div>
-          <div style="color: #64748b; font-weight: 500;">Max. Leistung (Ladevorgang)</div>
-          <div style="font-weight: 600; color: #0ea5e9;">${maxPowerSession.toFixed(
-            1
-          )} kW</div>
-        </div>
-        <div>
-          <div style="color: #64748b; font-weight: 500;">Min. Leistung (Ladevorgang)</div>
-          <div style="font-weight: 600; color: #0ea5e9;">${minPowerSession.toFixed(
-            1
-          )} kW</div>
+          <div style="color: #64748b; font-weight: 500;">Min. Leistung (Session)</div>
+          <div style="font-weight: 600; color: #0ea5e9;">
+          ${minPowerSession.toFixed(1)} kW
+          (${minPower.toFixed(1)} kW)</div>
+          <div class="power-progress-container">
+            <div class="power-progress-bar">
+              <div class="power-progress-fill" style="width: ${minPowerProgress}%"></div>
+            </div>
+            <div class="power-progress-label">${minPowerProgress.toFixed(
+              0
+            )}% der Fahrzeugleistung</div>
+          </div>
         </div>
         <div>
           <div style="color: #64748b; font-weight: 500;">Ø Leistung</div>
           <div style="font-weight: 600; color: #0ea5e9;">${avgPower.toFixed(
             1
           )} kW</div>
+          <div class="power-progress-container">
+            <div class="power-progress-bar">
+              <div class="power-progress-fill" style="width: ${avgPowerProgress}%"></div>
+            </div>
+            <div class="power-progress-label">${avgPowerProgress.toFixed(
+              0
+            )}% der Fahrzeugleistung</div>
+          </div>
         </div>
         <div>
           <div style="color: #64748b; font-weight: 500;">Effizienz</div>
@@ -995,6 +1022,16 @@ class ChargingCalculator {
               parseFloat(document.getElementById("chargingPower").value)) *
             100
           ).toFixed(0)}%</div>
+          <div class="power-progress-container">
+            <div class="power-progress-bar">
+              <div class="power-progress-fill" style="width: ${(
+                (avgPower /
+                  parseFloat(document.getElementById("chargingPower").value)) *
+                100
+              ).toFixed(0)}%"></div>
+            </div>
+            <div class="power-progress-label">Ladestation Auslastung</div>
+          </div>
         </div>
       </div>
     `;
@@ -1114,16 +1151,18 @@ class ChargingCalculator {
       batteryCapacity
     );
     const estimatedTime = chargingResult.totalTime; // in minutes
-    let totalParkingTime = 0;
+    let possibleTotalParkingTime = 0;
     if (endTime) {
-      totalParkingTime = DateTimeHelper.calculateTimeDifference(
+      possibleTotalParkingTime = DateTimeHelper.calculateTimeDifference(
         startTime,
         endTime
       );
     } else {
       // Fix: If endTime is not set, use estimatedTime as totalParkingTime (in minutes)
-      totalParkingTime = estimatedTime;
+      possibleTotalParkingTime = estimatedTime;
     }
+
+    let totalParkingTime = Math.max(possibleTotalParkingTime, estimatedTime);
 
     // Filter tariffs based on selected providers and connectors
     const filteredTariffs = this.tariffManager.getFilteredTariffs({
@@ -1135,12 +1174,10 @@ class ChargingCalculator {
       DateTimeHelper.timeToMinutes(startTime) + totalParkingTime;
     const endTimeDate = DateTimeHelper.minutesToTime(endTimeMinutes);
 
-    endTime =
-      endTime ||
-      endTimeDate.toLocaleString("de-DE", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+    endTime = endTimeDate.toLocaleString("de-DE", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
     // FIXME: move to a better place
     document.getElementById("endTime").value = endTime;
@@ -1349,7 +1386,7 @@ class ChargingCalculator {
         startTime,
         endTime
       );
-      const blockingTime = Math.max(0, totalParkingTime);
+      const blockingTime = Math.max(0, totalParkingTime, estimatedTime);
 
       // Calculate total cost (matching calculateCustomTariff logic)
       const energyCost = energyToCharge * customPricePerKwh;

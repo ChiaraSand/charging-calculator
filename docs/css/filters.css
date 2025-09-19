@@ -64,7 +64,7 @@
 
 .checkbox-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: 12px;
 }
 
@@ -121,5 +121,26 @@
 .filter-section-inline-content {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.filter-section-inline-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.filter-section-inline-header-title {
+  /* font-size: 1.5rem; */
+  /* font-weight: 600; */
+  color: var(--text-primary);
+}
+
+.filter-section-inline-header-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   gap: 16px;
 }

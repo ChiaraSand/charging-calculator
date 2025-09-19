@@ -1,6 +1,6 @@
 /* Table Styles */
 .table-container {
-  overflow-x: auto;
+  /* overflow-x: auto; */
   border-radius: 12px;
   border: 1px solid var(--border-color);
 }
@@ -27,13 +27,17 @@
 
 .tariff-table td {
   padding: 16px 12px;
-  border-bottom: 1px solid var(--border-color);
+  /* border-bottom: 1px solid var(--border-color); */
   transition: var(--transition);
   vertical-align: middle;
   /* display: flex;
   flex-direction: column; */
   line-height: 1;
   /* gap: 4px; */
+}
+
+.tariff-table th:not(:last-child) {
+  border-botto,: 1px solid var(--border-color);
 }
 
 .tariff-table tbody tr:hover {

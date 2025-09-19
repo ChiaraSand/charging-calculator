@@ -284,7 +284,7 @@
   padding: 24px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  gap: 32px;
   border: 1px solid #bae6fd;
 }
 
@@ -292,7 +292,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
 }
 
 .summary-item .label {

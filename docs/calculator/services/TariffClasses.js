@@ -594,13 +594,10 @@ class BlockingFee {
         "<small><i>Depends on Provider</i></small>";
 
       blockingFeeString = visibleBlockingFeeString + tooltip;
-
-      console.log("blockingFeeString", blockingFeeString);
     } else if (this.pricePerMin) {
       blockingFeeString =
         this.pricePerMin.toFixed(2) + " <span class='price-unit'>€/min</span>";
     } else {
-      console.log("else conditions", conditions);
       blockingFeeString = this.description + " " + JSON.stringify(conditions);
     }
     return blockingFeeString;

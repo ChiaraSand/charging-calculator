@@ -2,6 +2,7 @@ import JsonLoader from "../utils/JsonLoader.js";
 
 class GoogleMapsManager {
   constructor(enableInit = true) {
+    this.mapElementId = "map";
     this.map = null;
     this.userLocation = null;
     this.chargingStationMarkers = [];
@@ -28,9 +29,7 @@ class GoogleMapsManager {
     }
   }
 
-  async initializeMap(mapElementId) {
-    const defaultLocation = this.defaultLocation;
-
+  async initializeMap() {
     document
       .getElementById("toggleEnableMap")
       .addEventListener("click", () => this.toggleMapEnabled());
@@ -69,6 +68,12 @@ class GoogleMapsManager {
     if (!this.enable) {
       return;
     }
+
+    await this.initMap();
+  }
+
+  async initMap(mapElementId = this.mapElementId) {
+    const defaultLocation = this.defaultLocation;
 
     this.map = new google.maps.Map(document.getElementById(mapElementId), {
       zoom: 12,
@@ -141,11 +146,12 @@ class GoogleMapsManager {
       }
       const script = document.createElement("script");
       script.id = "google-maps-script";
-      // TODO: add loading=async
       // https://developers.google.com/maps/documentation/javascript/load-maps-js-api#direct_script_loading_url_parameters
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker`;
+      // &loading=async&callback=initMap
       script.async = true;
       script.onload = () => {
+        // await this.initMap();
         resolve();
       };
       script.onerror = (e) => {

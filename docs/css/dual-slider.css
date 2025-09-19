@@ -32,6 +32,7 @@
 .dual-slider-values {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   font-weight: 600;
   font-size: 1.125rem;
@@ -83,7 +84,6 @@
 
 .dual-slider-container {
   position: relative;
-  padding: 20px 0 30px 0;
 }
 
 .dual-slider-track {
@@ -93,6 +93,7 @@
   border-radius: 4px;
   cursor: pointer;
   transition: var(--transition);
+  margin: 20px 0;
 }
 
 .dual-slider-track:hover {
@@ -159,7 +160,6 @@
   right: 0; */
   display: flex;
   justify-content: space-between;
-  margin-top: 8px;
   font-size: 0.75rem;
   color: var(--text-secondary);
 }
