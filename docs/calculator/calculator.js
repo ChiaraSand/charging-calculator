@@ -380,7 +380,7 @@ class ChargingCalculator {
 
     content.classList.remove("toggle-hide");
     button.classList.remove("expanded");
-    button.innerHTML = '<i class="fas fa-chevron-up"></i> Ausblenden';
+    button.innerHTML = '<i class="fas fa-chevron-up"></i>';
   }
 
   hideSection(sectionId) {
@@ -390,7 +390,7 @@ class ChargingCalculator {
     content.classList.add("toggle-hide");
     button.classList.add("expanded");
     // NOTE: chevron is rotated 180deg by .expanded class -> equals chevron down
-    button.innerHTML = '<i class="fas fa-chevron-up"></i> Einblenden';
+    button.innerHTML = '<i class="fas fa-chevron-up"></i>';
   }
 
   handlePresetSelection(presetId) {
