@@ -294,9 +294,9 @@ class ChargingCalculator {
     });
 
     // Apply preconfiguration
-    document.getElementById("applyPreconfig").addEventListener("click", () => {
-      this.applyPreconfiguration();
-    });
+    // document.getElementById("applyPreconfig").addEventListener("click", () => {
+    //   this.applyPreconfiguration();
+    // });
 
     // Save preconfiguration
     document.getElementById("savePreconfig").addEventListener("click", () => {
@@ -923,6 +923,18 @@ class ChargingCalculator {
     this.populateTariffTable();
   }
 
+  calculateProgressbarValue(absoluteValue, maxProgressbarValue) {
+    return (absoluteValue / maxProgressbarValue) * 100;
+  }
+
+  calculatePercentageWidth(absoluteValue, minProgressbarValue) {
+    const progressbarMinWidthPercentage = 2;
+    return Math.max(
+      absoluteValue - minProgressbarValue,
+      progressbarMinWidthPercentage
+    );
+  }
+
   /**
    * Update charging speed information display (blue box in preconfig section)
    * @param {Object} chargingResult - Result from vehicle charging curves calculation
@@ -946,95 +958,147 @@ class ChargingCalculator {
 
     // Calculate charging speed statistics
     const chargingPowers = Object.values(vehicle.chargingCurves["400"]); // FIXME: use the actual charging power and get closest value
-    const maxPower = vehicle.maxChargingPower || Math.max(...chargingPowers);
-    const minPower = vehicle.minChargingPower || Math.min(...chargingPowers);
+    const maxPowerVehicle =
+      vehicle.maxChargingPower || Math.max(...chargingPowers);
+    const minPowerVehicle = 0;
+    // vehicle.minChargingPower || Math.min(...chargingPowers);
 
     const maxPowerSession = Math.max(...chargingResult.powerSteps);
     const minPowerSession = Math.min(...chargingResult.powerSteps);
-    const avgPower = chargingResult.averagePower;
+    const avgPowerSession = chargingResult.averagePower;
+
+    const maxProgressbarValue = Math.max(
+      maxPowerSession,
+      maxPowerVehicle,
+      chargingResult.chargerPower
+    );
 
     // Calculate progress bar values (percentage of vehicle's max charging power)
-    const maxPowerProgress = Math.min(
-      (maxPowerSession / vehicle.maxChargingPower) * 100,
-      100
+    const [
+      maxPowerSessionPercentage,
+      minPowerSessionPercentage,
+      avgPowerSessionPercentage,
+      maxPowerVehiclePercentage,
+      minPowerVehiclePercentage,
+    ] = [
+      maxPowerSession,
+      minPowerSession,
+      avgPowerSession,
+      maxPowerVehicle,
+      minPowerVehicle,
+    ].map((value) =>
+      this.calculateProgressbarValue(value, maxProgressbarValue)
     );
-    const minPowerProgress = Math.min(
-      (minPowerSession / vehicle.maxChargingPower) * 100,
-      100
+    // const avgPowerVehiclePercentage = (avgPowerVehicle / maxProgressbarValue) * 100;
+
+    const sessionPowerPercentageWidth = this.calculatePercentageWidth(
+      maxPowerSessionPercentage,
+      minPowerSessionPercentage
     );
-    const avgPowerProgress = Math.min(
-      (avgPower / vehicle.maxChargingPower) * 100,
-      100
+
+    const vehiclePowerPercentageWidth = this.calculatePercentageWidth(
+      maxPowerVehiclePercentage,
+      minPowerVehiclePercentage
     );
+
+    const progressbarData = {
+      maxPower: maxProgressbarValue,
+      maxPercentage: 100,
+      minPower: 0,
+      minPercentage: 0,
+      widthPercentage: 100,
+    };
+
+    const vehicleRangeData = {
+      maxPower: maxPowerVehicle,
+      maxPercentage: maxPowerVehiclePercentage,
+      minPower: minPowerVehicle,
+      minPercentage: minPowerVehiclePercentage,
+      widthPercentage: vehiclePowerPercentageWidth,
+      paddingLeftPercentage: Math.max(minPowerVehiclePercentage, 2),
+      paddingRightPercentage:
+        progressbarData.maxPercentage - maxPowerVehiclePercentage,
+    };
+
+    const sessionRangeData = {
+      maxPower: maxPowerSession,
+      maxPercentage: maxPowerSessionPercentage,
+      minPower: minPowerSession,
+      minPercentage: minPowerSessionPercentage,
+      avgPower: avgPowerSession,
+      avgPercentage: avgPowerSessionPercentage,
+      widthPercentage: sessionPowerPercentageWidth,
+      paddingLeftPercentage: Math.max(minPowerSessionPercentage, 2),
+      paddingRightPercentage:
+        progressbarData.maxPercentage - maxPowerSessionPercentage,
+    };
 
     speedInfoElement.innerHTML = `
       <div style="display: flex; align-items: center; gap: 8px;">
         <i class="fas fa-car" style="color: #0ea5e9;"></i>
         <strong>Ladegeschwindigkeit - ${vehicleName}</strong>
       </div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; font-size: 0.8rem;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; font-size: 0.8rem;">
         <div>
-          <div style="color: #64748b; font-weight: 500;">Max. Leistung (Session)</div>
-          <div style="font-weight: 600; color: #0ea5e9;">
-          ${maxPowerSession.toFixed(1)} kW
-          (${maxPower.toFixed(1)} kW)</div>
-          <div class="power-progress-container">
-            <div class="power-progress-bar">
-              <div class="power-progress-fill" style="width: ${maxPowerProgress}%"></div>
+          <div style="color: #64748b; font-weight: 500;">
+            <div>
+              Leistungsbereich
             </div>
-            <div class="power-progress-label">${maxPowerProgress.toFixed(
-              0
-            )}% der Fahrzeugleistung</div>
+            <div style="font-weight: 600; color: #0ea5e9;">
+              Ø ${sessionRangeData.avgPower.toFixed(1)} kW
+            </div>
           </div>
-        </div>
-        <div>
-          <div style="color: #64748b; font-weight: 500;">Min. Leistung (Session)</div>
-          <div style="font-weight: 600; color: #0ea5e9;">
-          ${minPowerSession.toFixed(1)} kW
-          (${minPower.toFixed(1)} kW)</div>
           <div class="power-progress-container">
-            <div class="power-progress-bar">
-              <div class="power-progress-fill" style="width: ${minPowerProgress}%"></div>
+            <div class="power-range-indicators" id="power-range-indicators-session">
+              <span class="power-range-min" style="padding-left: ${
+                sessionRangeData.paddingLeftPercentage
+              }%;">${
+      sessionRangeData.minPower > 0 ? sessionRangeData.minPower.toFixed(1) : ""
+    } kW</span>
+              <span class="power-range-max" style="display: ${
+                sessionRangeData.maxPower == sessionRangeData.minPower
+                  ? "none"
+                  : "block"
+              }; padding-right: ${
+      sessionRangeData.paddingRightPercentage
+    }%;">${sessionRangeData.maxPower.toFixed(1)} kW</span>
             </div>
-            <div class="power-progress-label">${minPowerProgress.toFixed(
-              0
-            )}% der Fahrzeugleistung</div>
-          </div>
-        </div>
-        <div>
-          <div style="color: #64748b; font-weight: 500;">Ø Leistung</div>
-          <div style="font-weight: 600; color: #0ea5e9;">${avgPower.toFixed(
-            1
-          )} kW</div>
-          <div class="power-progress-container">
-            <div class="power-progress-bar">
-              <div class="power-progress-fill" style="width: ${avgPowerProgress}%"></div>
+            <div class="power-range-indicators" id="power-range-indicators-vehicle">
+              <span class="power-range-min" style="padding-left: ${
+                vehicleRangeData.paddingLeftPercentage
+              }%;">${vehicleRangeData.minPower.toFixed(1)} kW</span>
+              <span class="power-range-max" style="padding-right: ${
+                vehicleRangeData.paddingRightPercentage
+              }%;">${vehicleRangeData.maxPower.toFixed(1)} kW</span>
             </div>
-            <div class="power-progress-label">${avgPowerProgress.toFixed(
-              0
-            )}% der Fahrzeugleistung</div>
-          </div>
-        </div>
-        <div>
-          <div style="color: #64748b; font-weight: 500;">Effizienz</div>
-          <div style="font-weight: 600; color: #0ea5e9;">${(
-            (avgPower /
-              parseFloat(document.getElementById("chargingPower").value)) *
-            100
-          ).toFixed(0)}%</div>
-          <div class="power-progress-container">
-            <div class="power-progress-bar">
-              <div class="power-progress-fill" style="width: ${(
-                (avgPower /
-                  parseFloat(document.getElementById("chargingPower").value)) *
-                100
-              ).toFixed(0)}%"></div>
+            <div class="power-range-progress-bar">
+              <div class="power-range-fill-sub" style="left: ${
+                vehicleRangeData.minPercentage
+              }%; width: ${vehicleRangeData.widthPercentage}%;"></div>
+              <div class="power-range-fill" style="left: ${
+                sessionRangeData.minPercentage
+              }%; width: ${sessionRangeData.widthPercentage}%;"></div>
             </div>
-            <div class="power-progress-label">Ladestation Auslastung</div>
+            <div class="power-range-indicators">
+              <span class="power-range-min">${progressbarData.minPower.toFixed(
+                1
+              )} kW</span>
+              <span class="power-range-max">${progressbarData.maxPower.toFixed(
+                1
+              )} kW</span>
+            </div>
           </div>
         </div>
       </div>
     `;
+    //   <div>
+    //   <div style="color: #64748b; font-weight: 500;">Effizienz</div>
+    //   <div style="font-weight: 600; color: #0ea5e9;">${(
+    //     (sessionRangeData.avgPower /
+    //       parseFloat(document.getElementById("chargingPower").value)) *
+    //     100
+    //   ).toFixed(0)}%</div>
+    // </div>
   }
 
   clearInput(inputId) {

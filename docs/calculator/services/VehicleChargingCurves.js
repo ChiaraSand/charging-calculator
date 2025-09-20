@@ -143,6 +143,7 @@ class VehicleChargingCurves {
       powerSteps: powerSteps,
       finalBatteryLevel: Math.min(currentBatteryLevel, targetLevel),
       averagePower: totalEnergy > 0 ? totalEnergy / (totalTime / 60) : 0,
+      chargerPower: chargerPower,
     };
   }
 

@@ -397,6 +397,125 @@
 } */
 
 /* Responsive adjustments for preconfiguration */
+/* Progress Bar Styles */
+.power-progress-container {
+  margin-top: 8px;
+}
+
+.power-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.power-progress-fill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--primary-color, #0ea5e9) 0%,
+    var(--success-color, #10b981) 100%
+  );
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.power-progress-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 0 4px 4px 0;
+}
+
+.power-progress-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 4px;
+  text-align: center;
+}
+
+/* Range Progress Bar Styles */
+.power-range-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.power-range-progress-bar > :not(:first-child) {
+  transform: translateY(-100%);
+}
+
+.power-range-fill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--primary-color, #0ea5e9) 0%,
+    var(--success-color, #10b981) 100%
+  );
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* .power-range-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 0 4px 4px 0;
+} */
+
+.power-range-fill-sub {
+  height: 100%;
+  background: lightgray;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.power-range-indicators {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+#power-range-indicators-session::before {
+  position: absolute;
+  content: "🔌";
+  margin-right: 4px;
+}
+
+#power-range-indicators-vehicle::before {
+  position: absolute;
+  content: "🚙";
+  margin-right: 4px;
+}
+
+.power-range-min {
+  color: var(--primary-color, #0ea5e9);
+  font-weight: 500;
+}
+
+.power-range-max {
+  color: var(--success-color, #10b981);
+  font-weight: 500;
+}
+
 @media (max-width: 768px) {
   .preconfig-grid {
     grid-template-columns: 1fr;

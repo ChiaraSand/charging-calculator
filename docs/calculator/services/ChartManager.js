@@ -23,6 +23,7 @@ class ChartManager {
         labels: [],
         datasets: [
           {
+            id: "charging-realistic",
             label: "Ladeverlauf (realistisch)",
             data: [],
             borderColor: "#2563eb",
@@ -37,6 +38,7 @@ class ChartManager {
             pointBorderWidth: 2,
           },
           {
+            id: "charging-linear",
             label: "Lineare Schätzung",
             data: [],
             borderColor: "#10b981",
@@ -53,6 +55,7 @@ class ChartManager {
           },
           // Additional charging power curves
           {
+            id: "charging-400",
             label: "400 kW (Ultra-Schnelllader)",
             data: [],
             borderColor: "#dc2626",
@@ -68,6 +71,7 @@ class ChartManager {
             borderDash: [3, 3],
           },
           {
+            id: "charging-300",
             label: "300 kW (Hochleistungslader)",
             data: [],
             borderColor: "#f59e0b",
@@ -83,6 +87,7 @@ class ChartManager {
             borderDash: [3, 3],
           },
           {
+            id: "charging-150",
             label: "150 kW (Schnelllader)",
             data: [],
             borderColor: "#8b5cf6",
@@ -98,6 +103,7 @@ class ChartManager {
             borderDash: [3, 3],
           },
           {
+            id: "charging-50",
             label: "50 kW (DC Schnelllader)",
             data: [],
             borderColor: "#06b6d4",
@@ -113,6 +119,7 @@ class ChartManager {
             borderDash: [3, 3],
           },
           {
+            id: "charging-22",
             label: "22 kW (AC Wallbox)",
             data: [],
             borderColor: "#84cc16",
@@ -128,6 +135,7 @@ class ChartManager {
             borderDash: [3, 3],
           },
           {
+            id: "charging-11",
             label: "11 kW (AC Wallbox)",
             data: [],
             borderColor: "#f97316",
@@ -141,6 +149,22 @@ class ChartManager {
             pointBorderColor: "#ffffff",
             pointBorderWidth: 1,
             borderDash: [3, 3],
+          },
+          {
+            id: "charging-current",
+            label: "Aktueller Ladezustand",
+            data: [],
+            borderColor: "#2563eb",
+            backgroundColor: "rgba(37, 99, 235, 0.1)",
+            borderWidth: 2,
+          },
+          {
+            id: "charging-target",
+            label: "Ziel Ladezustand",
+            data: [],
+            borderColor: "#10b981",
+            backgroundColor: "rgba(16, 185, 129, 0.1)",
+            borderWidth: 2,
           },
         ],
       },
@@ -369,12 +393,19 @@ class ChartManager {
 
     // Update chart data
     this.chargingChart.data.labels = timePoints.map((t) => `${t} min`);
+
+    // this.chargingChart.data.datasets[0].data = currentCharge;
+    // this.chargingChart.data.datasets[1].data = targetCharge;
     this.chargingChart.data.datasets[0].data = realisticChargingLevels;
     this.chargingChart.data.datasets[1].data = linearChargingLevels;
 
     additionalCurves.forEach((curve, index) => {
       this.chargingChart.data.datasets[index + 2].data = curve;
     });
+
+    // this.chargingChart.data.datasets[8].data = currentCharge;
+    // this.chargingChart.data.datasets[9].data = targetCharge;
+    // console.log(this.chargingChart.data.datasets);
 
     this.chargingChart.update();
   }
