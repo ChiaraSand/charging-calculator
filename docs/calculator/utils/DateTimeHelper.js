@@ -66,6 +66,19 @@ class DateTimeHelper {
         .padStart(2, "0")} h`;
     }
   }
+  static formatDurationAsObject(minutes) {
+    const roundedMinutes = Math.round(minutes);
+    if (roundedMinutes < 60) {
+      return { value: roundedMinutes, unit: "min" };
+    } else {
+      const value = `${Math.floor(roundedMinutes / 60)}:${Math.round(
+        roundedMinutes % 60
+      )
+        .toString()
+        .padStart(2, "0")}`;
+      return { value, unit: "h" };
+    }
+  }
 
   /**
    * Get current time in HH:MM format

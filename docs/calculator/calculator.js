@@ -1330,7 +1330,7 @@ class ChargingCalculator {
                         ? "<span class='price-value'>" +
                           tariff.blockingFee.toFixed(2) +
                           "</span>" +
-                          " <span class='price-unit'>€</span>"
+                          "<span class='price-unit'>€</span>"
                         : "-"
                     }
                 </td>
@@ -1360,6 +1360,10 @@ class ChargingCalculator {
 
     // Update header with actual energy amount
     this.updatePricePerSelectedKwhHeader(energyToCharge);
+
+    // Update header with actual blocking time
+    console.log("blockingTime", blockingTime);
+    this.updateTotalBlockingFeeMinutesHeader(blockingTime);
 
     // Update charging chart
     this.chartManager.updateChargingChart({
@@ -1430,6 +1434,7 @@ class ChargingCalculator {
     let totalCost = 0;
     let effectivePricePerKwh = 0;
     let blockingFeeCost = 0;
+    let totalParkingTime = 0;
 
     if (
       batteryCapacity > 0 &&
@@ -1446,7 +1451,7 @@ class ChargingCalculator {
       );
       // REVIEW: unused
       const estimatedTime = chargingResult.totalTime; // in minutes
-      const totalParkingTime = DateTimeHelper.calculateTimeDifference(
+      totalParkingTime = DateTimeHelper.calculateTimeDifference(
         startTime,
         endTime
       );
@@ -1463,14 +1468,27 @@ class ChargingCalculator {
     }
 
     // Update price per selected kWh
-    const pricePerSelectedKwhElement = document.getElementById(
-      "custom-price-per-selected-kwh-value"
-    );
-    if (pricePerSelectedKwhElement) {
-      pricePerSelectedKwhElement.textContent = `${pricePerSelectedKwh.toFixed(
-        2
-      )}`;
-    }
+    // const pricePerSelectedKwhElement = document.getElementById(
+    //   "custom-price-per-selected-kwh-value"
+    // );
+    // if (pricePerSelectedKwhElement) {
+    //   pricePerSelectedKwhElement.textContent = `${pricePerSelectedKwh.toFixed(
+    //     2
+    //   )}`;
+    // }
+    this.updatePricePerSelectedKwhHeader(pricePerSelectedKwh);
+
+    // Update total blocking fee minutes
+    // const totalBlockingFeeMinutesElement = document.getElementById(
+    //   "totalBlockingFeeMinutes"
+    // );
+    // if (totalBlockingFeeMinutesElement) {
+    //   console.log("totalParkingTime", totalParkingTime);
+    //   totalBlockingFeeMinutesElement.textContent = `${totalParkingTime.toFixed(
+    //     1
+    //   )}`;
+    // }
+    this.updateTotalBlockingFeeMinutesHeader(totalParkingTime);
 
     // Update blocking fee cost
     const blockingFeeCostElement = document.getElementById(
@@ -1496,9 +1514,34 @@ class ChargingCalculator {
   }
 
   updatePricePerSelectedKwhHeader(energyToCharge) {
-    const headerElement = document.getElementById("pricePerSelectedKwh");
-    if (headerElement) {
-      headerElement.textContent = `${energyToCharge.toFixed(1)} kWh`;
+    const pricePerSelectedKwhValue = document.getElementById(
+      "pricePerSelectedKwhValue"
+    );
+    // const pricePerSelectedKwhUnit = document.getElementById(
+    //   "pricePerSelectedKwhUnit"
+    // );
+    if (pricePerSelectedKwhValue) {
+      pricePerSelectedKwhValue.textContent = energyToCharge.toFixed(1);
+    }
+    // if (pricePerSelectedKwhUnit) {
+    //   pricePerSelectedKwhUnit.textContent = "kWh";
+    // }
+  }
+
+  updateTotalBlockingFeeMinutesHeader(blockingTime) {
+    const totalBlockingFeeMinutesValue = document.getElementById(
+      "totalBlockingFeeMinutesValue"
+    );
+    const totalBlockingFeeMinutesUnit = document.getElementById(
+      "totalBlockingFeeMinutesUnit"
+    );
+    console.log("blockingTime", blockingTime);
+    const durationObject = DateTimeHelper.formatDurationAsObject(blockingTime);
+    if (totalBlockingFeeMinutesValue) {
+      totalBlockingFeeMinutesValue.textContent = durationObject.value;
+    }
+    if (totalBlockingFeeMinutesUnit) {
+      totalBlockingFeeMinutesUnit.textContent = durationObject.unit;
     }
   }
 

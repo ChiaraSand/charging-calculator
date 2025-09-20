@@ -167,7 +167,7 @@
                         data-target="providers"
                         class="btn btn-secondary"
                       >
-                        Alle auswählen
+                        Alle
                       </button>
                       <button
                         type="button"
@@ -175,7 +175,7 @@
                         data-target="providers"
                         class="btn btn-secondary"
                       >
-                        Alle abwählen
+                        Keine
                       </button>
                     </div>
                   </div>
@@ -646,10 +646,25 @@
                     <!-- <th>Grundgebühr</th> -->
                     <th>Blocking Fee (Tarif)</th>
                     <th>
-                      Ladekosten Total <br />
-                      <small>(<span id="pricePerSelectedKwh">kWh</span>)</small>
+                      Ladekosten<br />
+                      <small id="pricePerSelectedKwh"
+                        >(<span id="pricePerSelectedKwhValue"></span
+                        ><span class="price-unit" id="pricePerSelectedKwhUnit"
+                          >kWh</span
+                        >)</small
+                      >
                     </th>
-                    <th>Blocking Fee Total</th>
+                    <th>
+                      Blocking Fee<br />
+                      <small id="totalBlockingFeeMinutes"
+                        >(<span id="totalBlockingFeeMinutesValue"></span
+                        ><span
+                          class="price-unit"
+                          id="totalBlockingFeeMinutesUnit"
+                          >min</span
+                        >)</small
+                      >
+                    </th>
                     <th>
                       Gesamtkosten<br /><small class="effective-price"
                         >Effektiv €/kWh</small

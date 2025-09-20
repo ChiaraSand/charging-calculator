@@ -520,13 +520,11 @@ class BlockingFee {
                 differentPrice &&
                   `${pricePerMin.toFixed(
                     2
-                  )} <span class='price-unit'>€/min</span>`,
+                  )}<span class='price-unit'>€/min</span>`,
                 maxPrice &&
-                  `max ${maxPrice.toFixed(
-                    2
-                  )} <span class='price-unit'>€</span>`,
+                  `max ${maxPrice.toFixed(2)}<span class='price-unit'>€</span>`,
                 maxBilledMinutes &&
-                  `max ${maxBilledMinutes} <span class='price-unit'>min</span>`,
+                  `max ${maxBilledMinutes}<span class='price-unit'>min</span>`,
               ]
                 .filter((string) => string)
                 .join(", "),
@@ -538,7 +536,7 @@ class BlockingFee {
 
       blockingFeeString =
         this.pricePerMin.toFixed(2) +
-        " <span class='price-unit'>€/min</span><br/><small><i style='font-weight: normal;'>" +
+        "<span class='price-unit'>€/min</span><br/><small><i style='font-weight: normal;'>" +
         perTimeRangeString +
         "</i></small>";
     } else if (conditions.durationHours) {
@@ -551,7 +549,7 @@ class BlockingFee {
         this.pricePerMin.toFixed(2) +
         "<span class='price-unit'>€/min</span><br/>max " +
         details.maxPrice.toFixed(2) +
-        " <span class='price-unit'>€</span></i></small>";
+        "<span class='price-unit'>€</span></i></small>";
     } else if (conditions.providerSpecific) {
       const freeProviders = [];
       const paidProviders = [];
@@ -596,7 +594,7 @@ class BlockingFee {
       blockingFeeString = visibleBlockingFeeString + tooltip;
     } else if (this.pricePerMin) {
       blockingFeeString =
-        this.pricePerMin.toFixed(2) + " <span class='price-unit'>€/min</span>";
+        this.pricePerMin.toFixed(2) + "<span class='price-unit'>€/min</span>";
     } else {
       blockingFeeString = this.description + " " + JSON.stringify(conditions);
     }
