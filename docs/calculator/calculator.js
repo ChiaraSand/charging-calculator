@@ -1440,7 +1440,7 @@ class ChargingCalculator {
     }
 
     // Update price per selected kWh
-    this.updatePricePerSelectedKwhHeader(pricePerSelectedKwh);
+    this.updatePricePerSelectedKwhHeader(energyToCharge);
 
     // Update total blocking fee minutes
     this.updateTotalBlockingFeeMinutesHeader(totalParkingTime);
@@ -1465,6 +1465,16 @@ class ChargingCalculator {
     );
     if (effectivePriceElement) {
       effectivePriceElement.textContent = `${effectivePricePerKwh.toFixed(2)}`;
+    }
+
+    // Update price per selected kWh
+    const pricePerSelectedKwhElement = document.getElementById(
+      "custom-price-per-selected-kwh-value"
+    );
+    if (pricePerSelectedKwhElement) {
+      pricePerSelectedKwhElement.textContent = `${pricePerSelectedKwh.toFixed(
+        2
+      )}`;
     }
   }
 
