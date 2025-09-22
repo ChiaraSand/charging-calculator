@@ -7,6 +7,7 @@
 
 import JsonLoader from "../utils/JsonLoader.js";
 import DateTimeHelper from "../utils/DateTimeHelper.js";
+import CustomDate from "../utils/CustomDate.js";
 
 // Enums for connector types and charging types
 let ConnectorType = {};
@@ -36,8 +37,13 @@ loadEnums();
  */
 class TimeRange {
   constructor(data = {}) {
-    this.from = data.from || "00:00"; // e.g., "09:00"
-    this.to = data.to || "23:59"; // e.g., "22:00"
+    this.from = CustomDate.parse(data.from || "00:00");
+    this.to = CustomDate.parse(data.to || "23:59");
+
+    if (this.to < this.from) {
+      this.to.addDays(1);
+    }
+
     this.pricePerMin = data.pricePerMin || 0;
     this.maxPrice = data.maxPrice || null;
     this.maxBilledMinutes = data.maxBilledMinutes || null;
@@ -46,26 +52,27 @@ class TimeRange {
   /**
    * Check if a time falls within this range
    */
-  isTimeInRange(timeString) {
-    const timeMinutes = DateTimeHelper.timeToMinutes(timeString);
-    const fromMinutes = DateTimeHelper.timeToMinutes(this.from);
-    let toMinutes = DateTimeHelper.timeToMinutes(this.to);
+  isTimeInRange(time) {
+    // NOTE:
+    // from is inclusive
+    // to is exclusive
+    // so we need to use < instead of <=
+    // 09:00-22:00
+    // |<-- YES -->|<-- NO -->|
+    // |09:00      |22:00
 
-    // Handle overnight ranges (e.g., 22:00 to 09:00)
-    if (toMinutes < fromMinutes) {
-      toMinutes += 24 * 60;
-      return timeMinutes >= fromMinutes || timeMinutes <= toMinutes - 24 * 60;
-    }
-
-    return timeMinutes >= fromMinutes && timeMinutes <= toMinutes;
+    return (
+      time.getTime() >= this.from.getTime() &&
+      time.getTime() < this.to.getTime()
+    );
   }
 
-  /**
-   * Get the price per minute for a given time
-   */
-  getPriceForTime(timeString) {
-    return this.isTimeInRange(timeString) ? this.pricePerMin : 0;
-  }
+  // /**
+  //  * Get the price per minute for a given time
+  //  */
+  // getPriceForTime(time) {
+  //   return this.isTimeInRange(time) ? this.pricePerMin : 0;
+  // }
 }
 
 /**
@@ -85,45 +92,65 @@ class TimeBasedCondition extends BlockingFeeCondition {
   constructor(data = {}) {
     super(data);
     this.description = data.description || "";
-    this.timeRanges = data.timeRanges
-      ? data.timeRanges.map((range) => new TimeRange(range))
-      : [];
+    this.timeRanges = data.timeRanges.map((range) => {
+      if (range instanceof TimeRange) {
+        return range;
+      }
+      return new TimeRange(range);
+    });
+    // this.timeRanges = data.timeRanges
+    //   ? data.timeRanges.map((range) => new TimeRange(range))
+    //   : [];
   }
 
   /**
    * Check if start time falls within the time window
    */
+  // FIXME calculate fee per time range instead of removed time
   removedBillableTimeInWindow(startTime, endTime) {
     if (!this.timeRanges || this.timeRanges.length === 0) return 0;
 
-    const startMinutes = DateTimeHelper.timeToMinutes(startTime);
-    let endMinutes = DateTimeHelper.timeToMinutes(endTime);
-    if (endMinutes < startMinutes) {
-      endMinutes += 24 * 60;
+    if (typeof startTime === "string") {
+      throw new Error("startTime is a string");
     }
+    if (typeof endTime === "string") {
+      throw new Error("endTime is a string");
+    }
+
+    // if (endTime < startTime) {
+    //   endTime.addDays(1);
+    // }
 
     let totalRemovedTime = 0;
 
     // Check each time range
     for (const timeRange of this.timeRanges) {
-      const fromMinutes = DateTimeHelper.timeToMinutes(timeRange.from);
-      let toMinutes = DateTimeHelper.timeToMinutes(timeRange.to);
-      if (toMinutes < fromMinutes) {
-        toMinutes += 24 * 60;
+      if (timeRange.to < timeRange.from) {
+        timeRange.to.addDays(1);
       }
 
       // Check if the charging session overlaps with this time range
-      if (endMinutes >= fromMinutes && startMinutes <= toMinutes) {
-        const startTimeInWindow = Math.max(startMinutes, fromMinutes);
-        const endTimeInWindow = Math.min(endMinutes, toMinutes);
-        const totalTimeInWindow = endTimeInWindow - startTimeInWindow;
+      if (endTime >= timeRange.from || startTime < timeRange.to) {
+        const startTimeInWindow = Math.max(
+          startTime.getTime(),
+          timeRange.from.getTime()
+        );
+        const endTimeInWindow = Math.min(
+          endTime.getTime(),
+          timeRange.to.getTime()
+        );
+        const totalTimeInWindow = (endTimeInWindow - startTimeInWindow) / 60000; // 1000 * 60
 
         // Apply max billed minutes if specified
         if (timeRange.maxBilledMinutes) {
           const removedTime =
             totalTimeInWindow -
-            Math.min(totalTimeInWindow, timeRange.maxBilledMinutes);
-          totalRemovedTime += removedTime;
+            Math.min(totalTimeInWindow, timeRange.maxBilledMinutes || 0);
+
+          // REVIEW: do not add time if its only a few seconds in a time range
+          if (removedTime >= 1) {
+            totalRemovedTime += removedTime;
+          }
         }
       }
     }
@@ -178,6 +205,106 @@ class ProviderBasedCondition extends BlockingFeeCondition {
     this.conditions = this.parseConditions(data.conditions || {});
   }
 
+  /**
+   * Validate input parameters for fee calculation
+   */
+  _validateFeeCalculationInputs(startTime, endTime) {
+    if (typeof startTime === "string") {
+      throw new Error("startTime is a string");
+    }
+    if (typeof endTime === "string") {
+      throw new Error("endTime is a string");
+    }
+  }
+
+  /**
+   * Calculate applicable minutes based on time-based conditions
+   */
+  _calculateTimeBasedApplicableMinutes(
+    blockingTimeMinutes,
+    startTime,
+    endTime
+  ) {
+    const timeCondition = this.conditions.daytime;
+    const removedBillableTimeInWindow =
+      timeCondition.removedBillableTimeInWindow(startTime, endTime);
+    return blockingTimeMinutes - removedBillableTimeInWindow;
+  }
+
+  /**
+   * Calculate fee based on time ranges with different pricing
+   */
+  _calculateTimeRangeBasedFee(startTime, endTime) {
+    const timeCondition = this.conditions.daytime;
+    if (!timeCondition.timeRanges || timeCondition.timeRanges.length === 0) {
+      return null;
+    }
+
+    let totalFee = 0;
+    let endTimeCopy = new Date(endTime);
+    let startTimeCopy = new Date(startTime);
+
+    if (endTimeCopy < startTimeCopy) {
+      endTimeCopy.setDate(endTimeCopy.getDate() + 1);
+    }
+
+    for (const timeRange of timeCondition.timeRanges) {
+      let timeRangeTo = new Date(timeRange.to);
+      if (timeRangeTo < timeRange.from) {
+        timeRangeTo.setDate(timeRangeTo.getDate() + 1);
+      }
+
+      // Check if the charging session overlaps with this time range
+      if (
+        timeRange.isTimeInRange(startTimeCopy) ||
+        timeRange.isTimeInRange(endTimeCopy)
+      ) {
+        const startTimeInWindow = Math.max(startTimeCopy, timeRange.from);
+        const endTimeInWindow = Math.min(endTimeCopy, timeRangeTo);
+        const timeInWindow = endTimeInWindow - startTimeInWindow;
+
+        // Apply max billed minutes if specified
+        const billableTime = timeRange.maxBilledMinutes
+          ? Math.min(timeInWindow, timeRange.maxBilledMinutes || 0)
+          : timeInWindow;
+
+        totalFee += billableTime * timeRange.pricePerMin;
+      }
+    }
+
+    return totalFee;
+  }
+
+  /**
+   * Calculate applicable minutes based on duration-based conditions
+   */
+  _calculateDurationBasedApplicableMinutes(blockingTimeMinutes) {
+    if (this.conditions.durationHours) {
+      const totalTimeHours = blockingTimeMinutes / 60;
+      if (!this.conditions.durationHours.isDurationExceeded(totalTimeHours)) {
+        return 0;
+      } else {
+        return (
+          this.conditions.durationHours.getExcessDuration(totalTimeHours) * 60
+        );
+      }
+    } else if (this.conditions.durationMinutes) {
+      const totalTimeMinutes = blockingTimeMinutes;
+      if (
+        !this.conditions.durationMinutes.isDurationExceeded(
+          totalTimeMinutes / 60
+        )
+      ) {
+        return 0;
+      } else {
+        return this.conditions.durationMinutes.getExcessDuration(
+          totalTimeMinutes / 60
+        );
+      }
+    }
+    return blockingTimeMinutes; // No specific conditions, bill all blocking time
+  }
+
   parseConditions(conditionsData) {
     const conditions = {};
 
@@ -222,95 +349,28 @@ class ProviderBasedCondition extends BlockingFeeCondition {
     if (this.pricePerMin <= 0) return 0;
     if (providerId && this.providerId !== providerId) return 0;
 
-    let applicableMinutes = 0;
+    this._validateFeeCalculationInputs(startTime, endTime);
 
     // Apply time-based conditions
     if (this.conditions.daytime) {
-      // Use the time-based condition logic
-      const timeCondition = this.conditions.daytime;
-      let removedBillableTimeInWindow = 0;
-
-      if (startTime && endTime) {
-        removedBillableTimeInWindow = timeCondition.removedBillableTimeInWindow(
-          startTime,
-          endTime
-        );
-      } else if (startTime) {
-        removedBillableTimeInWindow = timeCondition.removedBillableTimeInWindow(
-          startTime,
-          startTime + chargingTimeMinutes
-        );
-      } else if (endTime) {
-        removedBillableTimeInWindow = timeCondition.removedBillableTimeInWindow(
-          endTime - chargingTimeMinutes,
-          endTime
-        );
+      // Check if we should use time range-based pricing
+      const timeRangeFee = this._calculateTimeRangeBasedFee(startTime, endTime);
+      if (timeRangeFee !== null) {
+        return timeRangeFee;
       }
 
-      applicableMinutes = blockingTimeMinutes - removedBillableTimeInWindow;
-
-      // Calculate fee based on time ranges instead of base price
-      if (timeCondition.timeRanges && timeCondition.timeRanges.length > 0) {
-        let totalFee = 0;
-        const startMinutes = DateTimeHelper.timeToMinutes(startTime);
-        let endMinutes = DateTimeHelper.timeToMinutes(endTime);
-        if (endMinutes < startMinutes) {
-          endMinutes += 24 * 60;
-        }
-
-        for (const timeRange of timeCondition.timeRanges) {
-          const fromMinutes = DateTimeHelper.timeToMinutes(timeRange.from);
-          let toMinutes = DateTimeHelper.timeToMinutes(timeRange.to);
-          if (toMinutes < fromMinutes) {
-            toMinutes += 24 * 60;
-          }
-
-          // Check if the charging session overlaps with this time range
-          if (endMinutes >= fromMinutes && startMinutes <= toMinutes) {
-            const startTimeInWindow = Math.max(startMinutes, fromMinutes);
-            const endTimeInWindow = Math.min(endMinutes, toMinutes);
-            const timeInWindow = endTimeInWindow - startTimeInWindow;
-
-            // Apply max billed minutes if specified
-            const billableTime = timeRange.maxBilledMinutes
-              ? Math.min(timeInWindow, timeRange.maxBilledMinutes)
-              : timeInWindow;
-
-            totalFee += billableTime * timeRange.pricePerMin;
-          }
-        }
-
-        return totalFee;
-      }
-    }
-    // Apply duration-based conditions
-    else if (this.conditions.durationHours) {
-      const totalTimeHours = blockingTimeMinutes / 60;
-      if (!this.conditions.durationHours.isDurationExceeded(totalTimeHours)) {
-        applicableMinutes = 0;
-      } else {
-        applicableMinutes =
-          this.conditions.durationHours.getExcessDuration(totalTimeHours) * 60;
-      }
-    } else if (this.conditions.durationMinutes) {
-      const totalTimeMinutes = blockingTimeMinutes;
-      if (
-        !this.conditions.durationMinutes.isDurationExceeded(
-          totalTimeMinutes / 60
-        )
-      ) {
-        applicableMinutes = 0;
-      } else {
-        applicableMinutes = this.conditions.durationMinutes.getExcessDuration(
-          totalTimeMinutes / 60
-        );
-      }
-    }
-    // No specific conditions, bill all blocking time
-    else {
-      applicableMinutes = blockingTimeMinutes;
+      // Use standard time-based calculation
+      const applicableMinutes = this._calculateTimeBasedApplicableMinutes(
+        blockingTimeMinutes,
+        startTime,
+        endTime
+      );
+      return applicableMinutes * this.pricePerMin;
     }
 
+    // Apply duration-based conditions or fallback to all blocking time
+    const applicableMinutes =
+      this._calculateDurationBasedApplicableMinutes(blockingTimeMinutes);
     return applicableMinutes * this.pricePerMin;
   }
 }
@@ -325,6 +385,87 @@ class BlockingFee {
     this.conditions = this.parseConditions(data.conditions || {});
     this.maxPricePerSession = data.maxPricePerSession || false;
     this.maxPerSession = data.maxPerSession || false;
+  }
+
+  /**
+   * Validate input parameters for fee calculation
+   */
+  _validateFeeCalculationInputs(startTime, endTime) {
+    if (typeof startTime === "string") {
+      throw new Error("startTime is a string");
+    }
+    if (typeof endTime === "string") {
+      throw new Error("endTime is a string");
+    }
+  }
+
+  /**
+   * Calculate applicable minutes based on time-based conditions
+   */
+  _calculateTimeBasedApplicableMinutes(
+    blockingTimeMinutes,
+    startTime,
+    endTime
+  ) {
+    const removedBillableTimeInWindow =
+      this.conditions.daytime.removedBillableTimeInWindow(startTime, endTime);
+    return blockingTimeMinutes - removedBillableTimeInWindow;
+  }
+
+  /**
+   * Calculate applicable minutes based on duration-based conditions
+   */
+  _calculateDurationBasedApplicableMinutes(blockingTimeMinutes) {
+    if (this.conditions.durationHours) {
+      const totalTimeHours = blockingTimeMinutes / 60;
+      if (!this.conditions.durationHours.isDurationExceeded(totalTimeHours)) {
+        return 0;
+      } else {
+        return (
+          this.conditions.durationHours.getExcessDuration(totalTimeHours) * 60
+        );
+      }
+    } else if (this.conditions.durationMinutes) {
+      const totalTimeMinutes = blockingTimeMinutes;
+      if (
+        !this.conditions.durationMinutes.isDurationExceeded(
+          totalTimeMinutes / 60
+        )
+      ) {
+        return 0;
+      } else {
+        return this.conditions.durationMinutes.getExcessDuration(
+          totalTimeMinutes / 60
+        );
+      }
+    }
+    return blockingTimeMinutes; // No specific conditions, bill all blocking time
+  }
+
+  /**
+   * Apply maximum caps to the calculated fee
+   */
+  _applyMaximumCaps(fee) {
+    // Apply maximum caps
+    if (
+      this.conditions.maxPricePerSession &&
+      typeof this.conditions.maxPricePerSession === "number"
+    ) {
+      fee = Math.min(fee, this.conditions.maxPricePerSession);
+    }
+
+    if (
+      this.conditions.durationHours &&
+      typeof this.conditions.durationHours.maxPrice === "number"
+    ) {
+      fee = Math.min(fee, this.conditions.durationHours.maxPrice);
+    }
+
+    if (this.maxPerSession && typeof this.maxPerSession === "number") {
+      fee = Math.min(fee, this.maxPerSession);
+    }
+
+    return fee;
   }
 
   parseConditions(conditionsData) {
@@ -385,6 +526,8 @@ class BlockingFee {
     endTime,
     providerId = null
   ) {
+    this._validateFeeCalculationInputs(startTime, endTime);
+
     // Handle provider-specific conditions
     if (this.conditions.providerSpecific && providerId) {
       const providerCondition = this.conditions.providerSpecific[providerId];
@@ -408,93 +551,31 @@ class BlockingFee {
     if (this.pricePerMin <= 0) return 0;
 
     let applicableMinutes = 0;
-    let removedBillableTimeInWindow = 0;
 
     // Apply time-based conditions
     if (this.conditions.daytime) {
-      if (startTime && endTime) {
-        removedBillableTimeInWindow =
-          this.conditions.daytime.removedBillableTimeInWindow(
-            startTime,
-            endTime
-          );
-      } else if (startTime) {
-        removedBillableTimeInWindow =
-          this.conditions.daytime.removedBillableTimeInWindow(
-            startTime,
-            startTime + chargingTimeMinutes
-          );
-      } else if (endTime) {
-        removedBillableTimeInWindow =
-          this.conditions.daytime.removedBillableTimeInWindow(
-            endTime - chargingTimeMinutes,
-            endTime
-          );
-      } else {
-        removedBillableTimeInWindow = 0;
-      }
-
-      applicableMinutes = blockingTimeMinutes - removedBillableTimeInWindow;
+      applicableMinutes = this._calculateTimeBasedApplicableMinutes(
+        blockingTimeMinutes,
+        startTime,
+        endTime
+      );
     }
-
-    // Apply duration-based conditions
-    else if (this.conditions.durationHours) {
-      const totalTimeHours = blockingTimeMinutes / 60;
-      if (!this.conditions.durationHours.isDurationExceeded(totalTimeHours)) {
-        applicableMinutes = 0;
-      } else {
-        applicableMinutes =
-          this.conditions.durationHours.getExcessDuration(totalTimeHours) * 60;
-      }
-    } else if (this.conditions.durationMinutes) {
-      const totalTimeMinutes = blockingTimeMinutes;
-      if (
-        !this.conditions.durationMinutes.isDurationExceeded(
-          totalTimeMinutes / 60
-        )
-      ) {
-        applicableMinutes = 0;
-      } else {
-        applicableMinutes = this.conditions.durationMinutes.getExcessDuration(
-          totalTimeMinutes / 60
-        );
-      }
-    }
-
-    // total blocking time is billed
+    // Apply duration-based conditions or fallback to all blocking time
     else {
-      applicableMinutes = blockingTimeMinutes;
+      applicableMinutes =
+        this._calculateDurationBasedApplicableMinutes(blockingTimeMinutes);
     }
 
     // TODO: while charging and while idle
 
     let fee = applicableMinutes * this.pricePerMin;
-
-    // Apply maximum caps
-    if (
-      this.conditions.maxPricePerSession &&
-      typeof this.conditions.maxPricePerSession === "number"
-    ) {
-      fee = Math.min(fee, this.conditions.maxPricePerSession);
-    }
-
-    if (
-      this.conditions.durationHours &&
-      typeof this.conditions.durationHours.maxPrice === "number"
-    ) {
-      fee = Math.min(fee, this.conditions.durationHours.maxPrice);
-    }
-
-    if (this.maxPerSession && typeof this.maxPerSession === "number") {
-      fee = Math.min(fee, this.maxPerSession);
-    }
-
-    return fee;
+    return this._applyMaximumCaps(fee);
   }
 
   getBlockingFeeString(conditions = this.conditions) {
     let blockingFeeString = "";
     if (conditions.daytime) {
+      const icons = [];
       const perTimeRangeString = conditions.daytime.timeRanges
         .map((timeRange) => {
           const { from, to, pricePerMin, maxPrice, maxBilledMinutes } =
@@ -502,19 +583,16 @@ class BlockingFee {
 
           const differentPrice = pricePerMin !== this.pricePerMin;
 
-          const fromString = from
-            .split(":")
-            .filter((part) => part !== "00")
-            .join(":");
-
-          const toString = to
-            .split(":")
-            .filter((part) => part !== "00")
-            .join(":");
+          const fromString = from.getShortDaytimeString();
+          const toString = to.getShortDaytimeString();
 
           if (differentPrice || maxPrice || maxBilledMinutes) {
+            const icon = to < from ? "☀️" : "🌙";
+            icons.push(icon);
+
             return [
-              to < from ? "🌙" : "☀️",
+              "<span class='price-value'>",
+              icon,
               `🕙${fromString}-${toString}h: `,
               [
                 differentPrice &&
@@ -522,23 +600,42 @@ class BlockingFee {
                     2
                   )}<span class='price-unit'>€/min</span>`,
                 maxPrice &&
-                  `max ${maxPrice.toFixed(2)}<span class='price-unit'>€</span>`,
+                  `max. <span class='price-value'>${maxPrice.toFixed(
+                    2
+                  )}</span><span class='price-unit'>€</span>`,
                 maxBilledMinutes &&
-                  `max ${maxBilledMinutes}<span class='price-unit'>min</span>`,
+                  `max. <span class='price-value'>${maxBilledMinutes}</span><span class='price-unit'>min</span>`,
               ]
                 .filter((string) => string)
                 .join(", "),
+              "</span>",
             ].join("");
           }
         })
         .filter((string) => string)
         .join("<br/>");
 
+      const tooltip = [
+        "<div class='tooltip-container'>" +
+          "<i class='tooltip-icon fa-solid fa-info-circle'></i>" +
+          "<div class='tooltip-content'>" +
+          "<div class='tooltip-content-header'>Time Range</div>" +
+          perTimeRangeString +
+          "</div>" +
+          "</div>",
+      ].join("");
+
+      const iconsString = icons
+        .map(
+          (icon) => `<span class="badge badge-blocking-fee-icon">${icon}</span>`
+        )
+        .join("");
+
       blockingFeeString =
         this.pricePerMin.toFixed(2) +
-        "<span class='price-unit'>€/min</span><br/><small><i style='font-weight: normal;'>" +
-        perTimeRangeString +
-        "</i></small>";
+        "<span class='price-unit'>€/min</span>" +
+        iconsString +
+        tooltip;
     } else if (conditions.durationHours) {
       const details = conditions.durationHours;
       blockingFeeString =

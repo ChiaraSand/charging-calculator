@@ -243,33 +243,33 @@ describe("VehicleChargingCurves", () => {
     });
   });
 
-  describe("calculateGenericChargingTime", () => {
-    test("should calculate charging time correctly", () => {
-      const result = vehicleCurves.calculateGenericChargingTime(
-        20,
-        80,
-        150,
-        50
-      );
+  // describe("calculateGenericChargingTime", () => {
+  //   test("should calculate charging time correctly", () => {
+  //     const result = vehicleCurves.calculateGenericChargingTime(
+  //       20,
+  //       80,
+  //       150,
+  //       50
+  //     );
 
-      expect(result.totalTime).toBeGreaterThan(0);
-      expect(result.totalEnergy).toBe(30); // 50 kWh * 60% = 30 kWh
-      expect(result.timeSteps).toHaveLength(2);
-      expect(result.powerSteps).toHaveLength(2);
-    });
+  //     expect(result.totalTime).toBeGreaterThan(0);
+  //     expect(result.totalEnergy).toBe(30); // 50 kWh * 60% = 30 kWh
+  //     expect(result.timeSteps).toHaveLength(2);
+  //     expect(result.powerSteps).toHaveLength(2);
+  //   });
 
-    test("should handle zero charging range", () => {
-      const result = vehicleCurves.calculateGenericChargingTime(
-        80,
-        80,
-        150,
-        50
-      );
+  //   test("should handle zero charging range", () => {
+  //     const result = vehicleCurves.calculateGenericChargingTime(
+  //       80,
+  //       80,
+  //       150,
+  //       50
+  //     );
 
-      expect(result.totalTime).toBe(0);
-      expect(result.totalEnergy).toBe(0);
-    });
-  });
+  //     expect(result.totalTime).toBe(0);
+  //     expect(result.totalEnergy).toBe(0);
+  //   });
+  // });
 
   describe("getAvailableVehicles", () => {
     test("should return list of available vehicles", () => {

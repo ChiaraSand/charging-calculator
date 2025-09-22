@@ -437,7 +437,19 @@
 <a name='L372'></a><a href='#L372'>372</a>
 <a name='L373'></a><a href='#L373'>373</a>
 <a name='L374'></a><a href='#L374'>374</a>
-<a name='L375'></a><a href='#L375'>375</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L375'></a><a href='#L375'>375</a>
+<a name='L376'></a><a href='#L376'>376</a>
+<a name='L377'></a><a href='#L377'>377</a>
+<a name='L378'></a><a href='#L378'>378</a>
+<a name='L379'></a><a href='#L379'>379</a>
+<a name='L380'></a><a href='#L380'>380</a>
+<a name='L381'></a><a href='#L381'>381</a>
+<a name='L382'></a><a href='#L382'>382</a>
+<a name='L383'></a><a href='#L383'>383</a>
+<a name='L384'></a><a href='#L384'>384</a>
+<a name='L385'></a><a href='#L385'>385</a>
+<a name='L386'></a><a href='#L386'>386</a>
+<a name='L387'></a><a href='#L387'>387</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -532,6 +544,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -555,17 +571,25 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -857,18 +881,23 @@ class DualSlider {
         &lt;label for="chargeLevelSlider" class="dual-slider-label"&gt;${
           this.options.label
         }&lt;/label&gt;
+      &lt;/div&gt;
+      &lt;div class="dual-slider-container"&gt;
         &lt;div class="dual-slider-values"&gt;
-          &lt;input
-            type="number"
-            class="dual-slider-current-value"
-            value="${this.currentValue}"
-            min="${this.options.min}"
-            max="${this.options.max}"
-            step="${this.options.step}"
-            aria-label="${this.options.currentLabel} charge level"
-          /&gt;
-          &lt;span class="dual-slider-unit"&gt;${this.options.unit}&lt;/span&gt;
+          &lt;div&gt;
+            &lt;input
+              type="number"
+              class="dual-slider-current-value"
+              value="${this.currentValue}"
+              min="${this.options.min}"
+              max="${this.options.max}"
+              step="${this.options.step}"
+              aria-label="${this.options.currentLabel} charge level"
+            /&gt;
+            &lt;span class="dual-slider-unit"&gt;${this.options.unit}&lt;/span&gt;
+          &lt;/div&gt;
           &lt;span class="dual-slider-separator"&gt;→&lt;/span&gt;
+          &lt;div&gt;
           &lt;input
             type="number"
             class="dual-slider-target-value"
@@ -877,11 +906,10 @@ class DualSlider {
             max="${this.options.max}"
             step="${this.options.step}"
             aria-label="${this.options.targetLabel} charge level"
-          /&gt;
-          &lt;span class="dual-slider-unit"&gt;${this.options.unit}&lt;/span&gt;
+            /&gt;
+            &lt;span class="dual-slider-unit"&gt;${this.options.unit}&lt;/span&gt;
+          &lt;/div&gt;
         &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class="dual-slider-container"&gt;
         &lt;div class="dual-slider-track"&gt;
           &lt;div class="dual-slider-progress" style="left: ${this.getPercentage(
             this.currentValue
@@ -928,18 +956,26 @@ class DualSlider {
 <span class="cstat-no" title="statement not covered" >    track.addEventListener("mousedown", <span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >this.handleTrackClick(e))</span>;</span>
 &nbsp;
     // Touch events
-<span class="cstat-no" title="statement not covered" >    currentHandle.addEventListener("touchstart", <span class="fstat-no" title="function not covered" >(e</span>) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >      this.startDrag(e, "current")</span>
+<span class="cstat-no" title="statement not covered" >    currentHandle.addEventListener(</span>
+      "touchstart",
+<span class="fstat-no" title="function not covered" >      (e</span>) =&gt; <span class="cstat-no" title="statement not covered" >this.startDrag(e, "current"),</span>
+      { passive: false }
     );
-<span class="cstat-no" title="statement not covered" >    targetHandle.addEventListener("touchstart", <span class="fstat-no" title="function not covered" >(e</span>) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >      this.startDrag(e, "target")</span>
+<span class="cstat-no" title="statement not covered" >    targetHandle.addEventListener(</span>
+      "touchstart",
+<span class="fstat-no" title="function not covered" >      (e</span>) =&gt; <span class="cstat-no" title="statement not covered" >this.startDrag(e, "target"),</span>
+      { passive: false }
     );
-<span class="cstat-no" title="statement not covered" >    track.addEventListener("touchstart", <span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >this.handleTrackClick(e))</span>;</span>
+<span class="cstat-no" title="statement not covered" >    track.addEventListener("touchstart", <span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >this.handleTrackClick(e),</span> {</span>
+      passive: false,
+    });
 &nbsp;
     // Global events
 <span class="cstat-no" title="statement not covered" >    document.addEventListener("mousemove", <span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >this.handleDrag(e))</span>;</span>
 <span class="cstat-no" title="statement not covered" >    document.addEventListener("mouseup", <span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >this.endDrag())</span>;</span>
-<span class="cstat-no" title="statement not covered" >    document.addEventListener("touchmove", <span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >this.handleDrag(e))</span>;</span>
+<span class="cstat-no" title="statement not covered" >    document.addEventListener("touchmove", <span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >this.handleDrag(e),</span> {</span>
+      passive: false,
+    });
 <span class="cstat-no" title="statement not covered" >    document.addEventListener("touchend", <span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >this.endDrag())</span>;</span>
 &nbsp;
     // Keyboard events
@@ -1192,7 +1228,7 @@ export default DualSlider;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-18T19:02:22.214Z
+                at 2025-09-22T12:00:15.383Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

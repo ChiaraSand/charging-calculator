@@ -150,6 +150,7 @@
   font-size: 1rem;
   transition: var(--transition);
   background: white;
+  width: 100%;
 }
 
 .form-group input:focus,
@@ -175,6 +176,18 @@
   right: 0;
   top: 0;
   width: auto;
+}
+
+.form-group.double-row-group {
+  grid-row: span 2;
+}
+
+.form-group-label-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 /* Input with clear button container */

@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">51.82% </span>
+                <span class="strong">51.81% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>142/274</span>
+                <span class='fraction'>143/276</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">54.47% </span>
+                <span class="strong">54.07% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>73/134</span>
+                <span class='fraction'>73/135</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50.79% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>32/63</span>
+                <span class='fraction'>32/64</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">51.64% </span>
+                <span class="strong">51.63% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>141/273</span>
+                <span class='fraction'>142/275</span>
             </div>
         
             
@@ -883,10 +883,17 @@
 <a name='L818'></a><a href='#L818'>818</a>
 <a name='L819'></a><a href='#L819'>819</a>
 <a name='L820'></a><a href='#L820'>820</a>
-<a name='L821'></a><a href='#L821'>821</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L821'></a><a href='#L821'>821</a>
+<a name='L822'></a><a href='#L822'>822</a>
+<a name='L823'></a><a href='#L823'>823</a>
+<a name='L824'></a><a href='#L824'>824</a>
+<a name='L825'></a><a href='#L825'>825</a>
+<a name='L826'></a><a href='#L826'>826</a>
+<a name='L827'></a><a href='#L827'>827</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-yes">27x</span>
@@ -922,8 +929,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -954,6 +959,12 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1027,10 +1038,11 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1707,6 +1719,7 @@
 &nbsp;
 class GoogleMapsManager {
   constructor(enableInit = <span class="branch-0 cbranch-no" title="branch not covered" >true)</span> {
+    this.mapElementId = "map";
     this.map = null;
     this.userLocation = null;
     this.chargingStationMarkers = [];
@@ -1733,9 +1746,7 @@ class GoogleMapsManager {
     }
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  as</span>ync initializeMap(mapElementId) {
-    const defaultLocation = <span class="cstat-no" title="statement not covered" >this.defaultLocation;</span>
-&nbsp;
+<span class="fstat-no" title="function not covered" >  as</span>ync initializeMap() {
 <span class="cstat-no" title="statement not covered" >    document</span>
       .getElementById("toggleEnableMap")
       .addEventListener("click", <span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >this.toggleMapEnabled())</span>;
@@ -1774,6 +1785,12 @@ class GoogleMapsManager {
 <span class="cstat-no" title="statement not covered" >    if (!this.enable) {</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
     }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    await this.initMap();</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  as</span>ync initMap(mapElementId = <span class="branch-0 cbranch-no" title="branch not covered" >this.mapElementId)</span> {
+    const defaultLocation = <span class="cstat-no" title="statement not covered" >this.defaultLocation;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    this.map = new google.maps.Map(document.getElementById(mapElementId), {</span>
       zoom: 12,
@@ -1846,11 +1863,12 @@ class GoogleMapsManager {
       }
       const script = <span class="cstat-no" title="statement not covered" >document.createElement("script");</span>
 <span class="cstat-no" title="statement not covered" >      script.id = "google-maps-script";</span>
-      // TODO: add loading=async
       // https://developers.google.com/maps/documentation/javascript/load-maps-js-api#direct_script_loading_url_parameters
 <span class="cstat-no" title="statement not covered" >      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&amp;libraries=places,marker`;</span>
+      // &amp;loading=async&amp;callback=initMap
 <span class="cstat-no" title="statement not covered" >      script.async = true;</span>
 <span class="cstat-no" title="statement not covered" >      script.onload = <span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
+        // await this.initMap();
 <span class="cstat-no" title="statement not covered" >        resolve();</span>
       };
 <span class="cstat-no" title="statement not covered" >      script.onerror = <span class="fstat-no" title="function not covered" >(e</span>) =&gt; {</span>
@@ -2530,7 +2548,7 @@ export default GoogleMapsManager;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-18T19:02:22.184Z
+                at 2025-09-22T12:00:15.355Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

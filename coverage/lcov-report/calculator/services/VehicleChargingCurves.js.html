@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.66% </span>
+                <span class="strong">94.36% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>71/75</span>
+                <span class='fraction'>67/71</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">93.75% </span>
+                <span class="strong">93.33% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>15/16</span>
+                <span class='fraction'>14/15</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.52% </span>
+                <span class="strong">94.2% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>69/73</span>
+                <span class='fraction'>65/69</span>
             </div>
         
             
@@ -439,7 +439,9 @@
 <a name='L374'></a><a href='#L374'>374</a>
 <a name='L375'></a><a href='#L375'>375</a>
 <a name='L376'></a><a href='#L376'>376</a>
-<a name='L377'></a><a href='#L377'>377</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L377'></a><a href='#L377'>377</a>
+<a name='L378'></a><a href='#L378'>378</a>
+<a name='L379'></a><a href='#L379'>379</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -448,13 +450,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -594,6 +596,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">490x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -676,11 +679,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -902,8 +906,8 @@ class VehicleChargingCurves {
    */
   calculateChargingTime(
     vehicleId,
-    currentLevel,
-    targetLevel,
+    currentCharge,
+    targetCharge,
     chargerPower,
     batteryCapacity
   ) {
@@ -919,17 +923,17 @@ class VehicleChargingCurves {
 &nbsp;
     const timeSteps = [];
     const powerSteps = [];
-    let currentBatteryLevel = currentLevel;
+    let currentBatteryLevel = currentCharge;
     let totalTime = 0;
     let totalEnergy = 0;
 &nbsp;
     // Calculate in 1% increments
     const stepSize = 1;
-    const maxSteps = Math.ceil((targetLevel - currentLevel) / stepSize);
+    const maxSteps = Math.ceil((targetCharge - currentCharge) / stepSize);
 &nbsp;
     for (
       let step = 0;
-      step &lt; maxSteps &amp;&amp; currentBatteryLevel &lt; targetLevel;
+      step &lt; maxSteps &amp;&amp; currentBatteryLevel &lt; targetCharge;
       step++
     ) {
       const chargingPower = this.getChargingPower(
@@ -958,8 +962,9 @@ class VehicleChargingCurves {
       totalEnergy: totalEnergy,
       timeSteps: timeSteps,
       powerSteps: powerSteps,
-      finalBatteryLevel: Math.min(currentBatteryLevel, targetLevel),
+      finalBatteryLevel: Math.min(currentBatteryLevel, targetCharge),
       averagePower: totalEnergy &gt; 0 ? totalEnergy / (totalTime / 60) : 0,
+      chargerPower: chargerPower,
     };
   }
 &nbsp;
@@ -1038,33 +1043,34 @@ class VehicleChargingCurves {
     return Math.min(chargerPower * powerFactor, chargerPower);
   }
 &nbsp;
-  /**
-   * Generic charging time calculation for unknown vehicles
-   * @param {number} currentLevel - Current battery level (0-100)
-   * @param {number} targetLevel - Target battery level (0-100)
-   * @param {number} chargerPower - Available charger power (kW)
-   * @param {number} batteryCapacity - Battery capacity in kWh
-   * @returns {Object} Charging time calculation result
-   */
-  calculateGenericChargingTime(
-    currentLevel,
-    targetLevel,
-    chargerPower,
-    batteryCapacity
-  ) {
-    const energyNeeded = (batteryCapacity * (targetLevel - currentLevel)) / 100;
-    const averagePower = chargerPower * 1; //0.8; // Assume 80% average efficiency
-    const totalTime = (energyNeeded / averagePower) * 60; // in minutes
+  // REVIEW: unused
+  // /**
+  //  * Generic charging time calculation for unknown vehicles
+  //  * @param {number} currentLevel - Current battery level (0-100)
+  //  * @param {number} targetLevel - Target battery level (0-100)
+  //  * @param {number} chargerPower - Available charger power (kW)
+  //  * @param {number} batteryCapacity - Battery capacity in kWh
+  //  * @returns {Object} Charging time calculation result
+  //  */
+  // calculateGenericChargingTime(
+  //   currentLevel,
+  //   targetLevel,
+  //   chargerPower,
+  //   batteryCapacity
+  // ) {
+  //   const energyNeeded = (batteryCapacity * (targetLevel - currentLevel)) / 100;
+  //   const averagePower = chargerPower * 1; //0.8; // Assume 80% average efficiency
+  //   const totalTime = (energyNeeded / averagePower) * 60; // in minutes
 &nbsp;
-    return {
-      totalTime: totalTime,
-      totalEnergy: energyNeeded,
-      timeSteps: [0, totalTime],
-      powerSteps: [chargerPower, chargerPower],
-      finalBatteryLevel: targetLevel,
-      averagePower: averagePower,
-    };
-  }
+  //   return {
+  //     totalTime: totalTime,
+  //     totalEnergy: energyNeeded,
+  //     timeSteps: [0, totalTime],
+  //     powerSteps: [chargerPower, chargerPower],
+  //     finalBatteryLevel: targetLevel,
+  //     averagePower: averagePower,
+  //   };
+  // }
 &nbsp;
   /**
    * Get available vehicles
@@ -1198,7 +1204,7 @@ export default VehicleChargingCurves;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-18T19:02:22.184Z
+                at 2025-09-22T12:00:15.355Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

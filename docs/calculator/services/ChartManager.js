@@ -394,6 +394,7 @@ class ChartManager {
     // Update chart data
     this.chargingChart.data.labels = timePoints.map((t) => `${t} min`);
 
+    // TODO: add horizontal lines for current and target charge
     // this.chargingChart.data.datasets[0].data = currentCharge;
     // this.chargingChart.data.datasets[1].data = targetCharge;
     this.chargingChart.data.datasets[0].data = realisticChargingLevels;

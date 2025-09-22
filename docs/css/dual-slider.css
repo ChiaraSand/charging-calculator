@@ -38,6 +38,10 @@
   font-size: 1.125rem;
 }
 
+.dual-slider-values input {
+  width: inherit;
+}
+
 .dual-slider-current-value,
 .dual-slider-target-value {
   width: 60px;

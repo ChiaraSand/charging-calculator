@@ -36,7 +36,7 @@
           <div class="card">
             <div class="card-header">
               <h2><i class="fas fa-cog"></i> Schnellkonfiguration</h2>
-              <div class="btn-group">
+              <div class="card-middle-buttons btn-group">
                 <button
                   type="button"
                   id="savePreconfig"
@@ -153,7 +153,7 @@
               <div id="vehicle-details"></div>
               -->
 
-              <div class="card filter-section-inline">
+              <div class="card card-sub filter-section-inline">
                 <!-- TODO: Set default selected tab via JavaScript -->
                 <div class="filter-section-inline-header">
                   <div class="filter-section-inline-header-title">
@@ -189,65 +189,26 @@
                       <i class="fas fa-plug"></i> Steckertypen
                     </button>
                   </div>
-
                   <!-- Provider Filter Tab -->
                   <div class="filter-content active" id="providers-tab">
                     <div class="provider-filters">
                       <div class="filter-group">
-                        <!-- <label>Ladetarife anzeigen:</label> -->
                         <div class="checkbox-grid" id="providerCheckboxes">
                           <!-- Will be populated by JavaScript -->
                         </div>
                       </div>
-                      <!--
-                      <div class="filter-actions">
-                        <button
-                          type="button"
-                          id="selectAllProviders"
-                          class="btn btn-secondary"
-                        >
-                          Alle auswählen
-                        </button>
-                        <button
-                          type="button"
-                          id="selectNoProviders"
-                          class="btn btn-secondary"
-                        >
-                          Alle abwählen
-                        </button>
-                      </div>
-                      -->
                     </div>
                   </div>
-                </div>
 
-                <!-- Connector Filter Tab -->
-                <div class="filter-content" id="connectors-tab">
-                  <div class="connector-filters">
-                    <div class="filter-group">
-                      <label>Steckertypen anzeigen:</label>
-                      <div class="checkbox-grid" id="connectorCheckboxes">
-                        <!-- Will be populated by JavaScript -->
+                  <!-- Connector Filter Tab -->
+                  <div class="filter-content" id="connectors-tab">
+                    <div class="connector-filters">
+                      <div class="filter-group">
+                        <div class="checkbox-grid" id="connectorCheckboxes">
+                          <!-- Will be populated by JavaScript -->
+                        </div>
                       </div>
                     </div>
-                    <!--
-                    <div class="filter-actions">
-                      <button
-                        type="button"
-                        id="selectAllConnectors"
-                        class="btn btn-secondary"
-                      >
-                        Alle auswählen
-                      </button>
-                      <button
-                        type="button"
-                        id="selectNoConnectors"
-                        class="btn btn-secondary"
-                      >
-                        Alle abwählen
-                      </button>
-                    </div>
-                    -->
                   </div>
                 </div>
               </div>
@@ -261,11 +222,6 @@
             <div class="card-header">
               <h2><i class="fas fa-calculator"></i> Ladedauer berechnen</h2>
               <div class="form-actions">
-                <!--
-                <button type="button" id="clearAll" form="chargingForm" class="btn btn-secondary">
-                  <i class="fas fa-eraser"></i> Alle Felder leeren
-                </button>
-                -->
                 <button
                   type="button"
                   id="calculator-section-toggle"
@@ -296,119 +252,104 @@
                     >
                   </div>-->
 
-                  <div class="form-column">
-                    <div class="form-group">
-                      <div id="chargeLevelSlider"></div>
-                      <!-- Hidden inputs for compatibility with existing code -->
+                  <div class="form-group double-row-group">
+                    <!--
+                    data-start-id="chargeLevelSlider-value-start"
+                    data-end-id="chargeLevelSlider-value-end"
+                    -->
+                    <div id="chargeLevelSlider"></div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="batteryCapacity">Batteriekapazität (kWh)</label>
+                    <div>
                       <input
-                        type="hidden"
-                        id="currentCharge"
-                        name="currentCharge"
-                        value="20"
+                        type="number"
+                        id="batteryCapacity"
+                        name="batteryCapacity"
+                        value="52"
+                        min="1"
+                        max="200"
+                        step="0.1"
                       />
-                      <input
-                        type="hidden"
-                        id="targetCharge"
-                        name="targetCharge"
-                        value="80"
-                      />
-                      <span id="currentChargeValue" style="display: none"
-                        >20%</span
-                      >
-                      <span id="targetChargeValue" style="display: none"
-                        >80%</span
-                      >
                     </div>
                   </div>
 
-                  <div class="form-column">
-                    <div class="form-group">
-                      <label for="batteryCapacity"
-                        >Batteriekapazität (kWh)</label
-                      >
-                      <div class="input-with-clear">
-                        <input
-                          type="number"
-                          id="batteryCapacity"
-                          name="batteryCapacity"
-                          value="52"
-                          min="1"
-                          max="200"
-                          step="0.1"
-                        />
-                        <!--
+                  <div class="form-group">
+                    <label for="chargingPower">Ladeleistung (kW)</label>
+                    <select id="chargingPower" name="chargingPower">
+                      <option value="3.7">
+                        AC 3,7 kW (Haushaltssteckdose)
+                      </option>
+                      <option value="11">AC 11 kW (Wallbox)</option>
+                      <option value="22" selected>AC 22 kW (Wallbox)</option>
+                      <option value="50">DC 50 kW (Schnelllader)</option>
+                      <option value="150">
+                        DC 150 kW (Hochleistungslader)
+                      </option>
+                      <option value="300">
+                        DC 300 kW (Ultra-Schnelllader)
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-group-label-row">
+                      <label for="calculator-input-startDate">
+                        Parken Beginn
+                      </label>
+                      <div>
                         <button
                           type="button"
-                          class="clear-btn"
-                          data-target="batteryCapacity"
-                          title="Löschen"
+                          id="dateTime-input-startDate-now"
+                          name="dateTime-input-now"
+                          class="btn btn-secondary btn-sm dateTime-input-now"
+                          data-target="calculator-input-startDate"
                         >
-                          <i class="fas fa-times"></i>
+                          <i class="fas fa-clock"></i>
+                          Now
                         </button>
-                        -->
                       </div>
                     </div>
-
-                    <div class="form-group">
-                      <label for="chargingPower">Ladeleistung (kW)</label>
-                      <select id="chargingPower" name="chargingPower">
-                        <option value="3.7">
-                          AC 3,7 kW (Haushaltssteckdose)
-                        </option>
-                        <option value="11">AC 11 kW (Wallbox)</option>
-                        <option value="22" selected>AC 22 kW (Wallbox)</option>
-                        <option value="50">DC 50 kW (Schnelllader)</option>
-                        <option value="150">
-                          DC 150 kW (Hochleistungslader)
-                        </option>
-                        <option value="300">
-                          DC 300 kW (Ultra-Schnelllader)
-                        </option>
-                      </select>
+                    <div>
+                      <input
+                        type="datetime-local"
+                        id="calculator-input-startDate"
+                        name="calculator-input-startDate"
+                      />
                     </div>
                   </div>
 
-                  <div class="form-column">
-                    <div class="form-group">
-                      <label for="startTime">Parken Beginn</label>
-                      <div class="input-with-clear">
-                        <input
-                          type="time"
-                          id="startTime"
-                          name="startTime"
-                          value=""
-                        />
-                        <!--
+                  <div class="form-group">
+                    <div class="form-group-label-row">
+                      <label for="calculator-input-endDate">Parken Ende</label>
+                      <div>
                         <button
                           type="button"
-                          class="clear-btn"
-                          data-target="startTime"
-                          title="Löschen"
+                          id="dateTime-input-endDate-now"
+                          name="dateTime-input-now"
+                          class="btn btn-secondary btn-sm dateTime-input-now"
+                          data-target="calculator-input-endDate"
                         >
-                          <i class="fas fa-times"></i>
+                          <i class="fas fa-clock"></i>
+                          Now
                         </button>
-                        -->
                       </div>
                     </div>
-
-                    <div class="form-group">
-                      <label for="endTime">Parken Ende</label>
-                      <div class="input-with-clear">
-                        <input
-                          type="time"
-                          id="endTime"
-                          name="endTime"
-                          value=""
-                        />
-                        <button
-                          type="button"
-                          class="clear-btn"
-                          data-target="endTime"
-                          title="Löschen"
-                        >
-                          <i class="fas fa-times"></i>
-                        </button>
-                      </div>
+                    <div class="input-with-clear">
+                      <input
+                        type="datetime-local"
+                        id="calculator-input-endDate"
+                        name="calculator-input-endDate"
+                      />
+                      <button
+                        type="button"
+                        class="clear-btn"
+                        data-target="calculator-input-endDate"
+                        title="Löschen"
+                      >
+                        <i class="fas fa-times"></i>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -642,10 +583,8 @@
                   </tr>
                   <tr>
                     <th>Anbieter</th>
-                    <!-- <th>Ladeleistung (kW)</th> -->
                     <th>€/kWh</th>
-                    <!-- <th>Grundgebühr</th> -->
-                    <th>Blocking Fee (Tarif)</th>
+                    <th>Blocking Fee</th>
                     <th>
                       Ladekosten<br />
                       <small id="pricePerSelectedKwh"
@@ -669,7 +608,6 @@
                     <th>
                       Gesamt<br /><small class="effective-price">→ €/kWh</small>
                     </th>
-                    <!-- <th>Effektiv €/kWh</th> -->
                   </tr>
                 </thead>
                 <tbody id="tariffTableBody">

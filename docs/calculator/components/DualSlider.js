@@ -50,6 +50,7 @@ class DualSlider {
           <div>
             <input
               type="number"
+              id="${container.id}-value-start"
               class="dual-slider-current-value"
               value="${this.currentValue}"
               min="${this.options.min}"
@@ -63,6 +64,7 @@ class DualSlider {
           <div>
           <input
             type="number"
+            id="${container.id}-value-end"
             class="dual-slider-target-value"
             value="${this.targetValue}"
             min="${this.options.min}"

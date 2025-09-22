@@ -85,8 +85,8 @@ class VehicleChargingCurves {
    */
   calculateChargingTime(
     vehicleId,
-    currentLevel,
-    targetLevel,
+    currentCharge,
+    targetCharge,
     chargerPower,
     batteryCapacity
   ) {
@@ -102,17 +102,17 @@ class VehicleChargingCurves {
 
     const timeSteps = [];
     const powerSteps = [];
-    let currentBatteryLevel = currentLevel;
+    let currentBatteryLevel = currentCharge;
     let totalTime = 0;
     let totalEnergy = 0;
 
     // Calculate in 1% increments
     const stepSize = 1;
-    const maxSteps = Math.ceil((targetLevel - currentLevel) / stepSize);
+    const maxSteps = Math.ceil((targetCharge - currentCharge) / stepSize);
 
     for (
       let step = 0;
-      step < maxSteps && currentBatteryLevel < targetLevel;
+      step < maxSteps && currentBatteryLevel < targetCharge;
       step++
     ) {
       const chargingPower = this.getChargingPower(
@@ -141,7 +141,7 @@ class VehicleChargingCurves {
       totalEnergy: totalEnergy,
       timeSteps: timeSteps,
       powerSteps: powerSteps,
-      finalBatteryLevel: Math.min(currentBatteryLevel, targetLevel),
+      finalBatteryLevel: Math.min(currentBatteryLevel, targetCharge),
       averagePower: totalEnergy > 0 ? totalEnergy / (totalTime / 60) : 0,
       chargerPower: chargerPower,
     };
@@ -222,33 +222,34 @@ class VehicleChargingCurves {
     return Math.min(chargerPower * powerFactor, chargerPower);
   }
 
-  /**
-   * Generic charging time calculation for unknown vehicles
-   * @param {number} currentLevel - Current battery level (0-100)
-   * @param {number} targetLevel - Target battery level (0-100)
-   * @param {number} chargerPower - Available charger power (kW)
-   * @param {number} batteryCapacity - Battery capacity in kWh
-   * @returns {Object} Charging time calculation result
-   */
-  calculateGenericChargingTime(
-    currentLevel,
-    targetLevel,
-    chargerPower,
-    batteryCapacity
-  ) {
-    const energyNeeded = (batteryCapacity * (targetLevel - currentLevel)) / 100;
-    const averagePower = chargerPower * 1; //0.8; // Assume 80% average efficiency
-    const totalTime = (energyNeeded / averagePower) * 60; // in minutes
+  // REVIEW: unused
+  // /**
+  //  * Generic charging time calculation for unknown vehicles
+  //  * @param {number} currentLevel - Current battery level (0-100)
+  //  * @param {number} targetLevel - Target battery level (0-100)
+  //  * @param {number} chargerPower - Available charger power (kW)
+  //  * @param {number} batteryCapacity - Battery capacity in kWh
+  //  * @returns {Object} Charging time calculation result
+  //  */
+  // calculateGenericChargingTime(
+  //   currentLevel,
+  //   targetLevel,
+  //   chargerPower,
+  //   batteryCapacity
+  // ) {
+  //   const energyNeeded = (batteryCapacity * (targetLevel - currentLevel)) / 100;
+  //   const averagePower = chargerPower * 1; //0.8; // Assume 80% average efficiency
+  //   const totalTime = (energyNeeded / averagePower) * 60; // in minutes
 
-    return {
-      totalTime: totalTime,
-      totalEnergy: energyNeeded,
-      timeSteps: [0, totalTime],
-      powerSteps: [chargerPower, chargerPower],
-      finalBatteryLevel: targetLevel,
-      averagePower: averagePower,
-    };
-  }
+  //   return {
+  //     totalTime: totalTime,
+  //     totalEnergy: energyNeeded,
+  //     timeSteps: [0, totalTime],
+  //     powerSteps: [chargerPower, chargerPower],
+  //     finalBatteryLevel: targetLevel,
+  //     averagePower: averagePower,
+  //   };
+  // }
 
   /**
    * Get available vehicles

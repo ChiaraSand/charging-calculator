@@ -179,25 +179,25 @@ describe("ChargingCalculator Integration Tests", () => {
     });
 
     test("should select all providers", () => {
-      calculator.selectAllProviders();
+      calculator.selectAll("providers");
 
       expect(calculator.selectedProviders.size).toBeGreaterThan(0);
     });
 
     test("should select no providers", () => {
-      calculator.selectNoProviders();
+      calculator.selectNo("providers");
 
       expect(calculator.selectedProviders.size).toBe(0);
     });
 
     test("should select all connectors", () => {
-      calculator.selectAllConnectors();
+      calculator.selectAll("connectors");
 
       expect(calculator.selectedConnectors.size).toBeGreaterThan(0);
     });
 
     test("should select no connectors", () => {
-      calculator.selectNoConnectors();
+      calculator.selectNo("connectors");
 
       expect(calculator.selectedConnectors.size).toBe(0);
     });

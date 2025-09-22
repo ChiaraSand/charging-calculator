@@ -6,6 +6,7 @@ import GoogleMapsManager from "./services/GoogleMapsManager.js";
 import ChartManager from "./services/ChartManager.js";
 import DateTimeHelper from "./utils/DateTimeHelper.js";
 import DualSlider from "./components/DualSlider.js";
+import CustomDate from "./utils/CustomDate.js";
 
 class ChargingCalculator {
   constructor() {
@@ -30,12 +31,32 @@ class ChargingCalculator {
     this.chartManager = null; // Will be initialized after data is loaded
     this.dualSlider = null; // Will be initialized after DOM is ready
 
+    // this.formValues = {
+    //   batteryCapacity: 0,
+    //   currentCharge: 0,
+    //   targetCharge: 0,
+    //   chargingPower: 0,
+    //   startTime: new CustomDate().getDatePickerString(),
+    //   endTime: "",
+    // };
+
     this.init();
   }
 
   async init() {
-    const startTimeString = DateTimeHelper.getCurrentTimeString("de-DE");
-    document.getElementById("startTime").value = startTimeString;
+    this.inputFields = [
+      "batteryCapacity",
+      "chargeLevelSlider-value-start",
+      "chargeLevelSlider-value-end",
+      "calculator-input-startDate",
+      "calculator-input-endDate",
+    ];
+
+    // const startTimeString = DateTimeHelper.getCurrentTimeString("de-DE");
+    this.setDateTimeInputNow("calculator-input-startDate");
+    // document.getElementById("calculator-input-startDate").value =
+    //   DateTimeHelper.getCurrentDateTimeString("de-DE");
+    // document.getElementById("startTime").value = this.formValues.startTime;
 
     // Load data from JSON files first
     await this.loadDataFromJson();
@@ -83,9 +104,13 @@ class ChargingCalculator {
       batteryCapacity:
         parseFloat(document.getElementById("batteryCapacity").value) || 0,
       currentCharge:
-        parseFloat(document.getElementById("currentCharge").value) || 0,
+        parseFloat(
+          document.getElementById("chargeLevelSlider-value-start").value
+        ) || 0,
       targetCharge:
-        parseFloat(document.getElementById("targetCharge").value) || 0,
+        parseFloat(
+          document.getElementById("chargeLevelSlider-value-end").value
+        ) || 0,
       chargingPower:
         parseFloat(document.getElementById("chargingPower").value) || 0,
       selectedVehicle: this.selectedVehicle,
@@ -117,13 +142,6 @@ class ChargingCalculator {
       this.connectorData = connectorData;
       this.providerGroups = providerGroups;
       this.chargingPowers = chargingPowers;
-      this.inputFields = [
-        "batteryCapacity",
-        "currentCharge",
-        "targetCharge",
-        "startTime",
-        "endTime",
-      ];
       this.tariffs = tariffs;
       this.vehicles = vehicles;
     } catch (error) {
@@ -185,16 +203,16 @@ class ChargingCalculator {
 
   handleChargeLevelChange(values) {
     // Update the hidden form inputs for compatibility with existing code
-    const currentChargeInput = document.getElementById("currentCharge");
-    const targetChargeInput = document.getElementById("targetCharge");
-    const currentChargeValue = document.getElementById("currentChargeValue");
-    const targetChargeValue = document.getElementById("targetChargeValue");
+    // const currentChargeInput = document.getElementById("currentCharge");
+    // const targetChargeInput = document.getElementById("targetCharge");
+    // const currentChargeValue = document.getElementById("currentChargeValue");
+    // const targetChargeValue = document.getElementById("targetChargeValue");
 
-    if (currentChargeInput) currentChargeInput.value = values.current;
-    if (targetChargeInput) targetChargeInput.value = values.target;
-    if (currentChargeValue)
-      currentChargeValue.textContent = values.current + "%";
-    if (targetChargeValue) targetChargeValue.textContent = values.target + "%";
+    // if (currentChargeInput) currentChargeInput.value = values.current;
+    // if (targetChargeInput) targetChargeInput.value = values.target;
+    // if (currentChargeValue)
+    //   currentChargeValue.textContent = values.current + "%";
+    // if (targetChargeValue) targetChargeValue.textContent = values.target + "%";
 
     // Trigger calculations
     this.updateCalculations();
@@ -205,21 +223,15 @@ class ChargingCalculator {
     document
       .getElementById("batteryCapacity")
       .addEventListener("input", () => this.updateCalculations());
-    // Note: currentCharge and targetCharge are now handled by the dual slider
     document.getElementById("chargingPower").addEventListener("change", (e) => {
       document.getElementById("quickChargingPower").value = e.target.value;
       this.updateCalculations();
     });
-    // document.getElementById("vehicleSelect").addEventListener("change", (e) => {
-    //   this.selectedVehicle = e.target.value;
-    //   this.updateCalculations();
-    //   this.updateChargingChart();
-    // });
     document
-      .getElementById("startTime")
+      .getElementById("calculator-input-startDate")
       .addEventListener("change", () => this.updateCalculations());
     document
-      .getElementById("endTime")
+      .getElementById("calculator-input-endDate")
       .addEventListener("change", () => this.updateCalculations());
 
     // Clear buttons
@@ -227,6 +239,19 @@ class ChargingCalculator {
       btn.addEventListener("click", (e) => {
         const targetId = e.target.closest(".clear-btn").dataset.target;
         this.clearInput(targetId);
+      });
+    });
+
+    // Date time input now buttons
+    document.querySelectorAll(".dateTime-input-now").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        if (e.target.dataset.target) {
+          this.setDateTimeInputNow(e.target.dataset.target);
+        } else {
+          console.log(
+            "no target defined. Try clickung the button background (not the button text or icon)"
+          );
+        }
       });
     });
 
@@ -239,22 +264,6 @@ class ChargingCalculator {
     //   e.preventDefault();
     //   this.clearAllInputs(e.target.form);
     // });
-
-    // // Provider filter buttons
-    // document
-    //   .getElementById("selectAllProviders")
-    //   .addEventListener("click", () => this.selectAllProviders());
-    // document
-    //   .getElementById("selectNoProviders")
-    //   .addEventListener("click", () => this.selectNoProviders());
-
-    // // Connector filter buttons
-    // document
-    //   .getElementById("selectAllConnectors")
-    //   .addEventListener("click", () => this.selectAllConnectors());
-    // document
-    //   .getElementById("selectNoConnectors")
-    //   .addEventListener("click", () => this.selectNoConnectors());
 
     // filter buttons
     document
@@ -285,6 +294,11 @@ class ChargingCalculator {
 
     // Preconfiguration controls
     this.setupPreconfigurationEventListeners();
+  }
+
+  setDateTimeInputNow(targetId) {
+    const input = document.getElementById(targetId);
+    input.value = DateTimeHelper.getCurrentDateTimeString("de-DE");
   }
 
   setupPreconfigurationEventListeners() {
@@ -367,10 +381,28 @@ class ChargingCalculator {
     const content = document.getElementById(sectionId + "-content");
     // const button = document.getElementById(sectionId + "-toggle");
 
+    const currentOptions = JSON.parse(
+      localStorage.getItem("charging-calculator-view-options") || "{}"
+    );
+
     if (content.classList.contains("toggle-hide")) {
       this.showSection(sectionId);
+      localStorage.setItem(
+        "charging-calculator-view-options",
+        JSON.stringify({
+          ...currentOptions,
+          [sectionId]: true,
+        })
+      );
     } else {
       this.hideSection(sectionId);
+      localStorage.setItem(
+        "charging-calculator-view-options",
+        JSON.stringify({
+          ...currentOptions,
+          [sectionId]: false,
+        })
+      );
     }
   }
 
@@ -414,12 +446,12 @@ class ChargingCalculator {
     }
 
     // Update hidden inputs for compatibility
-    document.getElementById("currentCharge").value = preset.currentCharge;
-    document.getElementById("currentChargeValue").textContent =
-      preset.currentCharge + "%";
-    document.getElementById("targetCharge").value = preset.targetCharge;
-    document.getElementById("targetChargeValue").textContent =
-      preset.targetCharge + "%";
+    // document.getElementById("currentCharge").value = preset.currentCharge;
+    // document.getElementById("currentChargeValue").textContent =
+    //   preset.currentCharge + "%";
+    // document.getElementById("targetCharge").value = preset.targetCharge;
+    // document.getElementById("targetChargeValue").textContent =
+    //   preset.targetCharge + "%";
     document.getElementById("chargingPower").value = preset.chargingPower;
     document.getElementById("quickChargingPower").value = preset.chargingPower;
     document.getElementById("quickTariffSelect").value = preset.tariffFilter;
@@ -438,9 +470,13 @@ class ChargingCalculator {
       batteryCapacity:
         parseFloat(document.getElementById("batteryCapacity").value) || 0,
       currentCharge:
-        parseFloat(document.getElementById("currentCharge").value) || 0,
+        parseFloat(
+          document.getElementById("chargeLevelSlider-value-start").value
+        ) || 0,
       targetCharge:
-        parseFloat(document.getElementById("targetCharge").value) || 0,
+        parseFloat(
+          document.getElementById("chargeLevelSlider-value-end").value
+        ) || 0,
       chargingPower:
         parseFloat(document.getElementById("chargingPower").value) || 0,
       selectedVehicle: this.selectedVehicle,
@@ -471,9 +507,13 @@ class ChargingCalculator {
       batteryCapacity:
         parseFloat(document.getElementById("batteryCapacity").value) || 0,
       currentCharge:
-        parseFloat(document.getElementById("currentCharge").value) || 0,
+        parseFloat(
+          document.getElementById("chargeLevelSlider-value-start").value
+        ) || 0,
       targetCharge:
-        parseFloat(document.getElementById("targetCharge").value) || 0,
+        parseFloat(
+          document.getElementById("chargeLevelSlider-value-end").value
+        ) || 0,
       chargingPower:
         parseFloat(document.getElementById("chargingPower").value) || 0,
       selectedVehicle: this.selectedVehicle,
@@ -488,12 +528,17 @@ class ChargingCalculator {
       chargingPower: document.getElementById("quickChargingPower").value,
       tariffFilter: document.getElementById("quickTariffSelect").value,
       batteryCapacity: document.getElementById("batteryCapacity").value,
-      currentCharge: document.getElementById("currentCharge").value,
-      targetCharge: document.getElementById("targetCharge").value,
+      currentCharge: document.getElementById("chargeLevelSlider-value-start")
+        .value,
+      targetCharge: document.getElementById("chargeLevelSlider-value-end")
+        .value,
     };
 
     // Save to localStorage
-    localStorage.setItem("chargingCalculatorPreconfig", JSON.stringify(config));
+    localStorage.setItem(
+      "charging-calculator-preconfig",
+      JSON.stringify(config)
+    );
     this.showPreconfigMessage("Voreinstellung gespeichert!", "success");
   }
 
@@ -506,7 +551,7 @@ class ChargingCalculator {
     document.getElementById("quickTariffSelect").value = "all";
 
     // Clear saved configuration
-    localStorage.removeItem("chargingCalculatorPreconfig");
+    localStorage.removeItem("charging-calculator-preconfig");
 
     this.showPreconfigMessage("Voreinstellungen zurückgesetzt!", "info");
   }
@@ -527,7 +572,7 @@ class ChargingCalculator {
         break;
       case "all":
         // Select all providers
-        this.selectAllProviders();
+        this.selectAll("providers");
         break;
       case "custom":
         // Don't change selection, let user choose manually
@@ -659,7 +704,7 @@ class ChargingCalculator {
   }
 
   loadSavedPreconfiguration() {
-    const saved = localStorage.getItem("chargingCalculatorPreconfig");
+    const saved = localStorage.getItem("charging-calculator-preconfig");
     if (saved) {
       try {
         const config = JSON.parse(saved);
@@ -687,12 +732,12 @@ class ChargingCalculator {
           }
 
           // Update hidden inputs for compatibility
-          document.getElementById("currentCharge").value = config.currentCharge;
-          document.getElementById("currentChargeValue").textContent =
-            config.currentCharge + "%";
-          document.getElementById("targetCharge").value = config.targetCharge;
-          document.getElementById("targetChargeValue").textContent =
-            config.targetCharge + "%";
+          // document.getElementById("currentCharge").value = config.currentCharge;
+          // document.getElementById("currentChargeValue").textContent =
+          //   config.currentCharge + "%";
+          // document.getElementById("targetCharge").value = config.targetCharge;
+          // document.getElementById("targetChargeValue").textContent =
+          //   config.targetCharge + "%";
         }
 
         // Apply the configuration
@@ -739,26 +784,6 @@ class ChargingCalculator {
     this.selectedProviders = new Set(uniqueProviders);
   }
 
-  selectAllProviders() {
-    document
-      .querySelectorAll('#providerCheckboxes input[type="checkbox"]')
-      .forEach((checkbox) => {
-        checkbox.checked = true;
-        this.selectedProviders.add(checkbox.value);
-      });
-    this.populateTariffTable();
-  }
-
-  selectNoProviders() {
-    document
-      .querySelectorAll('#providerCheckboxes input[type="checkbox"]')
-      .forEach((checkbox) => {
-        checkbox.checked = false;
-      });
-    this.selectedProviders.clear();
-    this.populateTariffTable();
-  }
-
   populateConnectorFilters() {
     const container = document.getElementById("connectorCheckboxes");
 
@@ -797,26 +822,6 @@ class ChargingCalculator {
     // Initialize selected connectors
     this.selectedConnectors = new Set(connectorTypes.map((c) => c.id));
   }
-
-  // selectAllConnectors() {
-  //   document
-  //     .querySelectorAll('#connectorCheckboxes input[type="checkbox"]')
-  //     .forEach((checkbox) => {
-  //       checkbox.checked = true;
-  //       this.selectedConnectors.add(checkbox.value);
-  //     });
-  //   this.populateTariffTable();
-  // }
-
-  // selectNoConnectors() {
-  //   document
-  //     .querySelectorAll('#connectorCheckboxes input[type="checkbox"]')
-  //     .forEach((checkbox) => {
-  //       checkbox.checked = false;
-  //     });
-  //   this.selectedConnectors.clear();
-  //   this.populateTariffTable();
-  // }
 
   selectAll(tabName) {
     document
@@ -858,13 +863,32 @@ class ChargingCalculator {
     const batteryCapacity =
       parseFloat(document.getElementById("batteryCapacity").value) || 0;
     const currentCharge =
-      parseFloat(document.getElementById("currentCharge").value) || 0;
+      parseFloat(
+        document.getElementById("chargeLevelSlider-value-start").value
+      ) || 0;
     const targetCharge =
-      parseFloat(document.getElementById("targetCharge").value) || 0;
+      parseFloat(
+        document.getElementById("chargeLevelSlider-value-end").value
+      ) || 0;
     const chargingPower =
       parseFloat(document.getElementById("chargingPower").value) || 0;
-    const startTime = document.getElementById("startTime").value;
-    const endTime = document.getElementById("endTime").value;
+    const startTimePickerValue = document.getElementById(
+      "calculator-input-startDate"
+    ).value;
+    const endTimePickerValue = document.getElementById(
+      "calculator-input-endDate"
+    ).value;
+    const startTime = CustomDate.parse(startTimePickerValue);
+    let endTime; // = new CustomDate(endTimePickerValue);
+
+    // if (endTime < startTime) {
+    //   // endTime.addDays(1);
+    //   document.getElementById("endTime-input-next-day-indicator").textContent =
+    //     "+1";
+    // } else {
+    //   document.getElementById("endTime-input-next-day-indicator").textContent =
+    //     "";
+    // }
 
     // Only calculate if we have the minimum required values
     if (
@@ -886,7 +910,8 @@ class ChargingCalculator {
 
       // Calculate total parking time from start and end time
       let totalParkingTime = 0;
-      if (endTime) {
+      if (endTimePickerValue) {
+        endTime = CustomDate.parse(endTimePickerValue);
         totalParkingTime = DateTimeHelper.calculateTimeDifference(
           startTime,
           endTime
@@ -911,11 +936,12 @@ class ChargingCalculator {
       // Update charging speed information
       this.updateChargingSpeedInfo(chargingResult, this.selectedVehicle);
     } else {
+      // TODO: set in index.html?
       // Show placeholder values when inputs are empty or invalid
       document.getElementById("energyToCharge").textContent = "— kWh";
       document.getElementById("estimatedTime").textContent = "— min";
       document.getElementById("totalParkingTime").textContent = "— min";
-      document.getElementById("endTime").value = "";
+      document.getElementById("calculator-input-endDate").value = "";
       // document.getElementById("endTime").value =
       //   endTime || startTime + totalParkingTime;
     }
@@ -1116,13 +1142,13 @@ class ChargingCalculator {
       }
 
       // Update hidden inputs for compatibility
-      if (inputId === "currentCharge") {
-        input.value = "0";
-        document.getElementById("currentChargeValue").textContent = "0%";
-      } else if (inputId === "targetCharge") {
-        input.value = "100";
-        document.getElementById("targetChargeValue").textContent = "100%";
-      }
+      // if (inputId === "currentCharge") {
+      //   input.value = "0";
+      //   document.getElementById("currentChargeValue").textContent = "0%";
+      // } else if (inputId === "targetCharge") {
+      //   input.value = "100";
+      //   document.getElementById("targetChargeValue").textContent = "100%";
+      // }
     } else {
       // Empty the input
       input.value = "";
@@ -1140,16 +1166,16 @@ class ChargingCalculator {
     // }
 
     // Clear all individual inputs
-    const inputsToClear =
-      this.inputFields.length > 0
-        ? this.inputFields
-        : [
-            "batteryCapacity",
-            "currentCharge",
-            "targetCharge",
-            "startTime",
-            "endTime",
-          ];
+    const inputsToClear = this.inputFields;
+    // .length > 0
+    //   ? this.inputFields
+    //   : [
+    //       "batteryCapacity",
+    //       "chargeLevelSlider-value-start",
+    //       "chargeLevelSlider-value-end",
+    //       "startTime",
+    //       "endTime",
+    //     ];
 
     inputsToClear.forEach((inputId) => {
       this.clearInput(inputId);
@@ -1159,8 +1185,8 @@ class ChargingCalculator {
     document.getElementById("chargingPower").selectedIndex = -1;
 
     // Select all providers and connectors
-    this.selectAllProviders();
-    this.selectAllConnectors();
+    this.selectAll("providers");
+    this.selectAll("connectors");
 
     // Show confirmation
     const button = document.getElementById("clearAll");
@@ -1179,13 +1205,23 @@ class ChargingCalculator {
     const batteryCapacity =
       parseFloat(document.getElementById("batteryCapacity").value) || 0;
     const currentCharge =
-      parseFloat(document.getElementById("currentCharge").value) || 0;
+      parseFloat(
+        document.getElementById("chargeLevelSlider-value-start").value
+      ) || 0;
     const targetCharge =
-      parseFloat(document.getElementById("targetCharge").value) || 0;
+      parseFloat(
+        document.getElementById("chargeLevelSlider-value-end").value
+      ) || 0;
     const chargingPower =
       parseFloat(document.getElementById("chargingPower").value) || 0;
-    const startTime = document.getElementById("startTime").value;
-    let endTime = document.getElementById("endTime").value;
+    const startTimePickerValue = document.getElementById(
+      "calculator-input-startDate"
+    ).value;
+    const startTime = CustomDate.parse(startTimePickerValue);
+    const endTimePickerValue = document.getElementById(
+      "calculator-input-endDate"
+    ).value;
+    let endTime;
 
     // Check if we have enough data to calculate
     if (
@@ -1216,7 +1252,9 @@ class ChargingCalculator {
     );
     const estimatedTime = chargingResult.totalTime; // in minutes
     let possibleTotalParkingTime = 0;
-    if (endTime) {
+
+    if (endTimePickerValue) {
+      endTime = CustomDate.parse(endTimePickerValue);
       possibleTotalParkingTime = DateTimeHelper.calculateTimeDifference(
         startTime,
         endTime
@@ -1234,17 +1272,11 @@ class ChargingCalculator {
       connectors: Array.from(this.selectedConnectors),
     });
 
-    const endTimeMinutes =
-      DateTimeHelper.timeToMinutes(startTime) + totalParkingTime;
-    const endTimeDate = DateTimeHelper.minutesToTime(endTimeMinutes);
-
-    endTime = endTimeDate.toLocaleString("de-DE", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    endTime = startTime.addMinutesCopy(totalParkingTime);
+    const endTimeValue = endTime.getDateTimePickerString();
 
     // FIXME: move to a better place
-    document.getElementById("endTime").value = endTime;
+    document.getElementById("calculator-input-endDate").value = endTimeValue;
 
     // Sort provider tariffs by total cost using the new class methods
     const blockingTime = Math.max(0, totalParkingTime);
@@ -1287,7 +1319,7 @@ class ChargingCalculator {
                   <span class="price-unit">€/kWh</span>
                 </td>
                 <td class="price">
-                  <span class="price-value">
+                  <span>
                    ${tariff.blockingFeeString}
                   </span>
                 </td>
@@ -1366,9 +1398,13 @@ class ChargingCalculator {
     const batteryCapacity =
       parseFloat(document.getElementById("batteryCapacity").value) || 0;
     const currentCharge =
-      parseFloat(document.getElementById("currentCharge").value) || 0;
+      parseFloat(
+        document.getElementById("chargeLevelSlider-value-start").value
+      ) || 0;
     const targetCharge =
-      parseFloat(document.getElementById("targetCharge").value) || 0;
+      parseFloat(
+        document.getElementById("chargeLevelSlider-value-end").value
+      ) || 0;
     if (batteryCapacity > 0 && targetCharge > currentCharge) {
       const energyToCharge =
         (batteryCapacity * (targetCharge - currentCharge)) / 100;
@@ -1395,13 +1431,21 @@ class ChargingCalculator {
     const batteryCapacity =
       parseFloat(document.getElementById("batteryCapacity").value) || 0;
     const currentCharge =
-      parseFloat(document.getElementById("currentCharge").value) || 0;
+      parseFloat(
+        document.getElementById("chargeLevelSlider-value-start").value
+      ) || 0;
     const targetCharge =
-      parseFloat(document.getElementById("targetCharge").value) || 0;
+      parseFloat(
+        document.getElementById("chargeLevelSlider-value-end").value
+      ) || 0;
     const chargingPower =
       parseFloat(document.getElementById("chargingPower").value) || 0;
-    const startTime = document.getElementById("startTime").value;
-    const endTime = document.getElementById("endTime").value;
+    const startTime = new Date(
+      document.getElementById("calculator-input-startDate").value
+    );
+    const endTime = new Date(
+      document.getElementById("calculator-input-endDate").value
+    );
 
     let totalCost = 0;
     let effectivePricePerKwh = 0;
@@ -1514,9 +1558,13 @@ class ChargingCalculator {
     const batteryCapacity =
       parseFloat(document.getElementById("batteryCapacity")?.value) || 0;
     const currentCharge =
-      parseFloat(document.getElementById("currentCharge")?.value) || 0;
+      parseFloat(
+        document.getElementById("chargeLevelSlider-value-start").value
+      ) || 0;
     const targetCharge =
-      parseFloat(document.getElementById("targetCharge")?.value) || 0;
+      parseFloat(
+        document.getElementById("chargeLevelSlider-value-end").value
+      ) || 0;
 
     const energyToCharge =
       batteryCapacity > 0 && targetCharge > currentCharge
