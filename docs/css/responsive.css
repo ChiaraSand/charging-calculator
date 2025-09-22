@@ -1,4 +1,11 @@
 /* Responsive Design */
+@media (max-width: 1024px) {
+  .custom-tariff-input {
+    padding: 0px !important;
+    /* height: 30px !important; */
+  }
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 16px;

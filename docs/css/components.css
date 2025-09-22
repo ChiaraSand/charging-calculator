@@ -38,6 +38,11 @@
   justify-content: space-between;
 }
 
+.card-sub {
+  padding: 16px;
+  gap: 16px;
+}
+
 /* Button Styles */
 .btn {
   padding: 12px 24px;
