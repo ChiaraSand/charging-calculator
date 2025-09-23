@@ -939,10 +939,11 @@ class ChargingCalculator {
       let totalParkingTime = 0;
       if (endTimePickerValue) {
         endTime = CustomDate.parse(endTimePickerValue);
-        totalParkingTime = DateTimeHelper.calculateTimeDifference(
+        const currentTotalParkingTime = DateTimeHelper.calculateTimeDifference(
           startTime,
           endTime
         );
+        totalParkingTime = Math.max(currentTotalParkingTime, estimatedTime);
       } else {
         totalParkingTime = estimatedTime;
       }
