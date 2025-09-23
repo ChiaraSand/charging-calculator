@@ -31,10 +31,6 @@ class VehicleChargingCurves {
    * @returns {number} Actual charging power (kW)
    */
   getChargingPower(vehicleId, batteryLevel, chargerPower, chargingType) {
-    // TODO: use chargingType
-    // use linear interpolation for AC ? (better performance)
-    // TODO: check performance of chart
-
     const vehicle = this.vehicleData[vehicleId] || this.vehicleData["generic"];
 
     // Find the closest charger power curve
@@ -46,41 +42,47 @@ class VehicleChargingCurves {
       availableChargers
     );
 
-    if (!selectedCharger) {
-      return this.getGenericChargingPower(batteryLevel, chargerPower);
-    }
-
-    const curve =
-      vehicle.chargingCurves[selectedCharger.toString()] ||
-      vehicle.chargingCurves[400];
-    const batteryLevelRounded = Math.round(batteryLevel);
-
     let chargingPower;
 
-    // Find exact match or interpolate between closest levels
-    if (curve[batteryLevelRounded.toString()]) {
-      chargingPower = curve[batteryLevelRounded.toString()];
+    if (!selectedCharger) {
+      chargingPower = this.getGenericChargingPower(batteryLevel, chargerPower);
     } else {
-      // Interpolate between closest battery levels
-      const levels = Object.keys(curve)
-        .map(Number)
-        .sort((a, b) => a - b);
-      const lowerLevel = this.findClosestLevel(batteryLevel, levels, "lower");
-      const upperLevel = this.findClosestLevel(batteryLevel, levels, "upper");
+      const curve =
+        vehicle.chargingCurves[selectedCharger.toString()] ||
+        vehicle.chargingCurves[400];
+      const batteryLevelRounded = Math.round(batteryLevel);
 
-      if (lowerLevel === upperLevel) {
-        chargingPower = curve[lowerLevel.toString()];
+      // Find exact match or interpolate between closest levels
+      if (curve[batteryLevelRounded.toString()]) {
+        chargingPower = curve[batteryLevelRounded.toString()];
       } else {
-        // Linear interpolation
-        const lowerPower = curve[lowerLevel.toString()];
-        const upperPower = curve[upperLevel.toString()];
-        const ratio = (batteryLevel - lowerLevel) / (upperLevel - lowerLevel);
-        chargingPower = lowerPower + (upperPower - lowerPower) * ratio;
+        // Interpolate between closest battery levels
+        const levels = Object.keys(curve)
+          .map(Number)
+          .sort((a, b) => a - b);
+        const lowerLevel = this.findClosestLevel(batteryLevel, levels, "lower");
+        const upperLevel = this.findClosestLevel(batteryLevel, levels, "upper");
+
+        if (lowerLevel === upperLevel) {
+          chargingPower = curve[lowerLevel.toString()];
+        } else {
+          // Linear interpolation
+          const lowerPower = curve[lowerLevel.toString()];
+          const upperPower = curve[upperLevel.toString()];
+          const ratio = (batteryLevel - lowerLevel) / (upperLevel - lowerLevel);
+          chargingPower = lowerPower + (upperPower - lowerPower) * ratio;
+        }
       }
     }
 
-    // Apply the power limit based on charging type
-    return Math.min(chargingPower, chargerPower);
+    // Apply vehicle-specific power limits based on charging type
+    const maxVehiclePower =
+      chargingType === "AC"
+        ? vehicle.maxChargingPowerAC || vehicle.maxChargingPower || 999
+        : vehicle.maxChargingPowerDC || vehicle.maxChargingPower || 999;
+
+    // Apply all limits: vehicle capability, charger power, and charging type limit
+    return Math.min(chargingPower, chargerPower, maxVehiclePower);
   }
 
   /**
