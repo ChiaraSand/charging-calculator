@@ -1,1 +1,44 @@
-[400, 300, 150, 50, 22, 11]
+[
+  {
+    "id": "400",
+    "name": "400 kW",
+    "description": "[DC] 400 kW (Ultra-Schnelllader)",
+    "chargingType": "DC",
+    "value": 400
+  },
+  {
+    "id": "300",
+    "name": "300 kW",
+    "description": "[DC] 300 kW (Hochleistungslader)",
+    "chargingType": "DC",
+    "value": 300
+  },
+  {
+    "id": "150",
+    "name": "150 kW",
+    "description": "[DC] 150 kW (Hochleistungslader)",
+    "chargingType": "DC",
+    "value": 150
+  },
+  {
+    "id": "50",
+    "name": "50 kW",
+    "description": "[DC] 50 kW (Schnelllader)",
+    "chargingType": "DC",
+    "value": 50
+  },
+  {
+    "id": "22",
+    "name": "22 kW",
+    "description": "[AC] 22 kW (Wallbox)",
+    "chargingType": "AC",
+    "value": 22
+  },
+  {
+    "id": "11",
+    "name": "11 kW",
+    "description": "[AC] 11 kW (Wallbox)",
+    "chargingType": "AC",
+    "value": 11
+  }
+]

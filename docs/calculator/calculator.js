@@ -72,6 +72,8 @@ class ChargingCalculator {
     this.initializeDualSlider();
     this.setupEventListeners();
 
+    this.populateChargingPowerSelect();
+    this.populateQuickChargingPowerSelect();
     this.populatePresetSelect();
     this.populateVehicleSelect();
     this.populateProviderFilters();
@@ -145,6 +147,29 @@ class ChargingCalculator {
     }
   }
 
+  populateChargingPowerSelect() {
+    const chargingPowerSelect = document.getElementById("chargingPowerSelect");
+    chargingPowerSelect.innerHTML = this.chargingPowers
+      .map(
+        (power) =>
+          `<option value="${power.value}" data-charging-type="${power.chargingType}">${power.description}</option>`
+      )
+      .join("");
+  }
+
+  populateQuickChargingPowerSelect() {
+    const quickChargingPowerSelect = document.getElementById(
+      "quickChargingPowerSelect"
+    );
+    quickChargingPowerSelect.innerHTML = this.chargingPowers
+      .sort((a, b) => a.value - b.value)
+      .map(
+        (power) =>
+          `<option value="${power.value}">${power.description}</option>`
+      )
+      .join("");
+  }
+
   populatePresetSelect() {
     const presetSelect = document.getElementById("presetSelect");
     presetSelect.innerHTML = Object.entries(this.presets)
@@ -181,7 +206,7 @@ class ChargingCalculator {
   }
 
   fetchFormValuesFromDOM() {
-    const chargingPowerSelect = document.getElementById("chargingPower");
+    const chargingPowerSelect = document.getElementById("chargingPowerSelect");
     const chargingType =
       chargingPowerSelect.options[chargingPowerSelect.selectedIndex].dataset
         .chargingType; // || "DC";
@@ -227,10 +252,13 @@ class ChargingCalculator {
     document
       .getElementById("batteryCapacity")
       .addEventListener("input", () => this.updateCalculations());
-    document.getElementById("chargingPower").addEventListener("change", (e) => {
-      document.getElementById("quickChargingPower").value = e.target.value;
-      this.updateCalculations();
-    });
+    document
+      .getElementById("chargingPowerSelect")
+      .addEventListener("change", (e) => {
+        document.getElementById("quickChargingPowerSelect").value =
+          e.target.value;
+        this.updateCalculations();
+      });
     document
       .getElementById("calculator-input-startDate")
       .addEventListener("change", () => this.updateCalculations());
@@ -345,9 +373,9 @@ class ChargingCalculator {
 
     // Quick charging power selection
     document
-      .getElementById("quickChargingPower")
+      .getElementById("quickChargingPowerSelect")
       .addEventListener("change", (e) => {
-        document.getElementById("chargingPower").value = e.target.value;
+        document.getElementById("chargingPowerSelect").value = e.target.value;
         this.updateCalculations();
       });
 
@@ -442,8 +470,9 @@ class ChargingCalculator {
     // document.getElementById("targetCharge").value = preset.targetCharge;
     // document.getElementById("targetChargeValue").textContent =
     //   preset.targetCharge + "%";
-    document.getElementById("chargingPower").value = preset.chargingPower;
-    document.getElementById("quickChargingPower").value = preset.chargingPower;
+    document.getElementById("chargingPowerSelect").value = preset.chargingPower;
+    document.getElementById("quickChargingPowerSelect").value =
+      preset.chargingPower;
     document.getElementById("quickTariffSelect").value = preset.tariffFilter;
 
     // Update selected vehicle
@@ -467,12 +496,14 @@ class ChargingCalculator {
 
   applyPreconfiguration() {
     const vehicle = document.getElementById("quickVehicleSelect").value;
-    const chargingPower = document.getElementById("quickChargingPower").value;
+    const chargingPower = document.getElementById(
+      "quickChargingPowerSelect"
+    ).value;
     const tariffFilter = document.getElementById("quickTariffSelect").value;
 
     // Apply to main form
     // document.getElementById("vehicleSelect").value = vehicle;
-    document.getElementById("chargingPower").value = chargingPower;
+    document.getElementById("chargingPowerSelect").value = chargingPower;
 
     // Update selected vehicle
     this.selectedVehicle = vehicle;
@@ -494,7 +525,7 @@ class ChargingCalculator {
     const formValues = this.fetchFormValuesFromDOM();
     const config = {
       vehicle: document.getElementById("quickVehicleSelect").value,
-      chargingPower: document.getElementById("quickChargingPower").value,
+      chargingPower: document.getElementById("quickChargingPowerSelect").value,
       tariffFilter: document.getElementById("quickTariffSelect").value,
       batteryCapacity: formValues.batteryCapacity,
       currentCharge: formValues.currentCharge,
@@ -514,7 +545,7 @@ class ChargingCalculator {
     document.getElementById("presetSelect").value = "";
     document.getElementById("quickVehicleSelect").value =
       "renault-5-e-tech-52kwh";
-    document.getElementById("quickChargingPower").value = "22";
+    document.getElementById("quickChargingPowerSelect").value = "22";
     document.getElementById("quickTariffSelect").value = "all";
 
     // Clear saved configuration
@@ -680,7 +711,7 @@ class ChargingCalculator {
 
         // Apply saved configuration
         document.getElementById("quickVehicleSelect").value = config.vehicle; // || "renault-5-e-tech-52kwh";
-        document.getElementById("quickChargingPower").value =
+        document.getElementById("quickChargingPowerSelect").value =
           config.chargingPower; // || "22";
         document.getElementById("quickTariffSelect").value =
           config.tariffFilter; // || "all";
@@ -1146,7 +1177,7 @@ class ChargingCalculator {
     });
 
     // Clear charging power selection
-    document.getElementById("chargingPower").selectedIndex = -1;
+    document.getElementById("chargingPowerSelect").selectedIndex = -1;
 
     // Select all providers and connectors
     this.selectAll("providers");

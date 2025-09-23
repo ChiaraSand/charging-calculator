@@ -93,15 +93,13 @@
                 </div>
 
                 <div class="preconfig-group">
-                  <label for="quickChargingPower">Ladeleistung:</label>
-                  <select id="quickChargingPower" name="quickChargingPower">
+                  <label for="quickChargingPowerSelect">Ladeleistung:</label>
+                  <select
+                    id="quickChargingPowerSelect"
+                    name="quickChargingPowerSelect"
+                  >
+                    <!-- Will be populated by JavaScript -->
                     <option value="">Ladeleistung wählen...</option>
-                    <option value="3.7">AC 3,7 kW (Haushaltssteckdose)</option>
-                    <option value="11">AC 11 kW (Wallbox)</option>
-                    <option value="22">AC 22 kW (Wallbox)</option>
-                    <option value="50">DC 50 kW (Schnelllader)</option>
-                    <option value="150">DC 150 kW (Hochleistungslader)</option>
-                    <option value="300">DC 300 kW (Ultra-Schnelllader)</option>
                   </select>
                 </div>
 
@@ -276,26 +274,10 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="chargingPower">Ladeleistung (kW)</label>
-                    <select id="chargingPower" name="chargingPower">
-                      <option value="3.7">
-                        AC 3,7 kW (Haushaltssteckdose)
-                      </option>
-                      <option value="11" data-charging-type="AC">
-                        AC 11 kW (Wallbox)
-                      </option>
-                      <option value="22" selected data-charging-type="AC">
-                        AC 22 kW (Wallbox)
-                      </option>
-                      <option value="50" data-charging-type="DC">
-                        DC 50 kW (Schnelllader)
-                      </option>
-                      <option value="150" data-charging-type="DC">
-                        DC 150 kW (Hochleistungslader)
-                      </option>
-                      <option value="300" data-charging-type="DC">
-                        DC 300 kW (Ultra-Schnelllader)
-                      </option>
+                    <label for="chargingPowerSelect">Ladeleistung (kW)</label>
+                    <select id="chargingPowerSelect" name="chargingPowerSelect">
+                      <!-- Will be populated by JavaScript -->
+                      <option value="">Ladeleistung wählen...</option>
                     </select>
                   </div>
 
