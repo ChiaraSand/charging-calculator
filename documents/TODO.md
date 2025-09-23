@@ -40,8 +40,6 @@
    - mit "welche Anbieter hast du", bei tabelle eine collapsed section mit filter (inkl. "nur meine Anbieter")
 
 - maps api: find station provider info
-
-
-
-
-- charging time changed -> update parking time (only if longer)
+- charging time changed -> update parking time (only if longer) [DONE?]
+- vehicle-details
+   - AC / DC
