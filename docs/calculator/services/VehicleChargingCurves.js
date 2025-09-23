@@ -30,7 +30,11 @@ class VehicleChargingCurves {
    * @param {string} chargingType - AC or DC charging type
    * @returns {number} Actual charging power (kW)
    */
-  getChargingPower(vehicleId, batteryLevel, chargerPower, chargingType = "DC") {
+  getChargingPower(vehicleId, batteryLevel, chargerPower, chargingType) {
+    // TODO: use chargingType
+    // use linear interpolation for AC ? (better performance)
+    // TODO: check performance of chart
+
     const vehicle = this.vehicleData[vehicleId] || this.vehicleData["generic"];
 
     // Find the closest charger power curve
