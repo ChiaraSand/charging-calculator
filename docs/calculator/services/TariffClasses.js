@@ -15,6 +15,7 @@ let ChargingType = {
   AC: "AC",
   DC: "DC",
 };
+let ChargingTypeMapping = {};
 
 // Load enums from JSON files
 async function loadEnums() {
@@ -24,6 +25,7 @@ async function loadEnums() {
     ]);
 
     ConnectorType = connectorData.enumValues || {};
+    ChargingTypeMapping = connectorData.chargingTypeMapping || {};
   } catch (error) {
     console.error("[TariffClasses] Error loading enums from JSON:", error);
   }
@@ -836,24 +838,10 @@ class BaseTariff {
    */
   isCompatibleWithConnectors(connectorTypes) {
     if (!this.connectors || this.connectors.length === 0) {
-      // Fallback to type-based compatibility
-      const typeCompatibility = {
-        [ChargingType.AC]: [
-          ConnectorType.TYPE_1,
-          ConnectorType.TYPE_2,
-          ConnectorType.SCHUKO,
-        ],
-        [ChargingType.DC]: [
-          ConnectorType.CCS_1,
-          ConnectorType.CCS_2,
-          ConnectorType.CHADEMO,
-          ConnectorType.TESLA,
-        ],
-      };
-      return (
-        typeCompatibility[this.type]?.some((connector) =>
-          connectorTypes.includes(connector)
-        ) || false
+      // Fallback to type-based compatibility using charging type mapping
+      const compatibleConnectors = ChargingTypeMapping[this.type] || [];
+      return compatibleConnectors.some((connector) =>
+        connectorTypes.includes(connector)
       );
     }
 
@@ -899,17 +887,17 @@ class Provider {
   parseTariffs(tariffsData) {
     return tariffsData
       .map((tariffData) => {
-        // TODO: implement AC and DC tariffs
-        // Determine tariff type based on data (e.g. AC and DC)
-        // if (tariffData.types && Array.isArray(tariffData.types)) {
-        //   // Handle tariffs with multiple types
-        //   return tariffData.types.map((type) => {
-        //     const tariffDataWithType = { ...tariffData, type };
-        //     return this.createTariffInstance(tariffDataWithType);
-        //   });
-        // } else {
-        return this.createTariffInstance(tariffData);
-        // }
+        // Handle tariffs with multiple types (AC and DC)
+        if (tariffData.types && Array.isArray(tariffData.types)) {
+          // Create separate tariff instances for each type
+          return tariffData.types.map((type) => {
+            const tariffDataWithType = { ...tariffData, type };
+            return this.createTariffInstance(tariffDataWithType);
+          });
+        } else {
+          // Single type tariff or no types specified
+          return this.createTariffInstance(tariffData);
+        }
       })
       .flat();
   }

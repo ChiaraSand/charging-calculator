@@ -39,5 +39,9 @@
    - sollte nie **benötigt** werden, nur zum vereinfachen wenn mans mehrfach nutzt oder die Fahrzeug-Daten nicht kennt
    - mit "welche Anbieter hast du", bei tabelle eine collapsed section mit filter (inkl. "nur meine Anbieter")
 
-
 - maps api: find station provider info
+
+
+
+
+- charging time changed -> update parking time (only if longer)

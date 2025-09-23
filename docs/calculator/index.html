@@ -281,13 +281,19 @@
                       <option value="3.7">
                         AC 3,7 kW (Haushaltssteckdose)
                       </option>
-                      <option value="11">AC 11 kW (Wallbox)</option>
-                      <option value="22" selected>AC 22 kW (Wallbox)</option>
-                      <option value="50">DC 50 kW (Schnelllader)</option>
-                      <option value="150">
+                      <option value="11" data-charging-type="AC">
+                        AC 11 kW (Wallbox)
+                      </option>
+                      <option value="22" selected data-charging-type="AC">
+                        AC 22 kW (Wallbox)
+                      </option>
+                      <option value="50" data-charging-type="DC">
+                        DC 50 kW (Schnelllader)
+                      </option>
+                      <option value="150" data-charging-type="DC">
                         DC 150 kW (Hochleistungslader)
                       </option>
-                      <option value="300">
+                      <option value="300" data-charging-type="DC">
                         DC 300 kW (Ultra-Schnelllader)
                       </option>
                     </select>

@@ -31,7 +31,8 @@ describe("VehicleChargingCurves", () => {
         20,
         400
       );
-      expect(power).toBe(100.89); // From mock data
+      // Power should be limited by vehicle's maxChargingPowerDC (100 kW)
+      expect(power).toBe(100); // Limited by vehicle's DC capability
     });
 
     test("should interpolate power for unknown battery levels", () => {
@@ -48,6 +49,55 @@ describe("VehicleChargingCurves", () => {
       const power = vehicleCurves.getChargingPower("unknown-vehicle", 50, 150);
       expect(power).toBeGreaterThan(0);
       expect(power).toBeLessThanOrEqual(150);
+    });
+
+    test("should limit AC charging power based on vehicle capabilities", () => {
+      const vehicleId = "renault-5-e-tech-52kwh";
+      const batteryLevel = 20;
+      const chargerPower = 50; // Higher than vehicle's AC limit
+
+      const acPower = vehicleCurves.getChargingPower(
+        vehicleId,
+        batteryLevel,
+        chargerPower,
+        "AC"
+      );
+      const dcPower = vehicleCurves.getChargingPower(
+        vehicleId,
+        batteryLevel,
+        chargerPower,
+        "DC"
+      );
+
+      // AC power should be limited to vehicle's maxChargingPowerAC (11 kW)
+      // The charging curve data shows 100.89 kW at 20% battery, but this should be limited by AC capability
+      expect(acPower).toBeLessThanOrEqual(11);
+
+      // DC power should be limited to vehicle's maxChargingPowerDC (100 kW)
+      expect(dcPower).toBeLessThanOrEqual(100);
+    });
+
+    test("should handle vehicles without specific AC/DC limits", () => {
+      const vehicleId = "generic";
+      const batteryLevel = 50;
+      const chargerPower = 150;
+
+      const acPower = vehicleCurves.getChargingPower(
+        vehicleId,
+        batteryLevel,
+        chargerPower,
+        "AC"
+      );
+      const dcPower = vehicleCurves.getChargingPower(
+        vehicleId,
+        batteryLevel,
+        chargerPower,
+        "DC"
+      );
+
+      // Should fall back to maxChargingPower or 999
+      expect(acPower).toBeGreaterThan(0);
+      expect(dcPower).toBeGreaterThan(0);
     });
 
     test("should find closest charger when exact match not available", () => {

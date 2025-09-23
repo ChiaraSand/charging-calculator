@@ -124,88 +124,6 @@ describe("Tariff Classes", () => {
     });
   });
 
-  // describe("TimeRange", () => {
-  //   let timeRange;
-
-  //   test("should create time range with correct properties", () => {
-  //     timeRange = new TimeRange({
-  //       from: "09:00",
-  //       to: "17:00",
-  //       pricePerMin: 0.1,
-  //       maxPrice: 10.0,
-  //       maxBilledMinutes: 60,
-  //     });
-  //     // FIXME: Received: 2025-09-21T07:00:21.295Z
-  //     // expect(timeRange.from).toBe(new Date("09:00"));
-  //     // expect(timeRange.to).toBe(new Date("17:00"));
-  //     expect(timeRange.pricePerMin).toBe(0.1);
-  //     expect(timeRange.maxPrice).toBe(10.0);
-  //     expect(timeRange.maxBilledMinutes).toBe(60);
-  //   });
-
-  //   test("should check if time is in range correctly", () => {
-  //     timeRange = new TimeRange({
-  //       from: "09:00",
-  //       to: "17:00",
-  //       pricePerMin: 0.1,
-  //     });
-
-  //     const testTimesInRange = ["09:00", "10:00", "16:59"];
-
-  //     const testTimesOutOfRange = ["08:00", "08:59", "17:00", "18:00"];
-
-  //     testTimesInRange.forEach((time) => {
-  //       expect(timeRange.isTimeInRange(CustomDate.parse(time))).toBe(true);
-  //     });
-
-  //     testTimesOutOfRange.forEach((time) => {
-  //       expect(timeRange.isTimeInRange(CustomDate.parse(time))).toBe(false);
-  //     });
-  //   });
-
-  //   test("should handle overnight ranges correctly", () => {
-  //     timeRange = new TimeRange({
-  //       from: "22:00",
-  //       to: "06:00",
-  //       pricePerMin: 0.05,
-  //     });
-
-  //     const testTimesInRange = [
-  //       CustomDate.parse("22:00"),
-  //       CustomDate.parse("23:00"),
-  //       CustomDate.parse("02:00", true),
-  //       CustomDate.parse("05:00", true),
-  //       CustomDate.parse("05:59", true),
-  //     ];
-
-  //     const testTimesOutOfRange = [
-  //       CustomDate.parse("06:00"),
-  //       CustomDate.parse("21:59"),
-  //       CustomDate.parse("06:00", true),
-  //       CustomDate.parse("06:01", true),
-  //     ];
-
-  //     testTimesInRange.forEach((time) => {
-  //       expect(timeRange.isTimeInRange(time)).toBe(true);
-  //     });
-
-  //     testTimesOutOfRange.forEach((time) => {
-  //       expect(timeRange.isTimeInRange(time)).toBe(false);
-  //     });
-  //   });
-
-  //   test("should return correct price for time", () => {
-  //     timeRange = new TimeRange({
-  //       from: "09:00",
-  //       to: "17:00",
-  //       pricePerMin: 0.1,
-  //     });
-
-  //     expect(timeRange.getPriceForTime(CustomDate.parse("10:00"))).toBe(0.1);
-  //     expect(timeRange.getPriceForTime(CustomDate.parse("08:00"))).toBe(0);
-  //   });
-  // });
-
   describe("BlockingFee", () => {
     let blockingFee;
 
@@ -418,6 +336,39 @@ describe("Tariff Classes", () => {
 
       const incompatibleTariffs = provider.getCompatibleTariffs(["CCS_2"]);
       expect(incompatibleTariffs).toHaveLength(0);
+    });
+
+    test("should handle tariffs with multiple types (AC and DC)", () => {
+      const multiTypeProvider = new Provider({
+        id: "multi-type-provider",
+        name: "Multi Type Provider",
+        connectors: ["TYPE_2", "CCS_2"],
+        tariffs: [
+          {
+            id: "multi-type-tariff",
+            name: "Multi Type Tariff",
+            types: ["AC", "DC"],
+            pricePerKwh: 0.55,
+            baseFee: false,
+            blockingFee: false,
+          },
+        ],
+      });
+
+      // Should create separate tariff instances for AC and DC
+      expect(multiTypeProvider.tariffs).toHaveLength(2);
+
+      const acTariff = multiTypeProvider.tariffs.find((t) => t.type === "AC");
+      const dcTariff = multiTypeProvider.tariffs.find((t) => t.type === "DC");
+
+      expect(acTariff).toBeDefined();
+      expect(dcTariff).toBeDefined();
+      expect(acTariff).toBeInstanceOf(ACTariff);
+      expect(dcTariff).toBeInstanceOf(DCTariff);
+      expect(acTariff.id).toBe("multi-type-tariff");
+      expect(dcTariff.id).toBe("multi-type-tariff");
+      expect(acTariff.pricePerKwh).toBe(0.55);
+      expect(dcTariff.pricePerKwh).toBe(0.55);
     });
   });
 

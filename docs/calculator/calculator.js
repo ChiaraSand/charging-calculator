@@ -99,6 +99,12 @@ class ChargingCalculator {
     // Load saved preconfiguration after everything is initialized
     this.loadSavedPreconfiguration();
 
+    // get selected option from chargingPower select
+    const chargingPowerSelect = document.getElementById("chargingPower");
+    const chargingType =
+      chargingPowerSelect.options[chargingPowerSelect.selectedIndex].dataset
+        .chargingType || "DC";
+
     // Final chart update to ensure it shows the correct data
     this.chartManager.updateChargingChart({
       batteryCapacity:
@@ -113,6 +119,7 @@ class ChargingCalculator {
         ) || 0,
       chargingPower:
         parseFloat(document.getElementById("chargingPower").value) || 0,
+      chargingType: chargingType,
       selectedVehicle: this.selectedVehicle,
     });
   }
@@ -464,6 +471,12 @@ class ChargingCalculator {
       this.applyTariffFilter(preset.tariffFilter);
     }
 
+    // get selected option from chargingPower select
+    const chargingPowerSelect = document.getElementById("chargingPower");
+    const chargingType =
+      chargingPowerSelect.options[chargingPowerSelect.selectedIndex].dataset
+        .chargingType || "DC";
+
     // Update calculations
     this.updateCalculations();
     this.chartManager.updateChargingChart({
@@ -479,6 +492,7 @@ class ChargingCalculator {
         ) || 0,
       chargingPower:
         parseFloat(document.getElementById("chargingPower").value) || 0,
+      chargingType: chargingType,
       selectedVehicle: this.selectedVehicle,
     });
 
@@ -501,6 +515,12 @@ class ChargingCalculator {
     // Apply tariff filter
     this.applyTariffFilter(tariffFilter);
 
+    // get selected option from chargingPower select
+    const chargingPowerSelect = document.getElementById("chargingPower");
+    const chargingType =
+      chargingPowerSelect.options[chargingPowerSelect.selectedIndex].dataset
+        .chargingType || "DC";
+
     // Update calculations
     this.updateCalculations();
     this.chartManager.updateChargingChart({
@@ -516,6 +536,7 @@ class ChargingCalculator {
         ) || 0,
       chargingPower:
         parseFloat(document.getElementById("chargingPower").value) || 0,
+      chargingType: chargingType,
       selectedVehicle: this.selectedVehicle,
     });
 
@@ -872,6 +893,11 @@ class ChargingCalculator {
       ) || 0;
     const chargingPower =
       parseFloat(document.getElementById("chargingPower").value) || 0;
+    // get selected option from chargingPower select
+    const chargingPowerSelect = document.getElementById("chargingPower");
+    const chargingType =
+      chargingPowerSelect.options[chargingPowerSelect.selectedIndex].dataset
+        .chargingType || "DC";
     const startTimePickerValue = document.getElementById(
       "calculator-input-startDate"
     ).value;
@@ -902,7 +928,8 @@ class ChargingCalculator {
         currentCharge,
         targetCharge,
         chargingPower,
-        batteryCapacity
+        batteryCapacity,
+        chargingType
       );
 
       const energyToCharge = chargingResult.totalEnergy;
@@ -1214,6 +1241,11 @@ class ChargingCalculator {
       ) || 0;
     const chargingPower =
       parseFloat(document.getElementById("chargingPower").value) || 0;
+    // get selected option from chargingPower select
+    const chargingPowerSelect = document.getElementById("chargingPower");
+    const chargingType =
+      chargingPowerSelect.options[chargingPowerSelect.selectedIndex].dataset
+        .chargingType || "DC";
     const startTimePickerValue = document.getElementById(
       "calculator-input-startDate"
     ).value;
@@ -1248,7 +1280,8 @@ class ChargingCalculator {
       currentCharge,
       targetCharge,
       chargingPower,
-      batteryCapacity
+      batteryCapacity,
+      chargingType
     );
     const estimatedTime = chargingResult.totalTime; // in minutes
     let possibleTotalParkingTime = 0;
@@ -1375,6 +1408,7 @@ class ChargingCalculator {
       currentCharge,
       targetCharge,
       chargingPower,
+      chargingType: chargingType,
       selectedVehicle: this.selectedVehicle,
     });
   }
@@ -1440,6 +1474,11 @@ class ChargingCalculator {
       ) || 0;
     const chargingPower =
       parseFloat(document.getElementById("chargingPower").value) || 0;
+    // get selected option from chargingPower select
+    const chargingPowerSelect = document.getElementById("chargingPower");
+    const chargingType =
+      chargingPowerSelect.options[chargingPowerSelect.selectedIndex].dataset
+        .chargingType || "DC";
     const startTime = new Date(
       document.getElementById("calculator-input-startDate").value
     );
@@ -1463,7 +1502,8 @@ class ChargingCalculator {
         currentCharge,
         targetCharge,
         chargingPower,
-        batteryCapacity
+        batteryCapacity,
+        chargingType
       );
       // REVIEW: unused
       const estimatedTime = chargingResult.totalTime; // in minutes

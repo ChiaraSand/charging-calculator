@@ -8,6 +8,8 @@ export const mockVehicleData = {
     name: "Renault 5 E-Tech 52 kWh",
     batteryCapacity: 52,
     maxChargingPower: 100,
+    maxChargingPowerAC: 11,
+    maxChargingPowerDC: 100,
     connectorType: "CCS",
     chargingCurves: {
       400: {
@@ -53,6 +55,8 @@ export const mockVehicleData = {
     name: "Generic Vehicle",
     batteryCapacity: 50,
     maxChargingPower: 150,
+    maxChargingPowerAC: 11,
+    maxChargingPowerDC: 150,
     connectorType: "CCS",
     chargingCurves: {},
   },

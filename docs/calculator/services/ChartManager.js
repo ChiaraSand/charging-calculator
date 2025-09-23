@@ -281,6 +281,7 @@ class ChartManager {
       targetCharge = 0,
       chargingPower = 0,
       selectedVehicle = "renault-5-e-tech-52kwh",
+      chargingType = "DC",
     } = params;
 
     // Check if we have enough data to calculate
@@ -302,7 +303,8 @@ class ChartManager {
       currentCharge,
       targetCharge,
       chargingPower,
-      batteryCapacity
+      batteryCapacity,
+      chargingType
     );
 
     const estimatedTime = chargingResult.totalTime; // in minutes

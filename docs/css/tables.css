@@ -1,7 +1,7 @@
 /* Table Styles */
 .table-container {
-  /* overflow-x: auto; */
-  overflow: hidden; // FIXME: this is used to hide background corner of card
+  overflow: hidden;
+  /* overflow: hidden; // FIXME: this is used to hide background corner of card */
   border-radius: 12px;
   border: 1px solid var(--border-color);
 }
@@ -10,6 +10,10 @@
   width: 100%;
   border-collapse: collapse;
   /* background: white; */
+}
+
+.tariff-table tbody {
+  overflow-x: auto;
 }
 
 .tariff-table th {

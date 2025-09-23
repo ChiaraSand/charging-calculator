@@ -27,9 +27,10 @@ class VehicleChargingCurves {
    * @param {string} vehicleId - Vehicle identifier
    * @param {number} batteryLevel - Current battery level (0-100)
    * @param {number} chargerPower - Available charger power (kW)
+   * @param {string} chargingType - AC or DC charging type
    * @returns {number} Actual charging power (kW)
    */
-  getChargingPower(vehicleId, batteryLevel, chargerPower) {
+  getChargingPower(vehicleId, batteryLevel, chargerPower, chargingType = "DC") {
     const vehicle = this.vehicleData[vehicleId] || this.vehicleData["generic"];
 
     // Find the closest charger power curve
@@ -50,28 +51,32 @@ class VehicleChargingCurves {
       vehicle.chargingCurves[400];
     const batteryLevelRounded = Math.round(batteryLevel);
 
+    let chargingPower;
+
     // Find exact match or interpolate between closest levels
     if (curve[batteryLevelRounded.toString()]) {
-      return curve[batteryLevelRounded.toString()];
+      chargingPower = curve[batteryLevelRounded.toString()];
+    } else {
+      // Interpolate between closest battery levels
+      const levels = Object.keys(curve)
+        .map(Number)
+        .sort((a, b) => a - b);
+      const lowerLevel = this.findClosestLevel(batteryLevel, levels, "lower");
+      const upperLevel = this.findClosestLevel(batteryLevel, levels, "upper");
+
+      if (lowerLevel === upperLevel) {
+        chargingPower = curve[lowerLevel.toString()];
+      } else {
+        // Linear interpolation
+        const lowerPower = curve[lowerLevel.toString()];
+        const upperPower = curve[upperLevel.toString()];
+        const ratio = (batteryLevel - lowerLevel) / (upperLevel - lowerLevel);
+        chargingPower = lowerPower + (upperPower - lowerPower) * ratio;
+      }
     }
 
-    // Interpolate between closest battery levels
-    const levels = Object.keys(curve)
-      .map(Number)
-      .sort((a, b) => a - b);
-    const lowerLevel = this.findClosestLevel(batteryLevel, levels, "lower");
-    const upperLevel = this.findClosestLevel(batteryLevel, levels, "upper");
-
-    if (lowerLevel === upperLevel) {
-      return curve[lowerLevel.toString()];
-    }
-
-    // Linear interpolation
-    const lowerPower = curve[lowerLevel.toString()];
-    const upperPower = curve[upperLevel.toString()];
-    const ratio = (batteryLevel - lowerLevel) / (upperLevel - lowerLevel);
-
-    return lowerPower + (upperPower - lowerPower) * ratio;
+    // Apply the power limit based on charging type
+    return Math.min(chargingPower, chargerPower);
   }
 
   /**
@@ -81,6 +86,7 @@ class VehicleChargingCurves {
    * @param {number} targetLevel - Target battery level (0-100)
    * @param {number} chargerPower - Available charger power (kW)
    * @param {number} batteryCapacity - Battery capacity in kWh
+   * @param {string} chargingType - AC or DC charging type
    * @returns {Object} Charging time calculation result
    */
   calculateChargingTime(
@@ -88,7 +94,8 @@ class VehicleChargingCurves {
     currentCharge,
     targetCharge,
     chargerPower,
-    batteryCapacity
+    batteryCapacity,
+    chargingType
   ) {
     const vehicle = this.vehicleData[vehicleId] || this.vehicleData.generic;
     // if (!vehicle) {
@@ -110,6 +117,14 @@ class VehicleChargingCurves {
     const stepSize = 1;
     const maxSteps = Math.ceil((targetCharge - currentCharge) / stepSize);
 
+    // Limit charger power based on vehicle's AC/DC capabilities
+    const maxPower =
+      chargingType === "AC"
+        ? vehicle.maxChargingPowerAC || vehicle.maxChargingPower || 999
+        : vehicle.maxChargingPowerDC || vehicle.maxChargingPower || 999;
+
+    const limitedChargerPower = Math.min(chargerPower, maxPower);
+
     for (
       let step = 0;
       step < maxSteps && currentBatteryLevel < targetCharge;
@@ -118,9 +133,10 @@ class VehicleChargingCurves {
       const chargingPower = this.getChargingPower(
         vehicleId,
         currentBatteryLevel,
-        chargerPower
+        limitedChargerPower,
+        chargingType
       );
-      const actualPower = Math.min(chargingPower, chargerPower);
+      const actualPower = Math.min(chargingPower, limitedChargerPower);
 
       // Energy needed for this 1% step
       const energyForStep = (batteryCapacity * stepSize) / 100;
@@ -222,35 +238,6 @@ class VehicleChargingCurves {
     return Math.min(chargerPower * powerFactor, chargerPower);
   }
 
-  // REVIEW: unused
-  // /**
-  //  * Generic charging time calculation for unknown vehicles
-  //  * @param {number} currentLevel - Current battery level (0-100)
-  //  * @param {number} targetLevel - Target battery level (0-100)
-  //  * @param {number} chargerPower - Available charger power (kW)
-  //  * @param {number} batteryCapacity - Battery capacity in kWh
-  //  * @returns {Object} Charging time calculation result
-  //  */
-  // calculateGenericChargingTime(
-  //   currentLevel,
-  //   targetLevel,
-  //   chargerPower,
-  //   batteryCapacity
-  // ) {
-  //   const energyNeeded = (batteryCapacity * (targetLevel - currentLevel)) / 100;
-  //   const averagePower = chargerPower * 1; //0.8; // Assume 80% average efficiency
-  //   const totalTime = (energyNeeded / averagePower) * 60; // in minutes
-
-  //   return {
-  //     totalTime: totalTime,
-  //     totalEnergy: energyNeeded,
-  //     timeSteps: [0, totalTime],
-  //     powerSteps: [chargerPower, chargerPower],
-  //     finalBatteryLevel: targetLevel,
-  //     averagePower: averagePower,
-  //   };
-  // }
-
   /**
    * Get available vehicles
    * @returns {Array} List of available vehicles
@@ -276,6 +263,35 @@ class VehicleChargingCurves {
 }
 
 export default VehicleChargingCurves;
+
+// REVIEW: unused
+// /**
+//  * Generic charging time calculation for unknown vehicles
+//  * @param {number} currentLevel - Current battery level (0-100)
+//  * @param {number} targetLevel - Target battery level (0-100)
+//  * @param {number} chargerPower - Available charger power (kW)
+//  * @param {number} batteryCapacity - Battery capacity in kWh
+//  * @returns {Object} Charging time calculation result
+//  */
+// calculateGenericChargingTime(
+//   currentLevel,
+//   targetLevel,
+//   chargerPower,
+//   batteryCapacity
+// ) {
+//   const energyNeeded = (batteryCapacity * (targetLevel - currentLevel)) / 100;
+//   const averagePower = chargerPower * 1; //0.8; // Assume 80% average efficiency
+//   const totalTime = (energyNeeded / averagePower) * 60; // in minutes
+
+//   return {
+//     totalTime: totalTime,
+//     totalEnergy: energyNeeded,
+//     timeSteps: [0, totalTime],
+//     powerSteps: [chargerPower, chargerPower],
+//     finalBatteryLevel: targetLevel,
+//     averagePower: averagePower,
+//   };
+// }
 
 // loadFallbackVehicleData() {
 //   this.vehicleData = {
