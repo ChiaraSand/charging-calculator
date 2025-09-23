@@ -7,6 +7,7 @@ import ChartManager from "./services/ChartManager.js";
 import DateTimeHelper from "./utils/DateTimeHelper.js";
 import DualSlider from "./components/DualSlider.js";
 import CustomDate from "./utils/CustomDate.js";
+import ViewHelper from "./utils/ViewHelper.js";
 
 class ChargingCalculator {
   constructor() {
@@ -74,8 +75,14 @@ class ChargingCalculator {
 
     this.populateChargingPowerSelect();
     this.populateQuickChargingPowerSelect();
-    this.populatePresetSelect();
-    this.populateVehicleSelect();
+    ViewHelper.populateSelect(
+      "presetSelect",
+      Object.entries(this.presets).map(([value, { name }]) => [value, name])
+    );
+    ViewHelper.populateSelect(
+      "quickVehicleSelect",
+      Object.entries(this.vehicles).map(([value, { name }]) => [value, name])
+    );
     this.populateProviderFilters();
     this.populateConnectorFilters();
 
@@ -167,20 +174,6 @@ class ChargingCalculator {
         (power) =>
           `<option value="${power.value}">${power.description}</option>`
       )
-      .join("");
-  }
-
-  populatePresetSelect() {
-    const presetSelect = document.getElementById("presetSelect");
-    presetSelect.innerHTML = Object.entries(this.presets)
-      .map(([value, { name }]) => `<option value="${value}">${name}</option>`)
-      .join("");
-  }
-
-  populateVehicleSelect() {
-    const vehicleSelect = document.getElementById("quickVehicleSelect");
-    vehicleSelect.innerHTML = Object.entries(this.vehicles)
-      .map(([value, { name }]) => `<option value="${value}">${name}</option>`)
       .join("");
   }
 
@@ -301,12 +294,12 @@ class ChargingCalculator {
     document
       .getElementById("filter-selectAll")
       .addEventListener("click", (e) =>
-        this.selectAll(e.target.dataset.target)
+        ViewHelper.selectAllCheckboxes(`${e.target.dataset.target}-tab`)
       );
     document
       .getElementById("filter-selectNone")
       .addEventListener("click", (e) =>
-        this.selectNone(e.target.dataset.target)
+        ViewHelper.deselectAllCheckboxes(`${e.target.dataset.target}-tab`)
       );
 
     // Filter tabs
@@ -393,54 +386,6 @@ class ChargingCalculator {
 
   toggleGraphSection() {
     this.toggleSection("graph-section");
-  }
-
-  toggleSection(sectionId) {
-    const content = document.getElementById(sectionId + "-content");
-    // const button = document.getElementById(sectionId + "-toggle");
-
-    const currentOptions = JSON.parse(
-      localStorage.getItem("charging-calculator-view-options") || "{}"
-    );
-
-    if (content.classList.contains("toggle-hide")) {
-      this.showSection(sectionId);
-      localStorage.setItem(
-        "charging-calculator-view-options",
-        JSON.stringify({
-          ...currentOptions,
-          [sectionId]: true,
-        })
-      );
-    } else {
-      this.hideSection(sectionId);
-      localStorage.setItem(
-        "charging-calculator-view-options",
-        JSON.stringify({
-          ...currentOptions,
-          [sectionId]: false,
-        })
-      );
-    }
-  }
-
-  showSection(sectionId) {
-    const content = document.getElementById(sectionId + "-content");
-    const button = document.getElementById(sectionId + "-toggle");
-
-    content.classList.remove("toggle-hide");
-    button.classList.remove("expanded");
-    button.innerHTML = '<i class="fas fa-chevron-up"></i>';
-  }
-
-  hideSection(sectionId) {
-    const content = document.getElementById(sectionId + "-content");
-    const button = document.getElementById(sectionId + "-toggle");
-
-    content.classList.add("toggle-hide");
-    button.classList.add("expanded");
-    // NOTE: chevron is rotated 180deg by .expanded class -> equals chevron down
-    button.innerHTML = '<i class="fas fa-chevron-up"></i>';
   }
 
   handlePresetSelection(presetId) {
@@ -570,7 +515,7 @@ class ChargingCalculator {
         break;
       case "all":
         // Select all providers
-        this.selectAll("providers");
+        ViewHelper.selectAllCheckboxes("providers-tab");
         break;
       case "custom":
         // Don't change selection, let user choose manually
@@ -653,52 +598,7 @@ class ChargingCalculator {
   }
 
   showPreconfigMessage(message, type = "info") {
-    // Create or update message element
-    let messageElement = document.getElementById("preconfigMessage");
-    if (!messageElement) {
-      messageElement = document.createElement("div");
-      messageElement.id = "preconfigMessage";
-      messageElement.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 12px 20px;
-        border-radius: 8px;
-        font-weight: 500;
-        z-index: 1000;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      `;
-      document.body.appendChild(messageElement);
-    }
-
-    // Set message content and styling based on type
-    messageElement.textContent = message;
-    switch (type) {
-      case "success":
-        messageElement.style.background = "#10b981";
-        messageElement.style.color = "white";
-        break;
-      case "error":
-        messageElement.style.background = "#ef4444";
-        messageElement.style.color = "white";
-        break;
-      case "info":
-      default:
-        messageElement.style.background = "#3b82f6";
-        messageElement.style.color = "white";
-        break;
-    }
-
-    // Show message
-    messageElement.style.opacity = "1";
-    messageElement.style.transform = "translateX(0)";
-
-    // Hide message after 3 seconds
-    setTimeout(() => {
-      messageElement.style.opacity = "0";
-      messageElement.style.transform = "translateX(100%)";
-    }, 3000);
+    ViewHelper.showMessage(message, type, "preconfigMessage");
   }
 
   loadSavedPreconfiguration() {
@@ -728,14 +628,6 @@ class ChargingCalculator {
               config.targetCharge
             );
           }
-
-          // Update hidden inputs for compatibility
-          // document.getElementById("currentCharge").value = config.currentCharge;
-          // document.getElementById("currentChargeValue").textContent =
-          //   config.currentCharge + "%";
-          // document.getElementById("targetCharge").value = config.targetCharge;
-          // document.getElementById("targetChargeValue").textContent =
-          //   config.targetCharge + "%";
         }
 
         // Apply the configuration
@@ -819,24 +711,6 @@ class ChargingCalculator {
 
     // Initialize selected connectors
     this.selectedConnectors = new Set(connectorTypes.map((c) => c.id));
-  }
-
-  selectAll(tabName) {
-    document
-      .getElementById(`${tabName}-tab`)
-      .querySelectorAll('input[type="checkbox"]')
-      .forEach((checkbox) => {
-        checkbox.checked = true;
-      });
-  }
-
-  selectNone(tabName) {
-    document
-      .getElementById(`${tabName}-tab`)
-      .querySelectorAll('input[type="checkbox"]')
-      .forEach((checkbox) => {
-        checkbox.checked = false;
-      });
   }
 
   switchFilterTab(tabName) {
@@ -1154,46 +1028,46 @@ class ChargingCalculator {
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  // REVIEW: needed?
-  clearAllInputs(form = null) {
-    // if (form) {
-    //   form.reset();
-    // }
+  // // REVIEW: needed?
+  // clearAllInputs(form = null) {
+  //   // if (form) {
+  //   //   form.reset();
+  //   // }
 
-    // Clear all individual inputs
-    const inputsToClear = this.inputFields;
-    // .length > 0
-    //   ? this.inputFields
-    //   : [
-    //       "batteryCapacity",
-    //       "chargeLevelSlider-value-start",
-    //       "chargeLevelSlider-value-end",
-    //       "startTime",
-    //       "endTime",
-    //     ];
+  //   // Clear all individual inputs
+  //   const inputsToClear = this.inputFields;
+  //   // .length > 0
+  //   //   ? this.inputFields
+  //   //   : [
+  //   //       "batteryCapacity",
+  //   //       "chargeLevelSlider-value-start",
+  //   //       "chargeLevelSlider-value-end",
+  //   //       "startTime",
+  //   //       "endTime",
+  //   //     ];
 
-    inputsToClear.forEach((inputId) => {
-      this.clearInput(inputId);
-    });
+  //   inputsToClear.forEach((inputId) => {
+  //     this.clearInput(inputId);
+  //   });
 
-    // Clear charging power selection
-    document.getElementById("chargingPowerSelect").selectedIndex = -1;
+  //   // Clear charging power selection
+  //   document.getElementById("chargingPowerSelect").selectedIndex = -1;
 
-    // Select all providers and connectors
-    this.selectAll("providers");
-    this.selectAll("connectors");
+  //   // Select all providers and connectors
+  //   this.selectAll("providers");
+  //   this.selectAll("connectors");
 
-    // Show confirmation
-    const button = document.getElementById("clearAll");
-    const originalText = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-check"></i> Geleert!';
-    button.style.background = "var(--success-color)";
+  //   // Show confirmation
+  //   const button = document.getElementById("clearAll");
+  //   const originalText = button.innerHTML;
+  //   button.innerHTML = '<i class="fas fa-check"></i> Geleert!';
+  //   button.style.background = "var(--success-color)";
 
-    setTimeout(() => {
-      button.innerHTML = originalText;
-      button.style.background = "";
-    }, 2000);
-  }
+  //   setTimeout(() => {
+  //     button.innerHTML = originalText;
+  //     button.style.background = "";
+  //   }, 2000);
+  // }
 
   populateTariffTable() {
     const tbody = document.getElementById("tariffTableBody");
@@ -1503,34 +1377,46 @@ class ChargingCalculator {
   }
 
   updatePricePerSelectedKwhHeader(energyToCharge) {
-    const pricePerSelectedKwhValue = document.getElementById(
-      "pricePerSelectedKwhValue"
+    ViewHelper.setElementValue(
+      "pricePerSelectedKwhValue",
+      energyToCharge.toFixed(1)
     );
-    // const pricePerSelectedKwhUnit = document.getElementById(
-    //   "pricePerSelectedKwhUnit"
+    // const pricePerSelectedKwhValue = document.getElementById(
+    //   "pricePerSelectedKwhValue"
     // );
-    if (pricePerSelectedKwhValue) {
-      pricePerSelectedKwhValue.textContent = energyToCharge.toFixed(1);
-    }
-    // if (pricePerSelectedKwhUnit) {
-    //   pricePerSelectedKwhUnit.textContent = "kWh";
+    // // const pricePerSelectedKwhUnit = document.getElementById(
+    // //   "pricePerSelectedKwhUnit"
+    // // );
+    // if (pricePerSelectedKwhValue) {
+    //   pricePerSelectedKwhValue.textContent = energyToCharge.toFixed(1);
     // }
+    // // if (pricePerSelectedKwhUnit) {
+    // //   pricePerSelectedKwhUnit.textContent = "kWh";
+    // // }
   }
 
   updateTotalBlockingFeeMinutesHeader(blockingTime) {
-    const totalBlockingFeeMinutesValue = document.getElementById(
-      "totalBlockingFeeMinutesValue"
-    );
-    const totalBlockingFeeMinutesUnit = document.getElementById(
-      "totalBlockingFeeMinutesUnit"
-    );
+    // const totalBlockingFeeMinutesValue = document.getElementById(
+    //   "totalBlockingFeeMinutesValue"
+    // );
+    // const totalBlockingFeeMinutesUnit = document.getElementById(
+    //   "totalBlockingFeeMinutesUnit"
+    // );
     const durationObject = DateTimeHelper.formatDurationAsObject(blockingTime);
-    if (totalBlockingFeeMinutesValue) {
-      totalBlockingFeeMinutesValue.textContent = durationObject.value;
-    }
-    if (totalBlockingFeeMinutesUnit) {
-      totalBlockingFeeMinutesUnit.textContent = durationObject.unit;
-    }
+    // if (totalBlockingFeeMinutesValue) {
+    //   totalBlockingFeeMinutesValue.textContent = durationObject.value;
+    // }
+    // if (totalBlockingFeeMinutesUnit) {
+    //   totalBlockingFeeMinutesUnit.textContent = durationObject.unit;
+    // }
+    ViewHelper.setElementValue(
+      "totalBlockingFeeMinutesValue",
+      durationObject.value
+    );
+    ViewHelper.setElementValue(
+      "totalBlockingFeeMinutesUnit",
+      durationObject.unit
+    );
   }
 
   createCustomBlockingFeeRow() {
