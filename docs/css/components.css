@@ -507,21 +507,42 @@
 .power-range-indicators {
   display: flex;
   justify-content: space-between;
-  margin-top: 4px;
+  /* margin-top: 4px; */
   font-size: 0.7rem;
   color: #64748b;
 }
 
-#power-range-indicators-session::before {
+/* #power-range-indicators-session::before {
   position: absolute;
   content: "🔌";
   margin-right: 4px;
-}
+} */
 
-#power-range-indicators-vehicle::before {
+/* #power-range-indicators-vehicle::before {
   position: absolute;
   content: "🚙";
   margin-right: 4px;
+} */
+
+.power-progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.power-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.power-progress-row > .power-range-indicator-icon {
+  flex-shrink: 0;
+  /* text-align: center; */
+}
+
+.power-progress-row > :not(:first-child) {
+  flex: 1;
 }
 
 .power-range-min {

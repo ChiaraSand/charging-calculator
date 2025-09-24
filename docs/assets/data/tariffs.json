@@ -2,6 +2,7 @@
   {
     "id": "aral-pulse",
     "name": "Aral Pulse",
+    "categories": ["local"],
     "tariffs": [
       {
         "id": "aral-pulse-adac-e-charge",
@@ -34,6 +35,7 @@
   {
     "id": "ewe-go",
     "name": "EWE Go",
+    "categories": ["local"],
     "tariffs": [
       {
         "id": "ewe-go-e-charge",
@@ -66,6 +68,7 @@
   {
     "id": "qwello-nrw",
     "name": "Qwello NRW",
+    "categories": ["local"],
     "tariffs": [
       {
         "id": "qwello-nrw-e-charge",
@@ -105,6 +108,7 @@
   {
     "id": "mobility-plus",
     "name": "Mobility+",
+    "categories": ["local"],
     "tariffs": [
       {
         "id": "mobility-plus-charging",
@@ -133,6 +137,7 @@
     "id": "ionity",
     "name": "Ionity",
     "url": "https://www.ionity.eu/de/netzwerk/zugang-und-zahlung",
+    "categories": ["premium"],
     "tariffs": [
       {
         "id": "ionity-go",
@@ -170,6 +175,7 @@
     "id": "eon",
     "name": "E.ON",
     "url": "https://www.eon.de/de/pk/e-mobility/unterwegs.html",
+    "categories": ["local"],
     "partners": ["ionity"],
     "tariffs": [
       {

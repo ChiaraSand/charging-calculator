@@ -4,7 +4,7 @@
 
 import DateTimeHelper from "utils/DateTimeHelper.js";
 import {
-  TimeRange,
+  BlockingFeeTimeRange,
   BlockingFee,
   SpecialAttributes,
   BaseTariff,

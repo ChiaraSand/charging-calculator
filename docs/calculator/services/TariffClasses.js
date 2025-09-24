@@ -37,7 +37,7 @@ loadEnums();
 /**
  * Time range for time-based pricing
  */
-class TimeRange {
+class BlockingFeeTimeRange {
   constructor(data = {}) {
     this.from = CustomDate.parse(data.from || "00:00");
     this.to = CustomDate.parse(data.to || "23:59");
@@ -95,13 +95,13 @@ class TimeBasedCondition extends BlockingFeeCondition {
     super(data);
     this.description = data.description || "";
     this.timeRanges = data.timeRanges.map((range) => {
-      if (range instanceof TimeRange) {
+      if (range instanceof BlockingFeeTimeRange) {
         return range;
       }
-      return new TimeRange(range);
+      return new BlockingFeeTimeRange(range);
     });
     // this.timeRanges = data.timeRanges
-    //   ? data.timeRanges.map((range) => new TimeRange(range))
+    //   ? data.timeRanges.map((range) => new BlockingFeeTimeRange(range))
     //   : [];
   }
 
@@ -735,6 +735,7 @@ class BaseTariff {
     this.providerType = data.providerType || null;
     this.providerUrl = data.providerUrl || "";
     this.providerConnectors = data.providerConnectors || [];
+    this.providerCategories = data.providerCategories || [];
 
     // Parse blocking fee
     if (data.blockingFee && typeof data.blockingFee === "object") {
@@ -881,6 +882,8 @@ class Provider {
     this.type = data.type || null;
     this.url = data.url || "";
     this.connectors = data.connectors || [];
+    this.categories = data.categories || [];
+
     this.tariffs = this.parseTariffs(data.tariffs || []);
   }
 
@@ -913,6 +916,7 @@ class Provider {
       providerType: this.type,
       providerUrl: this.url,
       providerConnectors: this.connectors,
+      providerCategories: this.categories,
     };
 
     switch (tariffType) {
@@ -1049,6 +1053,35 @@ class TariffManager {
     return [...new Set(this.providers.map((provider) => provider.name))];
   }
 
+  getProvidersByCategory(category) {
+    return this.providers.filter((provider) =>
+      provider.categories.includes(category)
+    );
+  }
+
+  // REVIEW
+  getCheapestProviderIds() {
+    // Get all providers and sort by average price
+    const providers = this.providers;
+    const providerPrices = providers.map((provider) => {
+      const providerTariffs = this.tariffs.filter(
+        (t) => t.providerName === provider.name
+      );
+      const avgPrice =
+        providerTariffs.reduce((sum, t) => sum + t.pricePerKwh, 0) /
+        providerTariffs.length;
+      return { provider, avgPrice };
+    });
+
+    // Select the 3 cheapest providers
+    const cheapestProviders = providerPrices
+      .sort((a, b) => a.avgPrice - b.avgPrice)
+      .slice(0, 3)
+      .map((p) => p.provider.id);
+
+    return cheapestProviders;
+  }
+
   /**
    * Get unique connector types
    */
@@ -1064,7 +1097,7 @@ class TariffManager {
 export {
   ConnectorType,
   ChargingType,
-  TimeRange,
+  BlockingFeeTimeRange,
   BlockingFeeCondition,
   TimeBasedCondition,
   DurationBasedCondition,

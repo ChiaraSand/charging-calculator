@@ -1,6 +1,5 @@
 class ViewHelper {
   static populateSelect(selectId, options) {
-    console.log("populateSelect", selectId, options);
     const select = document.getElementById(selectId);
     select.innerHTML = options
       .map(([value, name]) => `<option value="${value}">${name}</option>`)
@@ -105,7 +104,6 @@ class ViewHelper {
   }
 
   static selectAllCheckboxes(checkboxContainerId) {
-    console.log("selectAllCheckboxes", checkboxContainerId);
     const checkboxes = document
       .getElementById(checkboxContainerId)
       .querySelectorAll('input[type="checkbox"]');
@@ -115,7 +113,6 @@ class ViewHelper {
   }
 
   static deselectAllCheckboxes(checkboxContainerId) {
-    console.log("deselectAllCheckboxes", checkboxContainerId);
     const checkboxes = document
       .getElementById(checkboxContainerId)
       .querySelectorAll('input[type="checkbox"]');

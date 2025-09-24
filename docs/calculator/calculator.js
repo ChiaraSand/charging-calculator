@@ -8,6 +8,7 @@ import DateTimeHelper from "./utils/DateTimeHelper.js";
 import DualSlider from "./components/DualSlider.js";
 import CustomDate from "./utils/CustomDate.js";
 import ViewHelper from "./utils/ViewHelper.js";
+import VehicleDetails from "./components/VehicleDetails.js";
 
 class ChargingCalculator {
   constructor() {
@@ -53,28 +54,26 @@ class ChargingCalculator {
       "calculator-input-endDate",
     ];
 
-    // const startTimeString = DateTimeHelper.getCurrentTimeString("de-DE");
+    this.tariffFilterOptions = [
+      { value: "all", label: "Alle Tarife" },
+      { value: "cheapest", label: "Nur günstigste Tarife" },
+      { value: "premium", label: "Premium Tarife (Ionity, etc.)" },
+      { value: "local", label: "Lokale Anbieter" },
+      { value: "custom", label: "Eigene Auswahl" },
+    ];
+
     this.setDateTimeInputNow("calculator-input-startDate");
-    // document.getElementById("calculator-input-startDate").value =
-    //   DateTimeHelper.getCurrentDateTimeString("de-DE");
-    // document.getElementById("startTime").value = this.formValues.startTime;
 
     // Load data from JSON files first
     await this.loadDataFromJson();
 
     await this.loadTariffs();
-
-    // Initialize chart manager after data is loaded
-    this.chartManager = new ChartManager(
-      this.vehicleCurves,
-      this.chargingPowers
-    );
+    await this.mapsManager.initializeMap();
 
     this.initializeDualSlider();
-    this.setupEventListeners();
-
     this.populateChargingPowerSelect();
     this.populateQuickChargingPowerSelect();
+    this.populateQuickTariffSelect();
     ViewHelper.populateSelect(
       "presetSelect",
       Object.entries(this.presets).map(([value, { name }]) => [value, name])
@@ -86,15 +85,21 @@ class ChargingCalculator {
     this.populateProviderFilters();
     this.populateConnectorFilters();
 
-    this.populateTariffTable();
-    // this.mapsManager.setAvailableTariffs(this.tariffs);
-    this.updateCalculations();
-    this.chartManager.initializeChargingChart();
-
-    await this.mapsManager.initializeMap();
-
     // Load saved preconfiguration after everything is initialized
     this.loadSavedPreconfiguration();
+
+    // Initialize chart manager after data is loaded
+    this.chartManager = new ChartManager(
+      this.vehicleCurves,
+      this.chargingPowers
+    );
+
+    this.setupEventListeners();
+
+    this.fetchFormValuesFromDOM();
+
+    this.updateCalculations();
+    this.chartManager.initializeChargingChart();
 
     this.fetchFormValuesFromDOM();
 
@@ -108,27 +113,18 @@ class ChargingCalculator {
   async loadDataFromJson() {
     try {
       // Load all JSON data files
-      const [
-        presets,
-        connectorData,
-        providerGroups,
-        chargingPowers,
-        // inputFields,
-        tariffs,
-        vehicles,
-      ] = await Promise.all([
-        JsonLoader.loadAsset("data/presets.json"),
-        JsonLoader.loadAsset("data/connectors.json"),
-        JsonLoader.loadAsset("data/provider-groups.json"),
-        JsonLoader.loadAsset("data/charging-powers.json"),
-        // JsonLoader.loadAsset("data/input-fields.json"),
-        JsonLoader.loadAsset("data/tariffs.json"),
-        JsonLoader.loadAsset("data/vehicles.json"),
-      ]);
+      const [presets, connectorData, chargingPowers, tariffs, vehicles] =
+        await Promise.all([
+          JsonLoader.loadAsset("data/presets.json"),
+          JsonLoader.loadAsset("data/connectors.json"),
+          JsonLoader.loadAsset("data/charging-powers.json"),
+          JsonLoader.loadAsset("data/tariffs.json"),
+          JsonLoader.loadAsset("data/vehicles.json"),
+        ]);
 
       this.presets = presets;
       this.connectorData = connectorData;
-      this.providerGroups = providerGroups;
+      // this.providerGroups = providerGroups;
       this.chargingPowers = chargingPowers;
       this.tariffs = tariffs;
       this.vehicles = vehicles;
@@ -177,6 +173,15 @@ class ChargingCalculator {
       .join("");
   }
 
+  populateQuickTariffSelect() {
+    const quickTariffSelect = document.getElementById("quickTariffSelect");
+    quickTariffSelect.innerHTML = this.tariffFilterOptions
+      .map(
+        (option) => `<option value="${option.value}">${option.label}</option>`
+      )
+      .join("");
+  }
+
   initializeDualSlider() {
     const container = document.getElementById("chargeLevelSlider");
     if (!container) return;
@@ -192,8 +197,8 @@ class ChargingCalculator {
       label: "Ladestand",
       currentLabel: "Aktuell",
       targetLabel: "Ziel",
-      onChange: (values) => {
-        this.handleChargeLevelChange(values);
+      onChange: () => {
+        this.updateCalculations();
       },
     });
   }
@@ -223,41 +228,21 @@ class ChargingCalculator {
     return this.formValues;
   }
 
-  handleChargeLevelChange(values) {
-    // Update the hidden form inputs for compatibility with existing code
-    // const currentChargeInput = document.getElementById("currentCharge");
-    // const targetChargeInput = document.getElementById("targetCharge");
-    // const currentChargeValue = document.getElementById("currentChargeValue");
-    // const targetChargeValue = document.getElementById("targetChargeValue");
-
-    // if (currentChargeInput) currentChargeInput.value = values.current;
-    // if (targetChargeInput) targetChargeInput.value = values.target;
-    // if (currentChargeValue)
-    //   currentChargeValue.textContent = values.current + "%";
-    // if (targetChargeValue) targetChargeValue.textContent = values.target + "%";
-
-    // Trigger calculations
-    this.updateCalculations();
-  }
-
   setupEventListeners() {
     // Form inputs
     document
-      .getElementById("batteryCapacity")
-      .addEventListener("input", () => this.updateCalculations());
+      .querySelectorAll(".trigger-update-calculation")
+      .forEach((element) => {
+        element.addEventListener("change", () => this.updateCalculations());
+      });
+
+    // Connect charging power select to quick charging power select
     document
       .getElementById("chargingPowerSelect")
       .addEventListener("change", (e) => {
         document.getElementById("quickChargingPowerSelect").value =
           e.target.value;
-        this.updateCalculations();
       });
-    document
-      .getElementById("calculator-input-startDate")
-      .addEventListener("change", () => this.updateCalculations());
-    document
-      .getElementById("calculator-input-endDate")
-      .addEventListener("change", () => this.updateCalculations());
 
     // Clear buttons
     document.querySelectorAll(".clear-btn").forEach((btn) => {
@@ -280,10 +265,6 @@ class ChargingCalculator {
       });
     });
 
-    // Legend toggle functionality
-    // this.setupLegendToggles();
-    this.chartManager?.setupLegendToggles();
-
     // Clear all button
     // document.getElementById("clearAll").addEventListener("click", (e) => {
     //   e.preventDefault();
@@ -291,16 +272,16 @@ class ChargingCalculator {
     // });
 
     // filter buttons
-    document
-      .getElementById("filter-selectAll")
-      .addEventListener("click", (e) =>
-        ViewHelper.selectAllCheckboxes(`${e.target.dataset.target}-tab`)
+    document.querySelectorAll(".btn-select-all").forEach((btn) => {
+      btn.addEventListener("click", (e) =>
+        ViewHelper.selectAllCheckboxes(e.target.dataset.target)
       );
-    document
-      .getElementById("filter-selectNone")
-      .addEventListener("click", (e) =>
-        ViewHelper.deselectAllCheckboxes(`${e.target.dataset.target}-tab`)
+    });
+    document.querySelectorAll(".btn-deselect-all").forEach((btn) => {
+      btn.addEventListener("click", (e) =>
+        ViewHelper.deselectAllCheckboxes(e.target.dataset.target)
       );
+    });
 
     // Filter tabs
     document.querySelectorAll(".filter-tab").forEach((tab) => {
@@ -313,7 +294,7 @@ class ChargingCalculator {
     // Section toggle functionality
     document.querySelectorAll(".section-toggle").forEach((button) => {
       button.addEventListener("click", () => {
-        this.toggleSection(button.dataset.toggleSection);
+        ViewHelper.toggleSection(button.dataset.toggleSection);
       });
     });
 
@@ -380,14 +361,6 @@ class ChargingCalculator {
       });
   }
 
-  togglePreconfiguration() {
-    this.toggleSection("preconfig");
-  }
-
-  toggleGraphSection() {
-    this.toggleSection("graph-section");
-  }
-
   handlePresetSelection(presetId) {
     if (!presetId) {
       return;
@@ -398,23 +371,11 @@ class ChargingCalculator {
       return;
     }
 
-    // Apply preset values to form fields
-    // document.getElementById("vehicleSelect").value = preset.vehicle;
-    // document.getElementById("quickVehicleSelect").value = preset.vehicle;
-    // document.getElementById("batteryCapacity").value = preset.batteryCapacity;
-
     // Update dual slider with preset values
     if (this.dualSlider) {
       this.dualSlider.setValues(preset.currentCharge, preset.targetCharge);
     }
 
-    // Update hidden inputs for compatibility
-    // document.getElementById("currentCharge").value = preset.currentCharge;
-    // document.getElementById("currentChargeValue").textContent =
-    //   preset.currentCharge + "%";
-    // document.getElementById("targetCharge").value = preset.targetCharge;
-    // document.getElementById("targetChargeValue").textContent =
-    //   preset.targetCharge + "%";
     document.getElementById("chargingPowerSelect").value = preset.chargingPower;
     document.getElementById("quickChargingPowerSelect").value =
       preset.chargingPower;
@@ -436,35 +397,42 @@ class ChargingCalculator {
     });
 
     // Show success message
-    this.showPreconfigMessage("Vorkonfiguration angewendet!", "success");
-  }
-
-  applyPreconfiguration() {
-    const vehicle = document.getElementById("quickVehicleSelect").value;
-    const chargingPower = document.getElementById(
-      "quickChargingPowerSelect"
-    ).value;
-    const tariffFilter = document.getElementById("quickTariffSelect").value;
-
-    // Apply to main form
-    // document.getElementById("vehicleSelect").value = vehicle;
-    document.getElementById("chargingPowerSelect").value = chargingPower;
-
-    // Update selected vehicle
-    this.selectedVehicle = vehicle;
-
-    // Apply tariff filter
-    this.applyTariffFilter(tariffFilter);
-
-    // Update calculations
-    this.updateCalculations();
-    this.chartManager.updateChargingChart({
-      ...this.fetchFormValuesFromDOM(),
-      selectedVehicle: this.selectedVehicle,
-    });
-
     this.showPreconfigMessage("Konfiguration angewendet!", "success");
   }
+
+  // applyPreconfiguration() {
+  //   const vehicle = document.getElementById("quickVehicleSelect").value;
+  //   this.selectedVehicle = vehicle;
+
+  //   const chargingPower = document.getElementById(
+  //     "quickChargingPowerSelect"
+  //   ).value;
+  //   const tariffFilter = document.getElementById("quickTariffSelect").value;
+
+  //   this.presets["custom"] = {
+  //     vehicle: vehicle,
+  //     chargingPower: chargingPower,
+  //     tariffFilter: tariffFilter,
+  //   };
+
+  //   // Apply to main form
+  //   // document.getElementById("vehicleSelect").value = vehicle;
+  //   // document.getElementById("chargingPowerSelect").value = chargingPower;
+
+  //   // Update selected vehicle
+
+  //   // Apply tariff filter
+  //   this.applyTariffFilter(tariffFilter);
+
+  //   // Update calculations
+  //   this.updateCalculations();
+  //   this.chartManager.updateChargingChart({
+  //     ...this.fetchFormValuesFromDOM(),
+  //     selectedVehicle: this.selectedVehicle,
+  //   });
+
+  //   this.showPreconfigMessage("Konfiguration angewendet!", "success");
+  // }
 
   savePreconfiguration() {
     const formValues = this.fetchFormValuesFromDOM();
@@ -482,119 +450,56 @@ class ChargingCalculator {
       "charging-calculator-preconfig",
       JSON.stringify(config)
     );
-    this.showPreconfigMessage("Voreinstellung gespeichert!", "success");
+    this.showPreconfigMessage("Konfiguration gespeichert!", "success");
   }
 
   resetPreconfiguration() {
     // Reset all preconfiguration fields
-    document.getElementById("presetSelect").value = "";
-    document.getElementById("quickVehicleSelect").value =
-      "renault-5-e-tech-52kwh";
-    document.getElementById("quickChargingPowerSelect").value = "22";
-    document.getElementById("quickTariffSelect").value = "all";
+    // document.getElementById("presetSelect").value = "";
+    // document.getElementById("quickVehicleSelect").value =
+    //   "renault-5-e-tech-52kwh";
+    // document.getElementById("quickChargingPowerSelect").value = "22";
+    // document.getElementById("quickTariffSelect").value = "all";
 
     // Clear saved configuration
     localStorage.removeItem("charging-calculator-preconfig");
 
-    this.showPreconfigMessage("Voreinstellungen zurückgesetzt!", "info");
+    this.showPreconfigMessage("Konfiguration gelöscht!", "info");
   }
 
   applyTariffFilter(filterType) {
-    switch (filterType) {
-      case "cheapest":
-        // Select only the cheapest providers
-        this.selectCheapestProviders();
-        break;
-      case "premium":
-        // Select premium providers like Ionity
-        this.selectPremiumProviders();
-        break;
-      case "local":
-        // Select local providers
-        this.selectLocalProviders();
-        break;
-      case "all":
-        // Select all providers
-        ViewHelper.selectAllCheckboxes("providers-tab");
-        break;
-      case "custom":
-        // Don't change selection, let user choose manually
-        break;
+    this.selectProvidersByCategory(filterType);
+    this.populateTariffTable();
+  }
+
+  selectProvidersByCategory(category) {
+    if (category === "custom") {
+      return;
     }
-  }
 
-  selectCheapestProviders() {
-    // Get all providers and sort by average price
-    const providers = this.tariffManager.getUniqueProviders();
-    const providerPrices = providers.map((provider) => {
-      const providerTariffs = this.tariffs.filter(
-        (t) => t.providerName === provider
-      );
-      const avgPrice =
-        providerTariffs.reduce((sum, t) => sum + t.pricePerKwh, 0) /
-        providerTariffs.length;
-      return { provider, avgPrice };
-    });
+    let newSelectedProviders = [];
+    if (category === "cheapest") {
+      newSelectedProviders = this.tariffManager.getCheapestProviderIds();
+    } else if (category === "all") {
+      newSelectedProviders = this.tariffManager.providers.map((p) => p.id);
+    } else {
+      newSelectedProviders = this.tariffManager
+        .getProvidersByCategory(category)
+        .map((p) => p.id);
+    }
 
-    // Select the 3 cheapest providers
-    const cheapestProviders = providerPrices
-      .sort((a, b) => a.avgPrice - b.avgPrice)
-      .slice(0, 3)
-      .map((p) => p.provider);
+    this.selectedProviders = new Set(newSelectedProviders);
 
-    // Update checkboxes
     document
       .querySelectorAll('#providerCheckboxes input[type="checkbox"]')
       .forEach((checkbox) => {
-        checkbox.checked = cheapestProviders.includes(checkbox.value);
+        checkbox.checked = newSelectedProviders.includes(checkbox.value);
         if (checkbox.checked) {
           this.selectedProviders.add(checkbox.value);
         } else {
           this.selectedProviders.delete(checkbox.value);
         }
       });
-
-    this.populateTariffTable();
-  }
-
-  selectPremiumProviders() {
-    const premiumProviders = this.providerGroups.premiumProviders || [
-      "Ionity",
-      "Tesla",
-    ];
-
-    document
-      .querySelectorAll('#providerCheckboxes input[type="checkbox"]')
-      .forEach((checkbox) => {
-        checkbox.checked = premiumProviders.includes(checkbox.value);
-        if (checkbox.checked) {
-          this.selectedProviders.add(checkbox.value);
-        } else {
-          this.selectedProviders.delete(checkbox.value);
-        }
-      });
-
-    this.populateTariffTable();
-  }
-
-  selectLocalProviders() {
-    const localProviders = this.providerGroups.localProviders || [
-      "EWE Go",
-      "Qwello NRW",
-    ];
-
-    document
-      .querySelectorAll('#providerCheckboxes input[type="checkbox"]')
-      .forEach((checkbox) => {
-        checkbox.checked = localProviders.includes(checkbox.value);
-        if (checkbox.checked) {
-          this.selectedProviders.add(checkbox.value);
-        } else {
-          this.selectedProviders.delete(checkbox.value);
-        }
-      });
-
-    this.populateTariffTable();
   }
 
   showPreconfigMessage(message, type = "info") {
@@ -631,7 +536,10 @@ class ChargingCalculator {
         }
 
         // Apply the configuration
-        this.applyPreconfiguration();
+        // this.applyPreconfiguration();
+
+        this.applyTariffFilter(config.tariffFilter);
+        this.showPreconfigMessage("Konfiguration geladen!", "success");
       } catch (error) {
         console.error("Error loading saved preconfiguration:", error);
       }
@@ -640,19 +548,14 @@ class ChargingCalculator {
 
   populateProviderFilters() {
     const container = document.getElementById("providerCheckboxes");
-    const uniqueProviders = this.tariffManager.getUniqueProviders();
 
-    container.innerHTML = uniqueProviders
+    container.innerHTML = this.tariffManager.providers
       .map(
         (provider) => `
             <div class="checkbox-item">
-                <input type="checkbox" id="provider-${provider
-                  .replace(/\s+/g, "-")
-                  .toLowerCase()}"
-                       value="${provider}" checked>
-                <label for="provider-${provider
-                  .replace(/\s+/g, "-")
-                  .toLowerCase()}">${provider}</label>
+                <input type="checkbox" id="provider-${provider.id}"
+                       value="${provider.id}" checked>
+                <label for="provider-${provider.id}">${provider.name}</label>
             </div>
         `
       )
@@ -671,7 +574,9 @@ class ChargingCalculator {
     });
 
     // Initialize selected providers
-    this.selectedProviders = new Set(uniqueProviders);
+    this.selectedProviders = new Set(
+      this.tariffManager.providers.map((p) => p.id)
+    );
   }
 
   populateConnectorFilters() {
@@ -722,13 +627,41 @@ class ChargingCalculator {
 
     // Update target of filter buttons
     document.getElementById("filter-selectAll").dataset.target = tabName;
-    document.getElementById("filter-selectNone").dataset.target = tabName;
+    document.getElementById("filter-deselectAll").dataset.target = tabName;
 
     // Update tab content
     document.querySelectorAll(".filter-content").forEach((content) => {
       content.classList.remove("active");
     });
-    document.getElementById(`${tabName}-tab`).classList.add("active");
+    document.getElementById(tabName).classList.add("active");
+  }
+
+  calculateEnergyToCharge(batteryCapacity, currentCharge, targetCharge) {
+    // TODO: get formValues from DOM
+    return (batteryCapacity * (targetCharge - currentCharge)) / 100;
+  }
+
+  calculateTotalEnergyCost(kwhToCharge, pricePerKwh) {
+    // TODO: get formValues from DOM
+    return kwhToCharge * pricePerKwh;
+  }
+
+  calculateTotalParkingTime(startTime, endTime, estimatedChargingDuration = 0) {
+    // TODO: get formValues from DOM
+    const startTimeObject = CustomDate.parse(startTime);
+
+    if (endTime) {
+      const endTimeObject = CustomDate.parse(endTime);
+      const parkingDuration = DateTimeHelper.calculateTimeDifference(
+        startTimeObject,
+        endTimeObject
+      );
+      // if estimatedChargingDuration is longer than given parkingDuration, use estimated charging duration
+      // TODO: update endTime or cshow warning?
+      return Math.max(parkingDuration, estimatedChargingDuration);
+    } else {
+      return estimatedChargingDuration;
+    }
   }
 
   updateCalculations() {
@@ -747,15 +680,6 @@ class ChargingCalculator {
     // get selected option from chargingPower select
     const startTimeObject = CustomDate.parse(startTime);
     let endTimeObject; // = new CustomDate(endTimePickerValue);
-
-    // if (endTime < startTime) {
-    //   // endTime.addDays(1);
-    //   document.getElementById("endTime-input-next-day-indicator").textContent =
-    //     "+1";
-    // } else {
-    //   document.getElementById("endTime-input-next-day-indicator").textContent =
-    //     "";
-    // }
 
     // Only calculate if we have the minimum required values
     if (
@@ -803,197 +727,22 @@ class ChargingCalculator {
         totalParkingTimeString;
 
       // Update charging speed information
-      this.updateChargingSpeedInfo(chargingResult, this.selectedVehicle);
+      VehicleDetails.updateChargingSpeedInfo(
+        chargingResult,
+        this.selectedVehicle,
+        this.vehicleCurves,
+        chargingType,
+        "vehicle-details"
+      );
     } else {
       // TODO: set in index.html?
       // Show placeholder values when inputs are empty or invalid
-      document.getElementById("energyToCharge").textContent = "— kWh";
-      document.getElementById("estimatedTime").textContent = "— min";
-      document.getElementById("totalParkingTime").textContent = "— min";
       document.getElementById("calculator-input-endDate").value = "";
       // document.getElementById("endTime").value =
       //   endTime || startTime + totalParkingTime;
     }
 
     this.populateTariffTable();
-  }
-
-  calculateProgressbarValue(absoluteValue, maxProgressbarValue) {
-    return (absoluteValue / maxProgressbarValue) * 100;
-  }
-
-  calculatePercentageWidth(absoluteValue, minProgressbarValue) {
-    const progressbarMinWidthPercentage = 2;
-    return Math.max(
-      absoluteValue - minProgressbarValue,
-      progressbarMinWidthPercentage
-    );
-  }
-
-  /**
-   * Update charging speed information display (blue box in preconfig section)
-   * @param {Object} chargingResult - Result from vehicle charging curves calculation
-   * @param {string} selectedVehicle - Selected vehicle ID
-   */
-  updateChargingSpeedInfo(chargingResult, selectedVehicle) {
-    // Find or create charging speed info element
-    let speedInfoElement = document.getElementById("chargingSpeedInfo");
-    if (!speedInfoElement) {
-      speedInfoElement = document.createElement("div");
-      speedInfoElement.id = "chargingSpeedInfo";
-      speedInfoElement.className = "charging-speed-info";
-
-      // Insert into the vehicle-details element
-      const parentElement = document.getElementById("vehicle-details");
-      parentElement.appendChild(speedInfoElement);
-    }
-
-    const vehicle = this.vehicleCurves.vehicleData[selectedVehicle];
-    const vehicleName = vehicle ? vehicle.name : "Allgemeines Fahrzeug";
-
-    // Calculate charging speed statistics
-    const chargingPowers = Object.values(vehicle.chargingCurves["400"]); // FIXME: use the actual charging power and get closest value
-    const maxPowerVehicle =
-      vehicle.maxChargingPower || Math.max(...chargingPowers);
-    const minPowerVehicle = 0;
-    // vehicle.minChargingPower || Math.min(...chargingPowers);
-
-    const maxPowerSession = Math.max(...chargingResult.powerSteps);
-    const minPowerSession = Math.min(...chargingResult.powerSteps);
-    const avgPowerSession = chargingResult.averagePower;
-
-    const maxProgressbarValue = Math.max(
-      maxPowerSession,
-      maxPowerVehicle,
-      chargingResult.chargerPower
-    );
-
-    // Calculate progress bar values (percentage of vehicle's max charging power)
-    const [
-      maxPowerSessionPercentage,
-      minPowerSessionPercentage,
-      avgPowerSessionPercentage,
-      maxPowerVehiclePercentage,
-      minPowerVehiclePercentage,
-    ] = [
-      maxPowerSession,
-      minPowerSession,
-      avgPowerSession,
-      maxPowerVehicle,
-      minPowerVehicle,
-    ].map((value) =>
-      this.calculateProgressbarValue(value, maxProgressbarValue)
-    );
-    // const avgPowerVehiclePercentage = (avgPowerVehicle / maxProgressbarValue) * 100;
-
-    const sessionPowerPercentageWidth = this.calculatePercentageWidth(
-      maxPowerSessionPercentage,
-      minPowerSessionPercentage
-    );
-
-    const vehiclePowerPercentageWidth = this.calculatePercentageWidth(
-      maxPowerVehiclePercentage,
-      minPowerVehiclePercentage
-    );
-
-    const progressbarData = {
-      maxPower: maxProgressbarValue,
-      maxPercentage: 100,
-      minPower: 0,
-      minPercentage: 0,
-      widthPercentage: 100,
-    };
-
-    const vehicleRangeData = {
-      maxPower: maxPowerVehicle,
-      maxPercentage: maxPowerVehiclePercentage,
-      minPower: minPowerVehicle,
-      minPercentage: minPowerVehiclePercentage,
-      widthPercentage: vehiclePowerPercentageWidth,
-      paddingLeftPercentage: Math.max(minPowerVehiclePercentage, 2),
-      paddingRightPercentage:
-        progressbarData.maxPercentage - maxPowerVehiclePercentage,
-    };
-
-    const sessionRangeData = {
-      maxPower: maxPowerSession,
-      maxPercentage: maxPowerSessionPercentage,
-      minPower: minPowerSession,
-      minPercentage: minPowerSessionPercentage,
-      avgPower: avgPowerSession,
-      avgPercentage: avgPowerSessionPercentage,
-      widthPercentage: sessionPowerPercentageWidth,
-      paddingLeftPercentage: Math.max(minPowerSessionPercentage, 2),
-      paddingRightPercentage:
-        progressbarData.maxPercentage - maxPowerSessionPercentage,
-    };
-
-    speedInfoElement.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <i class="fas fa-car" style="color: #0ea5e9;"></i>
-        <strong>Ladegeschwindigkeit - ${vehicleName}</strong>
-      </div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; font-size: 0.8rem;">
-        <div>
-          <div style="color: #64748b; font-weight: 500;">
-            <div>
-              Leistungsbereich
-            </div>
-            <div style="font-weight: 600; color: #0ea5e9;">
-              Ø ${sessionRangeData.avgPower.toFixed(1)} kW
-            </div>
-          </div>
-          <div class="power-progress-container">
-            <div class="power-range-indicators" id="power-range-indicators-session">
-              <span class="power-range-min" style="padding-left: ${
-                sessionRangeData.paddingLeftPercentage
-              }%;">${
-      sessionRangeData.minPower > 0 ? sessionRangeData.minPower.toFixed(1) : ""
-    } kW</span>
-              <span class="power-range-max" style="display: ${
-                sessionRangeData.maxPower == sessionRangeData.minPower
-                  ? "none"
-                  : "block"
-              }; padding-right: ${
-      sessionRangeData.paddingRightPercentage
-    }%;">${sessionRangeData.maxPower.toFixed(1)} kW</span>
-            </div>
-            <div class="power-range-indicators" id="power-range-indicators-vehicle">
-              <span class="power-range-min" style="padding-left: ${
-                vehicleRangeData.paddingLeftPercentage
-              }%;">${vehicleRangeData.minPower.toFixed(1)} kW</span>
-              <span class="power-range-max" style="padding-right: ${
-                vehicleRangeData.paddingRightPercentage
-              }%;">${vehicleRangeData.maxPower.toFixed(1)} kW</span>
-            </div>
-            <div class="power-range-progress-bar">
-              <div class="power-range-fill-sub" style="left: ${
-                vehicleRangeData.minPercentage
-              }%; width: ${vehicleRangeData.widthPercentage}%;"></div>
-              <div class="power-range-fill" style="left: ${
-                sessionRangeData.minPercentage
-              }%; width: ${sessionRangeData.widthPercentage}%;"></div>
-            </div>
-            <div class="power-range-indicators">
-              <span class="power-range-min">${progressbarData.minPower.toFixed(
-                1
-              )} kW</span>
-              <span class="power-range-max">${progressbarData.maxPower.toFixed(
-                1
-              )} kW</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    //   <div>
-    //   <div style="color: #64748b; font-weight: 500;">Effizienz</div>
-    //   <div style="font-weight: 600; color: #0ea5e9;">${(
-    //     (sessionRangeData.avgPower /
-    //       parseFloat(document.getElementById("chargingPower").value)) *
-    //     100
-    //   ).toFixed(0)}%</div>
-    // </div>
   }
 
   clearInput(inputId) {
@@ -1009,15 +758,6 @@ class ChargingCalculator {
           this.dualSlider.setValues(this.dualSlider.getValues().current, 100);
         }
       }
-
-      // Update hidden inputs for compatibility
-      // if (inputId === "currentCharge") {
-      //   input.value = "0";
-      //   document.getElementById("currentChargeValue").textContent = "0%";
-      // } else if (inputId === "targetCharge") {
-      //   input.value = "100";
-      //   document.getElementById("targetChargeValue").textContent = "100%";
-      // }
     } else {
       // Empty the input
       input.value = "";
@@ -1027,47 +767,6 @@ class ChargingCalculator {
     input.dispatchEvent(new Event("input", { bubbles: true }));
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
-
-  // // REVIEW: needed?
-  // clearAllInputs(form = null) {
-  //   // if (form) {
-  //   //   form.reset();
-  //   // }
-
-  //   // Clear all individual inputs
-  //   const inputsToClear = this.inputFields;
-  //   // .length > 0
-  //   //   ? this.inputFields
-  //   //   : [
-  //   //       "batteryCapacity",
-  //   //       "chargeLevelSlider-value-start",
-  //   //       "chargeLevelSlider-value-end",
-  //   //       "startTime",
-  //   //       "endTime",
-  //   //     ];
-
-  //   inputsToClear.forEach((inputId) => {
-  //     this.clearInput(inputId);
-  //   });
-
-  //   // Clear charging power selection
-  //   document.getElementById("chargingPowerSelect").selectedIndex = -1;
-
-  //   // Select all providers and connectors
-  //   this.selectAll("providers");
-  //   this.selectAll("connectors");
-
-  //   // Show confirmation
-  //   const button = document.getElementById("clearAll");
-  //   const originalText = button.innerHTML;
-  //   button.innerHTML = '<i class="fas fa-check"></i> Geleert!';
-  //   button.style.background = "var(--success-color)";
-
-  //   setTimeout(() => {
-  //     button.innerHTML = originalText;
-  //     button.style.background = "";
-  //   }, 2000);
-  // }
 
   populateTariffTable() {
     const tbody = document.getElementById("tariffTableBody");
@@ -1102,8 +801,11 @@ class ChargingCalculator {
       return;
     }
 
-    const energyToCharge =
-      (batteryCapacity * (targetCharge - currentCharge)) / 100;
+    const energyToCharge = this.calculateEnergyToCharge(
+      batteryCapacity,
+      currentCharge,
+      targetCharge
+    );
 
     // Use vehicle-specific charging curves for accurate time calculation
     const chargingResult = this.vehicleCurves.calculateChargingTime(
@@ -1233,6 +935,7 @@ class ChargingCalculator {
     // Update header with actual blocking time
     this.updateTotalBlockingFeeMinutesHeader(blockingTime);
 
+    // REVIEW: are these connected in ANY way???
     // Update charging chart
     this.chartManager.updateChargingChart({
       batteryCapacity,
@@ -1264,16 +967,14 @@ class ChargingCalculator {
     const { batteryCapacity, currentCharge, targetCharge } = formValues;
 
     if (batteryCapacity > 0 && targetCharge > currentCharge) {
-      const energyToCharge =
-        (batteryCapacity * (targetCharge - currentCharge)) / 100;
+      const energyToCharge = this.calculateEnergyToCharge(
+        batteryCapacity,
+        currentCharge,
+        targetCharge
+      );
       this.updateCustomTariffDisplay(energyToCharge);
     }
   }
-
-  // setupBlockingFeeInputs() {
-  //   // This function is kept for backward compatibility but now just calls the new function
-  //   this.setupCustomTariffEventListeners();
-  // }
 
   updateCustomTariffDisplay(energyToCharge) {
     const customPricePerKwh =
@@ -1283,7 +984,10 @@ class ChargingCalculator {
     const customBlockingFee = parseFloat(
       document.getElementById("custom-blocking-fee")?.value
     );
-    const pricePerSelectedKwh = customPricePerKwh * energyToCharge;
+    const pricePerSelectedKwh = this.calculateTotalEnergyCost(
+      energyToCharge,
+      customPricePerKwh
+    );
 
     // Calculate estimated time and blocking time
     const formValues = this.fetchFormValuesFromDOM();
@@ -1328,7 +1032,10 @@ class ChargingCalculator {
       const blockingTime = Math.max(0, totalParkingTime, estimatedTime);
 
       // Calculate total cost (matching calculateCustomTariff logic)
-      const energyCost = energyToCharge * customPricePerKwh;
+      const energyCost = this.calculateTotalEnergyCost(
+        energyToCharge,
+        customPricePerKwh
+      );
       const timeCost = 0; // Custom tariff doesn't have pricePerMin, so timeCost is always 0
 
       blockingFeeCost = blockingTime * customBlockingFee;
@@ -1381,34 +1088,17 @@ class ChargingCalculator {
       "pricePerSelectedKwhValue",
       energyToCharge.toFixed(1)
     );
-    // const pricePerSelectedKwhValue = document.getElementById(
-    //   "pricePerSelectedKwhValue"
-    // );
     // // const pricePerSelectedKwhUnit = document.getElementById(
     // //   "pricePerSelectedKwhUnit"
     // // );
-    // if (pricePerSelectedKwhValue) {
-    //   pricePerSelectedKwhValue.textContent = energyToCharge.toFixed(1);
-    // }
     // // if (pricePerSelectedKwhUnit) {
     // //   pricePerSelectedKwhUnit.textContent = "kWh";
     // // }
   }
 
   updateTotalBlockingFeeMinutesHeader(blockingTime) {
-    // const totalBlockingFeeMinutesValue = document.getElementById(
-    //   "totalBlockingFeeMinutesValue"
-    // );
-    // const totalBlockingFeeMinutesUnit = document.getElementById(
-    //   "totalBlockingFeeMinutesUnit"
-    // );
     const durationObject = DateTimeHelper.formatDurationAsObject(blockingTime);
-    // if (totalBlockingFeeMinutesValue) {
-    //   totalBlockingFeeMinutesValue.textContent = durationObject.value;
-    // }
-    // if (totalBlockingFeeMinutesUnit) {
-    //   totalBlockingFeeMinutesUnit.textContent = durationObject.unit;
-    // }
+
     ViewHelper.setElementValue(
       "totalBlockingFeeMinutesValue",
       durationObject.value
@@ -1434,14 +1124,24 @@ class ChargingCalculator {
 
     const energyToCharge =
       batteryCapacity > 0 && targetCharge > currentCharge
-        ? (batteryCapacity * (targetCharge - currentCharge)) / 100
+        ? this.calculateEnergyToCharge(
+            batteryCapacity,
+            currentCharge,
+            targetCharge
+          )
         : 0;
 
     const customPricePerKwh = 0.5; // Default value
-    const initialEnergyCost = energyToCharge * customPricePerKwh;
+    const initialEnergyCost = this.calculateTotalEnergyCost(
+      energyToCharge,
+      customPricePerKwh
+    );
 
     const customBlockingFee = 0.02;
-    const initialBlockingFee = energyToCharge * customBlockingFee;
+    const initialBlockingFee = this.calculateTotalEnergyCost(
+      energyToCharge,
+      customBlockingFee
+    );
 
     return `
       <tr class="custom-tariff-row" style="background-color: #f0f9ff; border-bottom: 2px solid var(--primary-color);">

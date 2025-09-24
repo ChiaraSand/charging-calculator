@@ -260,6 +260,8 @@ class ChartManager {
       },
     });
 
+    this.setupLegendToggles();
+
     this.hideAllDatasets();
   }
 
