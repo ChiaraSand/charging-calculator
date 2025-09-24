@@ -3,29 +3,29 @@
     <h2 class="map-section-header-title">
       <i class="fas fa-map-marker-alt"></i> Ladesäulen in der Nähe
     </h2>
-    <div class="map-section-header-right">
-      <div class="map-section-header-right-controls">
-        <div id="noStationsMessage" class="map-warning hidden">
-          <i class="fas fa-info-circle"></i>
-          <p>
-            Keine Ladesäulen in der Nähe gefunden. Versuchen Sie einen anderen
-            Standort oder erweitern Sie den Suchradius.
-          </p>
-        </div>
-        <div id="mapDisabled" class="map-warning">
-          <i class="fa-solid fa-triangle-exclamation"></i>
-          <p id="mapDisabledMessage">Map disabled.</p>
-        </div>
-        <div id="mapError" class="map-error">
-          <i class="fa-solid fa-triangle-exclamation"></i>
-          <p id="mapErrorMessage">Something went wrong.</p>
-        </div>
-        <div id="apiKeyError" class="map-warning">
-          <i class="fa-solid fa-triangle-exclamation"></i>
-          <p id="apiKeyErrorMessage">Google Maps API key not configured.</p>
-        </div>
-        <button id="toggleEnableMap" class="btn btn-secondary"></button>
+    <div class="map-section-header-right-controls card-middle-buttons">
+      <div id="noStationsMessage" class="map-warning hidden">
+        <i class="fas fa-info-circle"></i>
+        <p>
+          Keine Ladesäulen in der Nähe gefunden. Versuchen Sie einen anderen
+          Standort oder erweitern Sie den Suchradius.
+        </p>
       </div>
+      <div id="mapDisabled" class="map-warning">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <p id="mapDisabledMessage">Map disabled.</p>
+      </div>
+      <div id="mapError" class="map-error">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <p id="mapErrorMessage">Something went wrong.</p>
+      </div>
+      <div id="apiKeyError" class="map-warning">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <p id="apiKeyErrorMessage">Google Maps API key not configured.</p>
+      </div>
+      <button id="toggleEnableMap" class="btn btn-secondary"></button>
+    </div>
+    <div class="map-section-header-right">
       <button
         type="button"
         id="maps-section-toggle"
