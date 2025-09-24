@@ -448,6 +448,7 @@ class ChargingCalculator {
       batteryCapacity: formValues.batteryCapacity,
       currentCharge: formValues.currentCharge,
       targetCharge: formValues.targetCharge,
+      selectedProviders: Array.from(this.selectedProviders),
     };
 
     // Save to localStorage
@@ -546,6 +547,16 @@ class ChargingCalculator {
         // this.applyPreconfiguration();
 
         this.applyTariffFilter(config.tariffFilter);
+
+        this.selectedProviders = new Set(config.selectedProviders);
+        document
+          .querySelectorAll('#providerCheckboxes input[type="checkbox"]')
+          .forEach((checkbox) => {
+            checkbox.checked = config.selectedProviders.includes(
+              checkbox.value
+            );
+          });
+
         this.updateCalculations();
         this.showPreconfigMessage("Konfiguration geladen!", "success");
       } catch (error) {
@@ -581,10 +592,12 @@ class ChargingCalculator {
       });
     });
 
-    // Initialize selected providers
-    this.selectedProviders = new Set(
-      this.tariffManager.providers.map((p) => p.id)
-    );
+    if (this.selectedProviders.size === 0) {
+      // Initialize selected providers
+      this.selectedProviders = new Set(
+        this.tariffManager.providers.map((p) => p.id)
+      );
+    }
   }
 
   populateConnectorFilters() {
