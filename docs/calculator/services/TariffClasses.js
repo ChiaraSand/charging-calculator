@@ -133,6 +133,10 @@ class TimeBasedCondition extends BlockingFeeCondition {
 
       // Check if the charging session overlaps with this time range
       if (endTime >= timeRange.from || startTime < timeRange.to) {
+        // Set timerange to same day as parking time
+        timeRange.from.setDate(startTime.getDate());
+        timeRange.to.setDate(endTime.getDate());
+
         const startTimeInWindow = Math.max(
           startTime.getTime(),
           timeRange.from.getTime()
