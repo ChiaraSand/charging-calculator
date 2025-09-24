@@ -361,6 +361,7 @@ class ChargingCalculator {
       .getElementById("quickTariffSelect")
       .addEventListener("change", (e) => {
         this.applyTariffFilter(e.target.value);
+        this.updateCalculations();
       });
   }
 
@@ -473,7 +474,7 @@ class ChargingCalculator {
 
   applyTariffFilter(filterType) {
     this.selectProvidersByCategory(filterType);
-    this.populateTariffTable();
+    // this.populateTariffTable();
   }
 
   selectProvidersByCategory(category) {
@@ -545,6 +546,7 @@ class ChargingCalculator {
         // this.applyPreconfiguration();
 
         this.applyTariffFilter(config.tariffFilter);
+        this.updateCalculations();
         this.showPreconfigMessage("Konfiguration geladen!", "success");
       } catch (error) {
         console.error("Error loading saved preconfiguration:", error);
