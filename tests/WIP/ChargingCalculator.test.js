@@ -229,7 +229,7 @@ describe("ChargingCalculator Integration Tests", () => {
 
   describe("custom tariff functionality", () => {
     test("should create custom tariff row", () => {
-      const customRow = calculator.createCustomBlockingFeeRow();
+      const customRow = calculator.createCustomTariffRow();
 
       expect(customRow).toContain("Eigener Tarif");
       expect(customRow).toContain("custom-price-per-kwh");

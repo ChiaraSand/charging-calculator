@@ -41,6 +41,8 @@ class ChargingCalculator {
     //   startTime: new CustomDate().getDatePickerString(),
     //   endTime: "",
     // };
+    this.formValues = {}; // Will be initialized after DOM is ready
+    this.calculatedValues = {}; // Will be initialized after DOM is ready
 
     this.init();
   }
@@ -153,6 +155,7 @@ class ChargingCalculator {
   populateChargingPowerSelect() {
     const chargingPowerSelect = document.getElementById("chargingPowerSelect");
     chargingPowerSelect.innerHTML = this.chargingPowers
+      .sort((a, b) => a.value - b.value)
       .map(
         (power) =>
           `<option value="${power.value}" data-charging-type="${power.chargingType}">${power.description}</option>`
@@ -258,7 +261,7 @@ class ChargingCalculator {
         if (e.target.dataset.target) {
           this.setDateTimeInputNow(e.target.dataset.target);
         } else {
-          console.log(
+          console.warn(
             "no target defined. Try clickung the button background (not the button text or icon)"
           );
         }
@@ -379,6 +382,7 @@ class ChargingCalculator {
     document.getElementById("chargingPowerSelect").value = preset.chargingPower;
     document.getElementById("quickChargingPowerSelect").value =
       preset.chargingPower;
+    document.getElementById("chargingPowerSelect").value = preset.chargingPower;
     document.getElementById("quickTariffSelect").value = preset.tariffFilter;
 
     // Update selected vehicle
@@ -518,6 +522,8 @@ class ChargingCalculator {
         document.getElementById("quickVehicleSelect").value = config.vehicle; // || "renault-5-e-tech-52kwh";
         document.getElementById("quickChargingPowerSelect").value =
           config.chargingPower; // || "22";
+        document.getElementById("chargingPowerSelect").value =
+          config.chargingPower;
         document.getElementById("quickTariffSelect").value =
           config.tariffFilter; // || "all";
 
@@ -638,7 +644,10 @@ class ChargingCalculator {
 
   calculateEnergyToCharge(batteryCapacity, currentCharge, targetCharge) {
     // TODO: get formValues from DOM
-    return (batteryCapacity * (targetCharge - currentCharge)) / 100;
+    const energyToCharge =
+      (batteryCapacity * (targetCharge - currentCharge)) / 100;
+    this.calculatedValues.energyToCharge = energyToCharge;
+    return energyToCharge;
   }
 
   calculateTotalEnergyCost(kwhToCharge, pricePerKwh) {
@@ -648,6 +657,7 @@ class ChargingCalculator {
 
   calculateTotalParkingTime(startTime, endTime, estimatedChargingDuration = 0) {
     // TODO: get formValues from DOM
+    let totalParkingTime;
     const startTimeObject = CustomDate.parse(startTime);
 
     if (endTime) {
@@ -657,11 +667,16 @@ class ChargingCalculator {
         endTimeObject
       );
       // if estimatedChargingDuration is longer than given parkingDuration, use estimated charging duration
-      // TODO: update endTime or cshow warning?
-      return Math.max(parkingDuration, estimatedChargingDuration);
+      // TODO: update endTime or show warning?
+      totalParkingTime = Math.max(parkingDuration, estimatedChargingDuration);
     } else {
-      return estimatedChargingDuration;
+      totalParkingTime = estimatedChargingDuration;
+      endTimeObject = startTimeObject.addMinutesCopy(totalParkingTime);
+      const endTimeValue = endTimeObject.getDateTimePickerString();
+      document.getElementById("calculator-input-endDate").value = endTimeValue;
     }
+
+    this.calculatedValues.totalParkingTime = totalParkingTime;
   }
 
   updateCalculations() {
@@ -697,8 +712,12 @@ class ChargingCalculator {
         chargingType
       );
 
+      this.calculatedValues.chargingResult = chargingResult;
+
       const energyToCharge = chargingResult.totalEnergy;
+      this.calculatedValues.energyToCharge = energyToCharge;
       const estimatedTime = chargingResult.totalTime; // in minutes
+      this.calculatedValues.estimatedTime = estimatedTime;
 
       // Calculate total parking time from start and end time
       let totalParkingTime = 0;
@@ -711,20 +730,26 @@ class ChargingCalculator {
         totalParkingTime = Math.max(currentTotalParkingTime, estimatedTime);
       } else {
         totalParkingTime = estimatedTime;
+
+        // FIXME: move to a better place
+        endTimeObject = startTimeObject.addMinutesCopy(totalParkingTime);
+        const endTimeValue = endTimeObject.getDateTimePickerString();
+        document.getElementById("calculator-input-endDate").value =
+          endTimeValue;
       }
+      this.calculatedValues.totalParkingTime = totalParkingTime;
 
       const totalParkingTimeString =
         DateTimeHelper.formatDuration(totalParkingTime);
 
-      document.getElementById(
-        "energyToCharge"
-      ).textContent = `${energyToCharge.toFixed(1)} kWh`;
+      ViewHelper.setElementText(
+        "energyToCharge",
+        `${energyToCharge.toFixed(1)} kWh`
+      );
 
       const estimatedTimeString = DateTimeHelper.formatDuration(estimatedTime);
-      document.getElementById("estimatedTime").textContent =
-        estimatedTimeString;
-      document.getElementById("totalParkingTime").textContent =
-        totalParkingTimeString;
+      ViewHelper.setElementText("estimatedTime", estimatedTimeString);
+      ViewHelper.setElementText("totalParkingTime", totalParkingTimeString);
 
       // Update charging speed information
       VehicleDetails.updateChargingSpeedInfo(
@@ -737,7 +762,8 @@ class ChargingCalculator {
     } else {
       // TODO: set in index.html?
       // Show placeholder values when inputs are empty or invalid
-      document.getElementById("calculator-input-endDate").value = "";
+      // document.getElementById("calculator-input-endDate").value = "";
+      ViewHelper.setElementValue("calculator-input-endDate", "");
       // document.getElementById("endTime").value =
       //   endTime || startTime + totalParkingTime;
     }
@@ -801,36 +827,45 @@ class ChargingCalculator {
       return;
     }
 
-    const energyToCharge = this.calculateEnergyToCharge(
-      batteryCapacity,
-      currentCharge,
-      targetCharge
-    );
+    // const energyToCharge = this.calculateEnergyToCharge(
+    //   batteryCapacity,
+    //   currentCharge,
+    //   targetCharge
+    // );
+    const energyToCharge = this.calculatedValues.energyToCharge;
 
     // Use vehicle-specific charging curves for accurate time calculation
-    const chargingResult = this.vehicleCurves.calculateChargingTime(
-      this.selectedVehicle,
-      currentCharge,
-      targetCharge,
-      chargingPower,
-      batteryCapacity,
-      chargingType
-    );
-    const estimatedTime = chargingResult.totalTime; // in minutes
-    let possibleTotalParkingTime = 0;
+    // const chargingResult = this.vehicleCurves.calculateChargingTime(
+    //   this.selectedVehicle,
+    //   currentCharge,
+    //   targetCharge,
+    //   chargingPower,
+    //   batteryCapacity,
+    //   chargingType
+    // );
+    // const chargingResult = this.calculatedValues.chargingResult;
+    const estimatedTime = this.calculatedValues.estimatedTime; // in minutes
+    // let possibleTotalParkingTime = 0;
 
-    if (endTime) {
-      endTimeObject = CustomDate.parse(endTime);
-      possibleTotalParkingTime = DateTimeHelper.calculateTimeDifference(
-        startTimeObject,
-        endTimeObject
-      );
-    } else {
-      // Fix: If endTime is not set, use estimatedTime as totalParkingTime (in minutes)
-      possibleTotalParkingTime = estimatedTime;
-    }
+    // if (endTime) {
+    //   endTimeObject = CustomDate.parse(endTime);
+    //   possibleTotalParkingTime = DateTimeHelper.calculateTimeDifference(
+    //     startTimeObject,
+    //     endTimeObject
+    //   );
+    // } else {
+    //   possibleTotalParkingTime = estimatedTime;
+    // }
 
-    let totalParkingTime = Math.max(possibleTotalParkingTime, estimatedTime);
+    // let totalParkingTime = Math.max(possibleTotalParkingTime, estimatedTime);
+    const totalParkingTime = this.calculatedValues.totalParkingTime;
+    const blockingTime = Math.max(0, totalParkingTime);
+
+    // Update header with actual energy amount
+    this.updateTariffTableHeaderPricePerSelectedKwh(energyToCharge);
+
+    // Update header with actual blocking time
+    this.updateTariffTableHeaderTotalBlockingFeeMinutes(blockingTime);
 
     // Filter tariffs based on selected providers and connectors
     const filteredTariffs = this.tariffManager.getFilteredTariffs({
@@ -838,14 +873,14 @@ class ChargingCalculator {
       connectors: Array.from(this.selectedConnectors),
     });
 
-    endTimeObject = startTimeObject.addMinutesCopy(totalParkingTime);
-    const endTimeValue = endTimeObject.getDateTimePickerString();
+    this.fetchFormValuesFromDOM();
+    endTimeObject = new CustomDate(this.formValues.endTime);
+    // const endTimeValue = endTimeObject.getDateTimePickerString();
 
-    // FIXME: move to a better place
-    document.getElementById("calculator-input-endDate").value = endTimeValue;
+    // // FIXME: move to a better place
+    // document.getElementById("calculator-input-endDate").value = endTimeValue;
 
     // Sort provider tariffs by total cost using the new class methods
-    const blockingTime = Math.max(0, totalParkingTime);
     const sortedProviderTariffs = this.tariffManager.sortByCost(
       filteredTariffs,
       energyToCharge,
@@ -860,7 +895,7 @@ class ChargingCalculator {
       (a, b) => a.totalCost - b.totalCost
     );
     // Create custom tariff row
-    const customTariffRow = this.createCustomBlockingFeeRow();
+    const customTariffRow = this.createCustomTariffRow(energyToCharge);
 
     tbody.innerHTML =
       customTariffRow +
@@ -927,17 +962,11 @@ class ChargingCalculator {
     this.setupCustomTariffEventListeners();
 
     // Update custom tariff display
-    this.updateCustomTariffDisplay(energyToCharge);
-
-    // Update header with actual energy amount
-    this.updatePricePerSelectedKwhHeader(energyToCharge);
-
-    // Update header with actual blocking time
-    this.updateTotalBlockingFeeMinutesHeader(blockingTime);
+    // this.updateCustomTariffDisplay(energyToCharge);
 
     // REVIEW: are these connected in ANY way???
     // Update charging chart
-    this.chartManager.updateChargingChart({
+    this.chartManager?.updateChargingChart({
       batteryCapacity,
       currentCharge,
       targetCharge,
@@ -1044,11 +1073,11 @@ class ChargingCalculator {
         energyToCharge > 0 ? totalCost / energyToCharge : 0;
     }
 
-    // Update price per selected kWh
-    this.updatePricePerSelectedKwhHeader(energyToCharge);
+    // // Update price per selected kWh
+    // this.updatePricePerSelectedKwhHeader(energyToCharge);
 
-    // Update total blocking fee minutes
-    this.updateTotalBlockingFeeMinutesHeader(totalParkingTime);
+    // // Update total blocking fee minutes
+    // this.updateTotalBlockingFeeMinutesHeader(totalParkingTime);
 
     // Update blocking fee cost
     const blockingFeeCostElement = document.getElementById(
@@ -1083,11 +1112,12 @@ class ChargingCalculator {
     }
   }
 
-  updatePricePerSelectedKwhHeader(energyToCharge) {
-    ViewHelper.setElementValue(
-      "pricePerSelectedKwhValue",
+  updateTariffTableHeaderPricePerSelectedKwh(energyToCharge) {
+    ViewHelper.setElementText(
+      "tariff-table-header-price-per-selected-kwh-value",
       energyToCharge.toFixed(1)
     );
+
     // // const pricePerSelectedKwhUnit = document.getElementById(
     // //   "pricePerSelectedKwhUnit"
     // // );
@@ -1096,40 +1126,43 @@ class ChargingCalculator {
     // // }
   }
 
-  updateTotalBlockingFeeMinutesHeader(blockingTime) {
+  updateTariffTableHeaderTotalBlockingFeeMinutes(blockingTime) {
     const durationObject = DateTimeHelper.formatDurationAsObject(blockingTime);
 
-    ViewHelper.setElementValue(
-      "totalBlockingFeeMinutesValue",
+    ViewHelper.setElementText(
+      "tariff-table-header-total-blocking-fee-minutes-value",
       durationObject.value
     );
-    ViewHelper.setElementValue(
-      "totalBlockingFeeMinutesUnit",
+    ViewHelper.setElementText(
+      "tariff-table-header-total-blocking-fee-minutes-unit",
       durationObject.unit
     );
   }
 
-  createCustomBlockingFeeRow() {
+  createCustomTariffRow(energyToCharge) {
     // Calculate initial energy cost dynamically
-    const batteryCapacity =
-      parseFloat(document.getElementById("batteryCapacity")?.value) || 0;
-    const currentCharge =
-      parseFloat(
-        document.getElementById("chargeLevelSlider-value-start").value
-      ) || 0;
-    const targetCharge =
-      parseFloat(
-        document.getElementById("chargeLevelSlider-value-end").value
-      ) || 0;
+    // const batteryCapacity =
+    //   parseFloat(document.getElementById("batteryCapacity")?.value) || 0;
+    // const currentCharge =
+    //   parseFloat(
+    //     document.getElementById("chargeLevelSlider-value-start").value
+    //   ) || 0;
+    // const targetCharge =
+    //   parseFloat(
+    //     document.getElementById("chargeLevelSlider-value-end").value
+    //   ) || 0;
 
-    const energyToCharge =
-      batteryCapacity > 0 && targetCharge > currentCharge
-        ? this.calculateEnergyToCharge(
-            batteryCapacity,
-            currentCharge,
-            targetCharge
-          )
-        : 0;
+    // const formValues = this.fetchFormValuesFromDOM();
+    // const { batteryCapacity, currentCharge, targetCharge } = formValues;
+
+    // const energyToCharge =
+    //   batteryCapacity > 0 && targetCharge > currentCharge
+    //     ? this.calculateEnergyToCharge(
+    //         batteryCapacity,
+    //         currentCharge,
+    //         targetCharge
+    //       )
+    //     : 0;
 
     const customPricePerKwh = 0.5; // Default value
     const initialEnergyCost = this.calculateTotalEnergyCost(
@@ -1142,6 +1175,10 @@ class ChargingCalculator {
       energyToCharge,
       customBlockingFee
     );
+
+    const customTotalCost = initialEnergyCost + initialBlockingFee;
+    const customEffectivePricePerKwh =
+      energyToCharge > 0 ? customTotalCost / energyToCharge : 0;
 
     return `
       <tr class="custom-tariff-row" style="background-color: #f0f9ff; border-bottom: 2px solid var(--primary-color);">
@@ -1182,14 +1219,14 @@ class ChargingCalculator {
         <td class="total-cost" id="custom-total-cost">
           <span>
             <span class="price-value" id="custom-total-cost-value">
-              —
+              ${customTotalCost.toFixed(2)}
             </span>
             <span class="price-unit">€</span>
           </span>
           <br/>
           <small class="effective-price" id="custom-effective-price">
             <span class="price-value" id="custom-effective-price-value">
-              —
+              ${customEffectivePricePerKwh.toFixed(2)}
             </span>
             <span class="price-unit">€/kWh</span>
           </small>

@@ -126,6 +126,11 @@ class ViewHelper {
     const element = document.getElementById(elementId);
     element.value = value;
   }
+
+  static setElementText(elementId, text) {
+    const element = document.getElementById(elementId);
+    element.textContent = text;
+  }
 }
 
 export default ViewHelper;

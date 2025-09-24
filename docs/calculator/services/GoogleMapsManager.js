@@ -57,13 +57,12 @@ class GoogleMapsManager {
     this.hideNoStationsMessage();
     this.showMapLoadingIndicator();
 
-    await this.loadGoogleMapsApi();
-    // .catch((error) => {
-    //   console.error("Error loading Google Maps API:", error);
-    //   this.showApiKeyError();
-    //   this.setMapEnabledFromUser(false);
-    //   return;
-    // });
+    try {
+      await this.loadGoogleMapsApi();
+    } catch (error) {
+      console.error("Error loading Google Maps API:", error);
+      return;
+    }
 
     if (!this.enable) {
       return;
@@ -141,7 +140,7 @@ class GoogleMapsManager {
         this.showApiKeyError();
         this.setMapEnabledFromUser(false);
         // this.enable = false;
-        reject(new Error("Google Maps API key not configured"));
+        reject("Google Maps API key not configured");
         return;
       }
       const script = document.createElement("script");
