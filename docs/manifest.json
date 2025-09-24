@@ -1,0 +1,104 @@
+{
+  "manifest_version": 2,
+  "version": "1.0.0",
+  "name": "E-Auto Ladekosten Rechner & Tarifvergleich",
+  "short_name": "E-Auto Ladekosten Rechner",
+  "description": "Moderner E-Auto Ladekosten Rechner mit Tarifvergleich und Kartenintegration. Vergleiche Ladetarife verschiedener Anbieter und finde die günstigsten Ladesäulen.",
+  "start_url": "/charging-calculator/",
+  "scope": "/charging-calculator/",
+  "display": "standalone",
+  "orientation": "landscape-primary",
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff",
+  "lang": "de",
+  "dir": "ltr",
+  "categories": ["utilities", "productivity", "business"],
+  // "screenshots": [
+  //   {
+  //     "src": "/assets/logo/icon.png",
+  //     "sizes": "1024x1024",
+  //     "type": "image/png",
+  //     "form_factor": "wide",
+  //     "label": "E-Auto Ladekosten Rechner Hauptansicht"
+  //   }
+  // ],
+  "icons": [
+    {
+      "src": "/assets/logo/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/logo/favicon.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ladekosten berechnen",
+      "short_name": "Rechner",
+      "description": "Direkt zum Ladekosten-Rechner",
+      "url": "/charging-calculator/calculator/",
+      "icons": [
+        {
+          "src": "/assets/logo/favicon.png",
+          "sizes": "32x32",
+          "type": "image/png"
+        }
+      ]
+    }
+    // {
+    //   "name": "Kartenansicht",
+    //   "short_name": "Karte",
+    //   "description": "Ladesäulen auf der Karte anzeigen",
+    //   "url": "/charging-calculator/calculator/maps.html",
+    //   "icons": [
+    //     {
+    //       "src": "/assets/logo/favicon.png",
+    //       "sizes": "32x32",
+    //       "type": "image/png"
+    //     }
+    //   ]
+    // }
+  ],
+  // "related_applications": ["https://play.google.com/store/apps/details?id=com.google.android.apps.maps"],
+  // "prefer_related_applications": false,
+  // "edge_side_panel": {
+  //   "preferred_width": 400
+  // },
+  // "launch_handler": {
+  //   "client_mode": "navigate-existing"
+  // },
+  // "handle_links": "preferred",
+  // "capture_links": "new-client",
+  "protocol_handlers": [
+    {
+      "protocol": "web+chargingcalculator",
+      "url": "/charging-calculator/calculator/?action=%s"
+    }
+  ],
+  // "file_handlers": [
+  //   {
+  //     "action": "/charging-calculator/calculator/",
+  //     "accept": {
+  //       "application/json": [".json"],
+  //       "text/csv": [".csv"]
+  //     }
+  //   }
+  // ],
+  "share_target": {
+    "action": "/charging-calculator/calculator/",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  // "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "id": "charging-calculator-app"
+  // "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7"
+}

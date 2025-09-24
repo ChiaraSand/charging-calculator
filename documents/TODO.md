@@ -43,3 +43,5 @@
 - charging time changed -> update parking time (only if longer) [DONE?]
 - vehicle-details
    - AC / DC
+
+- PWA / APK
