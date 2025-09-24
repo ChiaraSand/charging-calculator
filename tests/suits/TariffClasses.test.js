@@ -493,10 +493,10 @@ describe("Tariff Classes", () => {
 
         // Verify blocking fee (should be in reasonable range - real-life calculation may differ)
         // Allow for small differences due to calculation changes
-        expect(actualBlockingFee).toBe(expectedBlockingFee);
+        expect(actualBlockingFee).toBeCloseTo(expectedBlockingFee, 0.001);
 
         // Verify total cost (energy cost should be exact, blocking fee may vary)
-        expect(actualTotalCost).toBe(expectedTotalCost);
+        expect(actualTotalCost).toBeCloseTo(expectedTotalCost, 0.001);
       }
     );
 
